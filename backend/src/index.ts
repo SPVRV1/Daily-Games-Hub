@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { MongoClient } from "mongodb";
+import gameRoutes from './routes/game.routes.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ const getMongoClient = async (): Promise<MongoClient> => {
 
     return mongoClient;
 };
+app.use('/api/games', gameRoutes);
 
 app.get("/api/health", (_req, res) => {
     res.json({
