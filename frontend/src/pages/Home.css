@@ -117,13 +117,11 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
     position: relative;
-    transition: background 0.15s;
+    transition: color 0.15s;
 }
 
 .icon-btn:hover {
-    background: var(--bg);
     color: var(--text-dark);
 }
 
