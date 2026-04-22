@@ -303,8 +303,12 @@
     padding: 14px 16px 16px;
 }
 
-.game-info--completed {
+.game-card--completed {
     background: var(--green-bg);
+}
+
+.dark .completed-badge {
+    color: #2d2f3f;
 }
 
 .game-info--pending {

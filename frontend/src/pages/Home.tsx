@@ -210,7 +210,7 @@ export default function Home() {
                 <h2 className="section-title">Today's Games</h2>
                 <div className="games-grid">
                     {GAMES.map((game) => (
-                        <div className="game-card" key={game.name}>
+                        <div className={`game-card${game.completed ? " game-card--completed" : ""}`} key={game.name}>
                             <div className="game-banner" style={{ background: game.gradient }}>
                                 {game.icon}
                                 {game.completed && (
@@ -222,7 +222,7 @@ export default function Home() {
                                     </span>
                                 )}
                             </div>
-                            <div className={`game-info ${game.completed ? "game-info--completed" : "game-info--pending"}`}>
+                            <div className={`game-info ${game.completed ? "" : "game-info--pending"}`}>
                                 <h3 className="game-name">{game.name}</h3>
                                 <p className="game-desc">{game.description}</p>
                                 {game.completed ? (
