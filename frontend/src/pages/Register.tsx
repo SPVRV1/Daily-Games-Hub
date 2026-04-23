@@ -1,4 +1,5 @@
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 
 import "./RegisterLoginPassword.css";
 
@@ -19,6 +20,13 @@ export default function Register() {
     confirmPassword: "",
   });
 
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -28,8 +36,47 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const validateForm = () => {
+    const newErrors = {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
+
+    if (!formData.username.trim())
+      newErrors.username = "Username is required!";
+
+    if (!formData.email.trim())
+      newErrors.email = "Email is required!";
+    
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Please enter a valid email!";
+
+    if (!formData.password)
+      newErrors.password = "Password is required!";
+    
+    else if (formData.password.length < 8)
+      newErrors.password = "Password must be at least 8 characters long!";
+
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password!";
+    
+    else if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match!";
+
+    setErrors(newErrors);
+
+    return Object.values(newErrors).every((value) => value === "");
+  };
+
+  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const isValid = validateForm();
+
+    if (!isValid)
+      return;
 
     console.log("Register data:", {
       username: formData.username,
@@ -55,10 +102,12 @@ export default function Register() {
         )}
       </button>
       
+      {/* Title */}
       <h1>Join Daily Games Hub</h1>
 
       <p>Create an account and start your gaming journey</p>
-
+      
+      {/* Form */}
       <form className="card" onSubmit={handleSubmit}>
         <label htmlFor="username">Username</label>
         <input
@@ -71,6 +120,12 @@ export default function Register() {
           onChange={handleChange}
         />
 
+        {errors.username && (
+          <span className="error-text">
+            {errors.username}
+          </span>
+        )}
+
         <label htmlFor="email">Email</label>
         <input 
           id="email"
@@ -81,6 +136,12 @@ export default function Register() {
           value={formData.email}
           onChange={handleChange}
         />
+
+        {errors.email && (
+          <span className="error-text">
+            {errors.email}
+          </span>
+        )}
 
         <label htmlFor="password">Password</label>
         <input
@@ -93,6 +154,12 @@ export default function Register() {
           onChange={handleChange}
         />
 
+        {errors.password && (
+          <span className="error-text">
+            {errors.password}
+          </span>
+        )}
+
         <label htmlFor="confirmPassword">Confirm Password</label>
         <input
           id="confirmPassword"
@@ -103,10 +170,18 @@ export default function Register() {
           onChange={handleChange}
         />
 
+        {errors.confirmPassword && (
+          <span className="error-text">
+            {errors.confirmPassword}
+          </span>
+        )}
+
+        {/* Submit button */}
         <button type="submit" className="submit-btn">Create Account</button>
 
+        {/* Link to login page */}
         <span className="form-link">
-          Already have an account? <a href="/login">Sign in</a>
+          Already have an account? <Link to="/login">Sign in</Link>
         </span>
       </form>
     </div>

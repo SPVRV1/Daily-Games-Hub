@@ -1,4 +1,5 @@
-import { useState,ChangeEvent, FormEvent } from "react";
+import { useState,ChangeEvent } from "react";
+import { Link } from "react-router-dom";
 
 import "./RegisterLoginPassword.css";
 
@@ -8,11 +9,17 @@ type ForgotPasswordFormData = {
 
 export default function ForgotPassword() {
     const [dark, setDark] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState("");
 
     const [formData, setFormData] =
         useState<ForgotPasswordFormData>({
             email: "",
         });
+    
+    const [errors, setErrors] = useState({
+        email: "",
+    });
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -21,12 +28,50 @@ export default function ForgotPassword() {
             ...prev,
             [name]: value,
         }));
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
+
+        setSuccess("");
     };
 
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const validateForm = () => {
+        const newErrors = {
+            email: "",
+        };
+
+        if (!formData.email.trim())
+            newErrors.email = "Email is required!";
+        
+        else if (!/\S+@\S+\.\S+/.test(formData.email))
+            newErrors.email = "Please enter a valid email!";
+
+        setErrors(newErrors);
+
+        return Object.values(newErrors).every((value) => value === "");
+    };
+
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        console.log("Reset password request:", formData);
+        const isValid = validateForm();
+
+        if (!isValid)
+            return;
+
+        setLoading(true);
+
+        setTimeout(() => {
+            setLoading(false);
+
+            setSuccess(
+                "Password reset instructions have been sent to your email!"
+            );
+
+            console.log("Reset password request:", formData);
+        }, 1000);
     };
 
     return (
@@ -45,11 +90,13 @@ export default function ForgotPassword() {
                     </svg>
                 )}
             </button>
-
+            
+            {/* Title */}
             <h1>Forgot password?</h1>
 
             <p>No worries, we'll send you reset instructions</p>
-
+            
+            {/* Form */}
             <form className="card" onSubmit={handleSubmit}>
                 <label htmlFor="email">Email</label>
                 <input
@@ -62,10 +109,26 @@ export default function ForgotPassword() {
                     onChange={handleChange}
                 />
 
-                <button type="submit" className="submit-btn">Reset password</button>
+                {success && (
+                    <div className="success-message">
+                        {success}
+                    </div>
+                )}
 
+                {errors.email && (
+                    <span className="error-text">
+                        {errors.email}
+                    </span>
+                )}
+
+                {/* Submit button */}
+                <button type="submit" className="submit-btn" disabled={loading}>
+                    {loading ? "Sending..." : "Reset password"}
+                </button>
+
+                {/* Link to login page */}
                 <span className="form-link">
-                    Back to <a href="/Login">Login</a>
+                    Back to <Link to="/login">Login</Link>
                 </span>
             </form>
         </div>
