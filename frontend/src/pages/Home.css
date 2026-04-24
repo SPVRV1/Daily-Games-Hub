@@ -1,57 +1,52 @@
-/* ── Palette variables ───────────────────────────────────── */
+/* ── Spec palette (5 official colors + supporting tints) ─── */
 :root {
-    --white:       #ffffff;
-    --bg:          #eaecef;
-    --text:        #414452;
-    --text-dark:   #2d2f3f;
-    --border:      #d4d7de;
+    --primary:    #3377f2;
+    --dark-base:  #2d2f3f;
+    --white:      #ffffff;
+    --green:      #1db756;
+    --orange:     #f38e10;
 
-    --primary:     #505cea;
-    --primary-lt:  #81a3f4;
-    --primary-bg:  #eff6ff;
+    --bg:         #eaecef;
+    --border:     #eaecef;
+    --text:       #5a5d72;
+    --text-dark:  #2d2f3f;
 
-    --blue:        #3377f2;
-    --sky:         #1ca0e2;
+    --card-bg:    #ffffff;
+    --navbar-bg:  #ffffff;
+    --green-bg:   #edfaf3;
+    --primary-bg: #eef4ff;
+    --streak-bg:  #fff8f0;
 
-    --green:       #1db756;
-    --green-lt:    #22c55e;
-    --green-bg:    #f0fdf4;
-
-    --orange:      #f38e10;
-    --pink:        #ed4675;
-    --purple:      #8752f4;
-    --magenta:     #c54fce;
-
-    --card-bg:     #ffffff;
-    --navbar-bg:   #ffffff;
-    --streak-bg:   #fff8f0;
+    --font-heading: 'Poppins', system-ui, sans-serif;
+    --font-body:    'Inter', system-ui, sans-serif;
+    --font-mono:    'Roboto Mono', monospace;
 }
 
-/* ── Dark mode overrides ─────────────────────────────────── */
+/* ── Dark mode ───────────────────────────────────────────── */
 .dark {
-    --bg:          #13141c;
-    --white:       #1e1f2b;
-    --card-bg:     #1e1f2b;
-    --navbar-bg:   #161720;
-    --text:        #9093a8;
-    --text-dark:   #e8eaf2;
-    --border:      #2e3044;
-    --primary-bg:  #1e2240;
-    --green-bg:    #0d2419;
-    --streak-bg:   #2a1f0e;
+    --bg:         #181a26;
+    --card-bg:    #2d2f3f;
+    --navbar-bg:  #23253a;
+    --text:       #9093a8;
+    --text-dark:  #ffffff;
+    --border:     #3a3d54;
+    --green-bg:   #0d2419;
+    --primary-bg: #1a2240;
+    --streak-bg:  #2a1f0e;
 }
 
 /* ── Layout ──────────────────────────────────────────────── */
 .home {
     min-height: 100vh;
     background: var(--bg);
-    font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-body);
     color: var(--text);
     transition: background 0.25s ease, color 0.25s ease;
 }
 
 .home * {
-    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    transition: background 0.25s ease, color 0.25s ease,
+                border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* ── Navbar ──────────────────────────────────────────────── */
@@ -69,6 +64,7 @@
 }
 
 .navbar-brand {
+    font-family: var(--font-heading);
     font-size: 17px;
     font-weight: 700;
     color: var(--text-dark);
@@ -83,11 +79,12 @@
 
 .nav-link {
     text-decoration: none;
+    font-family: var(--font-body);
     font-size: 14px;
     font-weight: 500;
     color: var(--text);
     padding: 6px 16px;
-    border-radius: 999px;
+    border-radius: 12px;
     transition: background 0.15s, color 0.15s;
 }
 
@@ -125,25 +122,30 @@
     color: var(--text-dark);
 }
 
+.icon-btn i {
+    font-size: 18px;
+}
+
 .notif-dot {
     position: absolute;
-    top: 7px;
-    right: 7px;
+    top: 6px;
+    right: 6px;
     width: 8px;
     height: 8px;
-    background: var(--pink);
+    background: var(--orange);
     border-radius: 50%;
-    border: 2px solid var(--white);
+    border: 2px solid var(--navbar-bg);
 }
 
 .avatar {
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: var(--blue);
+    background: var(--primary);
     color: var(--white);
+    font-family: var(--font-heading);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -164,6 +166,7 @@
 }
 
 .welcome h1 {
+    font-family: var(--font-heading);
     font-size: 26px;
     font-weight: 700;
     color: var(--text-dark);
@@ -172,6 +175,7 @@
 }
 
 .welcome p {
+    font-family: var(--font-body);
     font-size: 14px;
     color: var(--text);
     margin: 0;
@@ -189,7 +193,8 @@
     background: var(--card-bg);
     border-radius: 12px;
     padding: 20px 22px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .stat-card--streak {
@@ -210,18 +215,19 @@
 }
 
 .stat-icon {
-    width: 28px;
-    height: 28px;
+    font-size: 22px;
     flex-shrink: 0;
 }
 
 .stat-label {
+    font-family: var(--font-body);
     font-size: 13px;
     color: var(--text);
     font-weight: 500;
 }
 
 .stat-value {
+    font-family: var(--font-heading);
     font-size: 28px;
     font-weight: 700;
     color: var(--text-dark);
@@ -231,7 +237,7 @@
 /* Progress bar */
 .progress-bar {
     height: 6px;
-    background: var(--bg);
+    background: var(--border);
     border-radius: 999px;
     margin-top: 12px;
     overflow: hidden;
@@ -246,6 +252,7 @@
 
 /* ── Games Section ───────────────────────────────────────── */
 .section-title {
+    font-family: var(--font-heading);
     font-size: 18px;
     font-weight: 700;
     color: var(--text-dark);
@@ -261,9 +268,10 @@
 
 .game-card {
     background: var(--card-bg);
-    border-radius: 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
 }
@@ -271,6 +279,10 @@
 .game-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.game-card--completed {
+    background: var(--green-bg);
 }
 
 .game-banner {
@@ -281,6 +293,11 @@
     position: relative;
 }
 
+.game-banner i {
+    font-size: 44px;
+    color: white;
+}
+
 .completed-badge {
     position: absolute;
     top: 10px;
@@ -288,25 +305,27 @@
     background: rgba(255, 255, 255, 0.92);
     border-radius: 999px;
     padding: 4px 10px;
+    font-family: var(--font-body);
     font-size: 12px;
     font-weight: 600;
-    color: var(--text-dark);
+    color: #2d2f3f;
     display: flex;
     align-items: center;
     gap: 5px;
     backdrop-filter: blur(4px);
 }
 
-.game-info {
-    padding: 14px 16px 16px;
-}
-
-.game-card--completed {
-    background: var(--green-bg);
+.completed-badge i {
+    font-size: 12px;
+    color: var(--green);
 }
 
 .dark .completed-badge {
     color: #2d2f3f;
+}
+
+.game-info {
+    padding: 14px 16px 16px;
 }
 
 .game-info--pending {
@@ -314,6 +333,7 @@
 }
 
 .game-name {
+    font-family: var(--font-heading);
     font-size: 15px;
     font-weight: 700;
     color: var(--text-dark);
@@ -321,6 +341,7 @@
 }
 
 .game-desc {
+    font-family: var(--font-body);
     font-size: 13px;
     color: var(--text);
     margin: 0 0 10px;
@@ -328,6 +349,7 @@
 }
 
 .game-result {
+    font-family: var(--font-body);
     font-size: 13px;
     font-weight: 600;
     color: var(--green);
@@ -336,36 +358,40 @@
     gap: 5px;
 }
 
+.game-result i {
+    font-size: 13px;
+}
+
 .game-not-played {
+    font-family: var(--font-body);
     font-size: 13px;
     font-weight: 600;
     color: var(--orange);
 }
 
+/* dark completed card text */
+.dark .game-card--completed .game-name {
+    color: #c8f0d8;
+}
+
+.dark .game-card--completed .game-desc {
+    color: #7ab890;
+}
+
+.dark .game-card--completed .game-result {
+    color: #1db756;
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .games-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+    .games-grid  { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
-    .content {
-        padding: 24px 16px 40px;
-    }
-    .navbar {
-        padding: 0 16px;
-    }
-    .navbar-links {
-        display: none;
-    }
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .games-grid {
-        grid-template-columns: 1fr;
-    }
+    .content     { padding: 24px 16px 40px; }
+    .navbar      { padding: 0 16px; }
+    .navbar-links { display: none; }
+    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+    .games-grid  { grid-template-columns: 1fr; }
 }
