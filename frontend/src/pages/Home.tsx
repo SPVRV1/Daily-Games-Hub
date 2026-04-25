@@ -140,8 +140,8 @@ export default function Home() {
             <nav className="navbar">
                 <span className="navbar-brand">Daily Games Hub</span>
                 <div className="navbar-links">
-                    <a href="#" className="nav-link active">Home</a>
-                    <a href="#" className="nav-link">Friends</a>
+                    <a href="/" className="nav-link active">Home</a>
+                    <a href="Friends" className="nav-link">Friends</a>
                     <a href="#" className="nav-link">Statistics</a>
                 </div>
                 <div className="navbar-right">
