@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "./Home.css";
 import Navbar from "../components/Navbar";
 
@@ -133,11 +132,9 @@ const GAMES: Game[] = [
 ];
 
 export default function Home() {
-    const [dark, setDark] = useState(false);
-
     return (
-        <div className={`home${dark ? " dark" : ""}`}>
-            <Navbar dark={dark} onToggleTheme={() => setDark(!dark)} activeLink="home" />
+        <div className="home">
+            <Navbar activeLink="home" />
 
             {/* Content */}
             <main className="content">
