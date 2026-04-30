@@ -12,6 +12,6 @@ export interface IGameResult {
     date: string, // DD-MM-YYYY
     completed: boolean,
     attempts: number,
-    timeSpent?: number, // v sekundah
+    timeSpent?: number, // in sec
     score: number
 }

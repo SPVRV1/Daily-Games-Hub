@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// narejeno po ER modelu
+// Done after ER model
 export interface IGameResultDocument extends Document {
   user_id: mongoose.Types.ObjectId;
   challenge_id: mongoose.Types.ObjectId;

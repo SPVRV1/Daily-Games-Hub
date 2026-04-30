@@ -3,12 +3,23 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "./assets/vite.svg";
 import heroImg from "./assets/hero.png";
 import "./App.css";
+import GameResultScreen from "./components/game/GameResult";
+import AlreadyPlayed from "./components/game/AlreadyPlayed";
 
 function App() {
     const [count, setCount] = useState(0);
 
+    const testResult = {
+        challenge_id: '123',
+        completed: true,
+        attempts_used: 3,
+        correct_answers: undefined,
+        time_seconds: 45,
+        score: 80,
+    };
     return (
         <>
+            <AlreadyPlayed result={testResult} />
             <section id="center">
                 <div className="hero">
                     <img

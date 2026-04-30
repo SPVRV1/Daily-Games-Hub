@@ -4,20 +4,20 @@ import GameResult from '../models/GameResult.js';
 import { getTodayDate } from '../utils/gameHelpers.js';
 import { GameType } from '../types/game.types.js';
 
-// matic AuthRequest mankja, spodaj le začasno
+// AuthRequest still not implemented, under this just for time 
 //import { AuthRequest } from '../middleware/auth';
 interface AuthRequest extends Request {
     userId?: string;
     params: any;
 }
 
-// zamenjaj z importom ko Tjaš naredi modele, spodaj le začasno
+// models yet not implemented
 // import Game from '../models/Game';
 // import DailyChallenge from '../models/DailyChallenge';
 const Game = { findOne: async (_: any) => null } as any;
 
 // GET /api/games/:gameType/today
-// Vrne današnji challenge za določeno igro 
+// it returns the todays chalange for specific game
 export const getTodayChallenge = async (req: Request, res: Response) => {
     const { gameType } = req.params as { gameType: GameType }
     const today = getTodayDate()
@@ -29,7 +29,7 @@ export const getTodayChallenge = async (req: Request, res: Response) => {
 }
 
 // GET /api/games/:gameType/played-today
-// Preveri ali je user danes že igral določeno igro, vrne rezultat če jo je
+// it checks if user has already finished the game for certian type, if he has finished then it returns the reuslts
 export const getPlayedToday = async (req: AuthRequest, res: Response) => {
     const { gameType } = req.params as { gameType: GameType };
     const today = getTodayDate();
@@ -40,7 +40,7 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
 };
 
 // POST /api/games/:gameType/result
-// Shrani rezultat igre, prepreči dvojno oddajo za isti dan
+// saves game reuslts
 export const submitResult = async (req: AuthRequest, res: Response) => {
     const { challenge_id, completed, attempts_used, correct_answers, time_seconds, score } = req.body;
 
