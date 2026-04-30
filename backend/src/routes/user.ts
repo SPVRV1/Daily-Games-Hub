@@ -6,20 +6,19 @@ const router = Router();
 
 router.get("/data", async (_req, res) => {
     try {
-        const { username: _username } = _req.query;
+        const { id } = _req.query;
+        const _id = Number(id);
 
-        if (!_username || typeof _username !== "string") {
+        if (!_id || typeof _id !== "number" || isNaN(_id)) {
             res.status(400).json({
                 ok: false,
-                error: "Username query parameter is required",
+                error: "Valid ID query parameter is required",
             });
             return;
         }
 
         const collection = await getUsersCollection();
-        const user = await collection.findOne({ username: _username });
-
-        console.log(typeof user);
+        const user = await collection.findOne({ _id });
 
         if (!user) {
             res.status(404).json({
