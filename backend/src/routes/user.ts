@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { getUsersCollection } from "../db.js";
-import { User } from "../models/user.js";
+import { verifyToken, AuthRequest } from "../middleware/auth.js";
 
 const router = Router();
 
+//router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
 router.get("/data", async (_req, res) => {
     try {
         const { id } = _req.query;
