@@ -11,12 +11,12 @@ type StatItem = {
     iconClass: string;
 };
 
-const STATS: StatItem[] = [
-    { label: "Day Streak", value: "7", Icon: Flame, lightBackgroundClass: "bg-amber-50", darkBackgroundClass: "bg-amber-500/8", iconClass: "text-amber-600" },
-    { label: "Games Played", value: "42", Icon: Gamepad2, lightBackgroundClass: "bg-sky-50", darkBackgroundClass: "bg-sky-500/8", iconClass: "text-sky-600" },
-    { label: "Achievements", value: "3", Icon: Trophy, lightBackgroundClass: "bg-emerald-50", darkBackgroundClass: "bg-emerald-500/8", iconClass: "text-emerald-600" },
-    { label: "Global Rank", value: "#24", Icon: BadgeCheck, lightBackgroundClass: "bg-violet-50", darkBackgroundClass: "bg-violet-500/8", iconClass: "text-violet-600" },
-];
+type OverviewSectionProps = {
+    currentStreak?: number | null;
+    gamesPlayed?: number | null;
+    achievementsCount?: number | null;
+    globalRank?: number | null;
+};
 
 function StatCard({ label, value, Icon, lightBackgroundClass, darkBackgroundClass, iconClass, isDark }: StatItem & { isDark: boolean }) {
     return (
@@ -30,8 +30,50 @@ function StatCard({ label, value, Icon, lightBackgroundClass, darkBackgroundClas
     );
 }
 
-export default function OverviewSection() {
+const toStatValue = (value: number | null | undefined, formatter?: (value: number) => string) => {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+        return "-";
+    }
+
+    return formatter ? formatter(value) : String(value);
+};
+
+export default function OverviewSection({ currentStreak, gamesPlayed, achievementsCount, globalRank }: OverviewSectionProps) {
     const { isDark } = useTheme();
+    const stats: StatItem[] = [
+        {
+            label: "Day Streak",
+            value: toStatValue(currentStreak),
+            Icon: Flame,
+            lightBackgroundClass: "bg-amber-50",
+            darkBackgroundClass: "bg-amber-500/8",
+            iconClass: "text-amber-600",
+        },
+        {
+            label: "Games Played",
+            value: toStatValue(gamesPlayed),
+            Icon: Gamepad2,
+            lightBackgroundClass: "bg-sky-50",
+            darkBackgroundClass: "bg-sky-500/8",
+            iconClass: "text-sky-600",
+        },
+        {
+            label: "Achievements",
+            value: toStatValue(achievementsCount),
+            Icon: Trophy,
+            lightBackgroundClass: "bg-emerald-50",
+            darkBackgroundClass: "bg-emerald-500/8",
+            iconClass: "text-emerald-600",
+        },
+        {
+            label: "Global Rank",
+            value: toStatValue(globalRank, (value) => `#${value}`),
+            Icon: BadgeCheck,
+            lightBackgroundClass: "bg-violet-50",
+            darkBackgroundClass: "bg-violet-500/8",
+            iconClass: "text-violet-600",
+        },
+    ];
 
     return (
         <section className={`rounded-2xl border p-5 shadow-sm transition-colors ${isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-linear-to-br from-white to-sky-50/30"}`}>
@@ -41,7 +83,7 @@ export default function OverviewSection() {
             </h2>
 
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-                {STATS.map((stat) => (
+                {stats.map((stat) => (
                     <StatCard key={stat.label} {...stat} isDark={isDark} />
                 ))}
             </div>
