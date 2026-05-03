@@ -41,6 +41,8 @@
     --primary-bg:  #1e2240;
     --green-bg:    #0d2419;
     --streak-bg:   #2a1f0e;
+}
+
 body {
     margin: 0;
     padding: 0;
