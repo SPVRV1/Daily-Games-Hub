@@ -12,7 +12,9 @@ export default function Navbar({ activeLink = "home" }: NavbarProps) {
 
     return (
         <nav className="navbar">
-            <span className="navbar-brand">Daily Games Hub</span>
+            <span className="navbar-brand">
+                Daily <span className="brand-games">Games</span><span className="brand-hub">Hub</span>
+            </span>
             <div className="navbar-links">
                 <Link to="/" className={`nav-link${activeLink === "home" ? " active" : ""}`}>Home</Link>
                 <Link to="/friends" className={`nav-link${activeLink === "friends" ? " active" : ""}`}>Friends</Link>
