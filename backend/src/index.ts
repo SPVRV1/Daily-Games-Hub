@@ -2,6 +2,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { MongoClient } from "mongodb";
+import friendsRoutes from "./routes/friends.js";
 
 dotenv.config();
 
@@ -15,6 +16,18 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 
+app.use("/api/friends", async (req, res, next) => {
+    try {
+        const db = await getMongoDb();
+        return friendsRoutes(db)(req, res, next);
+    } catch (error) {
+        return res.status(503).json({
+            ok: false,
+            error: "Database connection failed",
+        });
+    }
+});
+
 const getMongoClient = async (): Promise<MongoClient> => {
     if (!mongoUri) {
         throw new Error("MONGO_URI is not configured");
@@ -27,6 +40,11 @@ const getMongoClient = async (): Promise<MongoClient> => {
     await mongoClient.connect();
 
     return mongoClient;
+};
+
+const getMongoDb = async () => {
+    const client = await getMongoClient();
+    return client.db(mongoDbName);
 };
 
 app.get("/api/health", (_req, res) => {
