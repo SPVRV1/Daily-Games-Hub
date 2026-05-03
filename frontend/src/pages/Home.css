@@ -67,8 +67,16 @@
     font-family: var(--font-heading);
     font-size: 17px;
     font-weight: 700;
-    color: var(--text-dark);
+    color: #405469;
     letter-spacing: -0.3px;
+}
+
+.brand-games {
+    color: var(--text-dark);
+}
+
+.brand-hub {
+    color: var(--primary);
 }
 
 .navbar-links {
@@ -293,9 +301,11 @@
     position: relative;
 }
 
-.game-banner i {
-    font-size: 44px;
-    color: white;
+.game-icon-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
 }
 
 .completed-badge {

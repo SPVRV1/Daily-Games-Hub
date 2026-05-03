@@ -36,7 +36,7 @@ const GAMES: Game[] = [
         name: "Wordle",
         description: "Guess the 5-letter word in 6 attempts",
         gradient: "linear-gradient(135deg, #1db756, #158a40)",
-        icon: "fi-rr-file-word",
+        icon: "/icons/Wordle1.png",
         completed: true,
         result: "completed in 3rd attempt",
     },
@@ -44,37 +44,37 @@ const GAMES: Game[] = [
         name: "Flagle",
         description: "Identify the country from its flag",
         gradient: "linear-gradient(135deg, #3377f2, #1a5ccf)",
-        icon: "fi-rr-flag",
+        icon: "/icons/Flagle1.png",
         completed: true,
         result: "Completed in 4th attempt",
     },
     {
         name: "More or Less",
         description: "Compare values and guess which is higher",
-        gradient: "linear-gradient(135deg, #f38e10, #ffbb69ff)",
-        icon: "fi-rr-balance-scale-left",
+        gradient: "linear-gradient(135deg, #f38e10, #d4700a)",
+        icon: "/icons/MoreOrLess1.png",
         completed: false,
     },
     {
         name: "Worldle",
         description: "Identify the country from its silhouette",
-        gradient: "linear-gradient(135deg, #1ca0e2, #5ac8ffff)",
-        icon: "fi-rr-globe",
+        gradient: "linear-gradient(135deg, #14b8a6, #0d9488)",
+        icon: "/icons/Worldle1.png",
         completed: false,
     },
     {
         name: "Math Sprint",
         description: "Solve math problems as fast as you can",
-        gradient: "linear-gradient(135deg, #f38e10, #f5da0f)",
-        icon: "fi-rr-calculator",
+        gradient: "linear-gradient(135deg, #f5da0f, #f38e10)",
+        icon: "/icons/MathSprint1.png",
         completed: true,
         result: "Completed in 1:23",
     },
     {
         name: "Songless",
         description: "Guess the song from a short audio clip",
-        gradient: "linear-gradient(135deg, #8752f4, #ae85ffff)",
-        icon: "fi-rr-headphones",
+        gradient: "linear-gradient(135deg, #a855f7, #7c3aed)",
+        icon: "/icons/Songless1.png",
         completed: false,
     },
 ];
@@ -86,7 +86,9 @@ export default function Home() {
         <div className={`home${dark ? " dark" : ""}`}>
             {/* Navbar */}
             <nav className="navbar">
-                <span className="navbar-brand">Daily Games Hub</span>
+                <span className="navbar-brand">
+                    Daily <span className="brand-games">Games</span><span className="brand-hub">Hub</span>
+                </span>
                 <div className="navbar-links">
                     <a href="#" className="nav-link active">Home</a>
                     <a href="#" className="nav-link">Friends</a>
@@ -152,7 +154,7 @@ export default function Home() {
                             key={game.name}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>
-                                <i className={`fi ${game.icon}`} />
+                                <img src={game.icon} alt={game.name} className="game-icon-img" />
                                 {game.completed && (
                                     <span className="completed-badge">
                                         <i className="fi fi-rr-check" />
