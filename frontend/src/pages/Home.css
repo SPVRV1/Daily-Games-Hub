@@ -399,9 +399,19 @@
 }
 
 @media (max-width: 600px) {
-    .content     { padding: 24px 16px 40px; }
-    .navbar      { padding: 0 16px; }
-    .navbar-links { display: none; }
-    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-    .games-grid  { grid-template-columns: 1fr; }
+    .content {
+        padding: 24px 16px 40px;
+    }
+    .navbar {
+        padding: 0 16px;
+    }
+    .navbar-links {
+        display: none;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
 }
