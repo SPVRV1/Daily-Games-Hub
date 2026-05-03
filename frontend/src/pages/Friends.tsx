@@ -1,7 +1,18 @@
 import { useState } from "react";
 import "./Friends.css";
 
+// Backend endpoints for friendships are prepared and tested:
+//
+// POST   /api/friends/request
+// GET    /api/friends/:userId
+// GET    /api/friends/:userId/requests
+// PATCH  /api/friends/:friendshipId/status
+// DELETE /api/friends/:friendshipId
+
+
 //example info
+// backend call:
+// GET /api/friends/:userId
 const FRIENDS = [
     { id: 1, name: "alex_games",  streak: 14, games: "5/6", color: "#f38e10" },
     { id: 2, name: "sarah_pro",   streak: 21, games: "6/6", color: "#8752f4" },
@@ -9,6 +20,8 @@ const FRIENDS = [
     { id: 4, name: "emma_plays",  streak: 30, games: "5/6", color: "#ed4675" },
 ];
 
+// backend call:
+// GET /api/friends/:userId/requests
 const REQUESTS = [
     { id: 5, name: "daily_gamer", streak: 5,  games: "3/6", color: "#1db756" },
     { id: 6, name: "puzzle_king", streak: 12, games: "6/6", color: "#505cea" },
@@ -106,12 +119,17 @@ export default function Friends() {
                             <div className="fp-actions">
                                 {tab === "requests" ? (
                                     <>
+                                        {/* PATCH /api/friends/:friendshipId/status
+                                            Body: { status: "accepted" } or { status: "rejected" }
+                                        */}
                                         <button className="fp-btn-view">Accept</button>
                                         <button className="fp-btn-remove">Decline</button>
                                     </>
                                 ) : (
                                     <>
                                         <button className="fp-btn-view">View Profile</button>
+
+                                        {/* DELETE /api/friends/:friendshipId*/}
                                         <button
                                             className="fp-btn-remove"
                                             onClick={() => setFriends(prev => prev.filter(x => x.id !== f.id))}
