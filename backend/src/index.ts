@@ -4,7 +4,10 @@ dotenv.config();
 import cors from "cors";
 import express from "express";
 import { MongoClient } from "mongodb";
+
+import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
+
 
 export const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -16,6 +19,18 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 app.use("/api/user", userRoutes);
+
+app.use("/api/friends", async (req, res, next) => {
+    try {
+        const db = await getMongoDb();
+        return friendsRoutes(db)(req, res, next);
+    } catch (error) {
+        return res.status(503).json({
+            ok: false,
+            error: "Database connection failed",
+        });
+    }
+});
 
 const getMongoClient = async (): Promise<MongoClient> => {
     if (!mongoUri) {
@@ -29,6 +44,11 @@ const getMongoClient = async (): Promise<MongoClient> => {
     await mongoClient.connect();
 
     return mongoClient;
+};
+
+const getMongoDb = async () => {
+    const client = await getMongoClient();
+    return client.db(mongoDbName);
 };
 
 app.get("/api/health", (_req, res) => {
