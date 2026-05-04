@@ -4,6 +4,7 @@ dotenv.config();
 import cors from "cors";
 import express from "express";
 import { MongoClient } from "mongodb";
+import gameRoutes from './routes/game.routes.js';
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
@@ -19,6 +20,7 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 app.use("/api/user", userRoutes);
+app.use('/api/games', gameRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {
