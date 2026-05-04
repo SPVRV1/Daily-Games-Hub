@@ -1,5 +1,4 @@
 import Navbar from "../components/Navbar";
-import { useState } from "react";
 import "./Home.css";
 
 const STATS = [
@@ -81,10 +80,8 @@ const GAMES: Game[] = [
 ];
 
 export default function Home() {
-    const [dark, setDark] = useState(false);
-
     return (
-        <div className={`home${dark ? " dark" : ""}`}>
+        <div className={"home"}>
             {/* Navbar */}
             <Navbar activeLink="home" />
 
