@@ -7,7 +7,6 @@ import { MongoClient } from "mongodb";
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
-import wordleRoutes from "./routes/wordle.js";
 
 
 export const app = express();
@@ -20,7 +19,6 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 app.use("/api/user", userRoutes);
-app.use("/api/wordle", wordleRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {
