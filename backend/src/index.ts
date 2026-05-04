@@ -20,6 +20,7 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 app.use("/api/user", userRoutes);
+app.use('/api/games', gameRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {
@@ -46,7 +47,6 @@ const getMongoClient = async (): Promise<MongoClient> => {
 
     return mongoClient;
 };
-app.use('/api/games', gameRoutes);
 
 const getMongoDb = async () => {
     const client = await getMongoClient();
