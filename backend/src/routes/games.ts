@@ -15,12 +15,10 @@ export default function gamesRoutes(db: Db) {
     const router = Router();
     const games = db.collection<Game>("games");
 
-    //GET all active games
-    router.get("/", async (_req, res) => {
+    // GET all active games
+    router.get("/active", async (_req, res) => {
         try {
-            const result = await games
-                .find({ is_active: true })
-                .toArray();
+            const result = await games.find({ is_active: true }).toArray();
 
             res.json({
                 ok: true,
@@ -29,12 +27,29 @@ export default function gamesRoutes(db: Db) {
         } catch (error) {
             res.status(500).json({
                 ok: false,
-                error: "Failed to fetch games",
+                error: "Failed to fetch active games",
             });
         }
     });
 
-    //GET game by id
+    // GET all games
+    router.get("/all", async (_req, res) => {
+        try {
+            const result = await games.find({}).toArray();
+
+            res.json({
+                ok: true,
+                games: result,
+            });
+        } catch (error) {
+            res.status(500).json({
+                ok: false,
+                error: "Failed to fetch all games",
+            });
+        }
+    });
+
+    // GET game by id
     router.get("/:id", async (req, res) => {
         try {
             const id = Number(req.params.id);
