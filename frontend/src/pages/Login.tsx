@@ -73,7 +73,7 @@ export default function Login() {
   };
 
   return (
-    <div className="container auth-container">
+    <div className="container auth-container w-full">
       <Navbar activeLink="home" variant="auth" />
       <div className="auth-content">
         {/* Title */}
