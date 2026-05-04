@@ -1,0 +1,417 @@
+/* ── Spec palette (5 official colors + supporting tints) ─── */
+:root {
+    --primary:    #3377f2;
+    --dark-base:  #2d2f3f;
+    --white:      #ffffff;
+    --green:      #1db756;
+    --orange:     #f38e10;
+
+    --bg:         #eaecef;
+    --border:     #eaecef;
+    --text:       #5a5d72;
+    --text-dark:  #2d2f3f;
+
+    --card-bg:    #ffffff;
+    --navbar-bg:  #ffffff;
+    --green-bg:   #edfaf3;
+    --primary-bg: #eef4ff;
+    --streak-bg:  #fff8f0;
+
+    --font-heading: 'Poppins', system-ui, sans-serif;
+    --font-body:    'Inter', system-ui, sans-serif;
+    --font-mono:    'Roboto Mono', monospace;
+}
+
+/* ── Dark mode ───────────────────────────────────────────── */
+.dark {
+    --bg:         #181a26;
+    --card-bg:    #2d2f3f;
+    --navbar-bg:  #23253a;
+    --text:       #9093a8;
+    --text-dark:  #ffffff;
+    --border:     #3a3d54;
+    --green-bg:   #0d2419;
+    --primary-bg: #1a2240;
+    --streak-bg:  #2a1f0e;
+}
+
+/* ── Layout ──────────────────────────────────────────────── */
+.home {
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--text);
+    transition: background 0.25s ease, color 0.25s ease;
+}
+
+.home * {
+    transition: background 0.25s ease, color 0.25s ease,
+                border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* ── Navbar ──────────────────────────────────────────────── */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--navbar-bg);
+    padding: 0 32px;
+    height: 60px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.navbar-brand {
+    font-family: var(--font-heading);
+    font-size: 17px;
+    font-weight: 700;
+    color: #405469;
+    letter-spacing: -0.3px;
+}
+
+.brand-games {
+    color: var(--text-dark);
+}
+
+.brand-hub {
+    color: var(--primary);
+}
+
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-link {
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    padding: 6px 16px;
+    border-radius: 12px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-link:hover {
+    background: var(--bg);
+    color: var(--text-dark);
+}
+
+.nav-link.active {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    position: relative;
+    transition: color 0.15s;
+}
+
+.icon-btn:hover {
+    color: var(--text-dark);
+}
+
+.icon-btn i {
+    font-size: 18px;
+}
+
+.notif-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--orange);
+    border-radius: 50%;
+    border: 2px solid var(--navbar-bg);
+}
+
+.avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--white);
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* ── Content ─────────────────────────────────────────────── */
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 32px 60px;
+}
+
+/* ── Welcome ─────────────────────────────────────────────── */
+.welcome {
+    margin-bottom: 28px;
+}
+
+.welcome h1 {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.welcome p {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+    margin: 0;
+}
+
+/* ── Stats ───────────────────────────────────────────────── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card--streak {
+    background: var(--streak-bg);
+    border-left: 4px solid var(--orange);
+}
+
+.stat-card--streak .stat-value {
+    font-size: 36px;
+    color: var(--orange);
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.stat-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.stat-label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: -0.5px;
+}
+
+/* Progress bar */
+.progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--green));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+/* ── Games Section ───────────────────────────────────────── */
+.section-title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 18px;
+    letter-spacing: -0.3px;
+}
+
+.games-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.game-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.game-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.game-card--completed {
+    background: var(--green-bg);
+}
+
+.game-banner {
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.game-icon-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+}
+
+.completed-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    color: #2d2f3f;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    backdrop-filter: blur(4px);
+}
+
+.completed-badge i {
+    font-size: 12px;
+    color: var(--green);
+}
+
+.dark .completed-badge {
+    color: #2d2f3f;
+}
+
+.game-info {
+    padding: 14px 16px 16px;
+}
+
+.game-info--pending {
+    background: var(--primary-bg);
+}
+
+.game-name {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 4px;
+}
+
+.game-desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    margin: 0 0 10px;
+    line-height: 1.4;
+}
+
+.game-result {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--green);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.game-result i {
+    font-size: 13px;
+}
+
+.game-not-played {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--orange);
+}
+
+/* dark completed card text */
+.dark .game-card--completed .game-name {
+    color: #c8f0d8;
+}
+
+.dark .game-card--completed .game-desc {
+    color: #7ab890;
+}
+
+.dark .game-card--completed .game-result {
+    color: #1db756;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
+    .games-grid  { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+    .content {
+        padding: 24px 16px 40px;
+    }
+    .navbar {
+        padding: 0 16px;
+    }
+    .navbar-links {
+        display: none;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .games-grid {
+        grid-template-columns: 1fr;
+    }
+}
