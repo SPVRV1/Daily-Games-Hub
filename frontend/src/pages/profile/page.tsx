@@ -93,7 +93,7 @@ const ProfilePage = () => {
 
     return (
         <div className={`min-h-screen transition-colors ${isDark ? "bg-slate-950" : "bg-slate-100"}`}>
-            <Navbar activeLink="home" />
+            <Navbar activeLink="none" />
 
             <main className="mx-auto w-full max-w-350 px-4 py-6 sm:px-6 lg:px-8">
                 <div className="space-y-5">

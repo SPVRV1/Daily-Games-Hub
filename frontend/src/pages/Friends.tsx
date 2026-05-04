@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./Friends.css";
+import Navbar from "../components/Navbar";
 
 // Backend endpoints for friendships are prepared and tested:
 //
@@ -39,40 +40,9 @@ export default function Friends() {
   return (
     <div className={`home${dark ? " dark" : ""}`}>
       {/* Navbar */}
-      <nav className="navbar">
-        <span className="navbar-brand">
-          Daily <span className="brand-games">Games</span>
-          <span className="brand-hub">Hub</span>
-        </span>
-        <div className="navbar-links">
-          <a href="#" className="nav-link ">
-            Home
-          </a>
-          <a href="#" className="nav-link active">
-            Friends
-          </a>
-          <a href="#" className="nav-link">
-            Statistics
-          </a>
-        </div>
-        <div className="navbar-right">
-          <button
-            className="icon-btn"
-            aria-label="Toggle theme"
-            onClick={() => setDark(!dark)}
-          >
-            <i className={`fi ${dark ? "fi-rr-sun" : "fi-rr-moon"}`} />
-          </button>
-          <button className="icon-btn" aria-label="Notifications">
-            <i className="fi fi-rr-bell" />
-            <span className="notif-dot" />
-          </button>
-          <div className="avatar">Z</div>
-          <button className="icon-btn" aria-label="Logout">
-            <i className="fi fi-rr-sign-out-alt" />
-          </button>
-        </div>
-      </nav>
+      <div className="friends">
+        <Navbar activeLink="friends" />
+      </div>
 
       <main className="content">
         <div className="welcome">

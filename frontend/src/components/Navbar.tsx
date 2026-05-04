@@ -4,10 +4,10 @@ import { useTheme } from "../context/ThemeContext";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 
 type NavbarProps = {
-    activeLink?: "home" | "friends" | "statistics";
+    activeLink?: "home" | "friends" | "statistics" | "none";
 };
 
-export default function Navbar({ activeLink = "home" }: NavbarProps) {
+export default function Navbar({ activeLink = "none" }: NavbarProps) {
     const { isDark, toggleTheme } = useTheme();
 
     return (
