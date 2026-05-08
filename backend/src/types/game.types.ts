@@ -3,7 +3,7 @@ export type GameType = "wordle" | "flagle" | "worldle" | "moreless" | "songless"
 export interface IGameChallange {
     gameType: GameType,
     date: string, // DD-MM-YYYY
-    challengeData: Record<string, number>;
+    challengeData: any;
 }
 
 export interface IGameResult {
