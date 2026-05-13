@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import Navbar from "../components/Navbar";
 import "./Friends.css";
 
 type FriendItem = {
