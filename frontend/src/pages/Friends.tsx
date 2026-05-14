@@ -10,6 +10,8 @@ type FriendItem = {
     username?: string;
     email?: string;
     avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
   };
 };
 
@@ -20,6 +22,8 @@ type RequestItem = {
     username?: string;
     email?: string;
     avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
   };
 };
 
@@ -29,6 +33,8 @@ type SearchResultItem = {
     username?: string;
     email?: string;
     avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
   };
   relation: {
     friendship_id?: string;
@@ -39,7 +45,14 @@ type SearchResultItem = {
 };
 
 const API = import.meta.env.VITE_API_URL ?? "";
-const AVATAR_COLORS = ["#f38e10", "#8752f4", "#1ca0e2", "#ed4675", "#1db756", "#505cea"];
+const AVATAR_COLORS = [
+  "#f38e10",
+  "#8752f4",
+  "#1ca0e2",
+  "#ed4675",
+  "#1db756",
+  "#505cea",
+];
 
 const getAvatarColor = (seed: number) => {
   const index = Math.abs(seed) % AVATAR_COLORS.length;
@@ -117,17 +130,9 @@ export default function Friends() {
     }
   }, [search]);
 
-  const filteredFriends = friends.filter((friend) =>
-    (friend.user.username ?? `User ${friend.user._id}`)
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+  const filteredFriends = friends;
 
-  const filteredRequests = requests.filter((request) =>
-    (request.requester.username ?? `User ${request.requester._id}`)
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+  const filteredRequests = requests;
 
   const filtered = tab === "friends" ? filteredFriends : filteredRequests;
 
@@ -138,13 +143,16 @@ export default function Friends() {
     try {
       setActionLoadingId(friendshipId);
 
-      const response = await fetch(`${API}/api/friends/${friendshipId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API}/api/friends/${friendshipId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
         },
-        body: JSON.stringify({ status }),
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to update request to ${status}`);
@@ -275,19 +283,25 @@ export default function Friends() {
           >
             My Friends ({friends.length})
           </button>
-          <button
-            className={`fp-tab${tab === "requests" ? " fp-tab--active" : ""}`}
-            onClick={() => setTab("requests")}
-          >
-            Friend Requests
-            <span className="fp-badge">{requests.length}</span>
-          </button>
+          <div className="fp-tab-wrapper">
+            <button
+              className={`fp-tab${tab === "requests" ? " fp-tab--active" : ""}`}
+              onClick={() => setTab("requests")}
+            >
+              Friend Requests
+            </button>
+
+            {requests.length > 0 && (
+              <span className="fp-badge">{requests.length}</span>
+            )}
+          </div>
         </div>
 
         <div className="fp-card">
           {loading && <p className="fp-empty">Loading...</p>}
 
-          {!loading && isShowingFriends &&
+          {!loading &&
+            isShowingFriends &&
             filtered.map((item, i) => {
               const profile = "user" in item ? item.user : item.requester;
 
@@ -307,8 +321,12 @@ export default function Friends() {
                       {profile.username ?? `User ${profile._id}`}
                     </span>
                     <div className="fp-meta">
-                      <span className="fp-streak">ID: {profile._id}</span>
-                      <span className="fp-games">{profile.email ?? "No email"}</span>
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
                     </div>
                   </div>
                   <div className="fp-actions">
@@ -332,7 +350,8 @@ export default function Friends() {
               );
             })}
 
-          {!loading && isShowingRequests &&
+          {!loading &&
+            isShowingRequests &&
             filtered.map((item, i) => {
               const profile = "user" in item ? item.user : item.requester;
 
@@ -352,8 +371,12 @@ export default function Friends() {
                       {profile.username ?? `User ${profile._id}`}
                     </span>
                     <div className="fp-meta">
-                      <span className="fp-streak">ID: {profile._id}</span>
-                      <span className="fp-games">{profile.email ?? "No email"}</span>
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
                     </div>
                   </div>
                   <div className="fp-actions">
@@ -380,14 +403,17 @@ export default function Friends() {
               );
             })}
 
-          {!loading && searchMode &&
+          {!loading &&
+            searchMode &&
             searchResults.map((item, i) => {
               const profile = item.user;
               const relation = item.relation;
               const isPendingIncoming =
-                relation?.status === "pending" && relation.receiver_id === userId;
+                relation?.status === "pending" &&
+                relation.receiver_id === userId;
               const isPendingOutgoing =
-                relation?.status === "pending" && relation.requester_id === userId;
+                relation?.status === "pending" &&
+                relation.requester_id === userId;
               const isAccepted = relation?.status === "accepted";
 
               return (
@@ -406,8 +432,12 @@ export default function Friends() {
                       {profile.username ?? `User ${profile._id}`}
                     </span>
                     <div className="fp-meta">
-                      <span className="fp-streak">ID: {profile._id}</span>
-                      <span className="fp-games">{profile.email ?? "No email"}</span>
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
                     </div>
                   </div>
                   <div className="fp-actions">
@@ -421,7 +451,9 @@ export default function Friends() {
                         </button>
                         <button
                           className="fp-btn-remove"
-                          onClick={() => handleRemoveFriend(relation.friendship_id ?? "")}
+                          onClick={() =>
+                            handleRemoveFriend(relation.friendship_id ?? "")
+                          }
                           disabled={
                             !relation.friendship_id ||
                             actionLoadingId === relation.friendship_id
@@ -484,8 +516,8 @@ export default function Friends() {
             ((isShowingFriends && filtered.length === 0) ||
               (isShowingRequests && filtered.length === 0) ||
               (searchMode && searchResults.length === 0)) && (
-            <p className="fp-empty">No results found.</p>
-          )}
+              <p className="fp-empty">No results found.</p>
+            )}
         </div>
       </main>
     </div>
