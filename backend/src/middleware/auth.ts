@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { isBlacklisted } from "../utils/auth.js";
 
 export interface AuthRequest extends Request {
     user?: any;
@@ -13,6 +14,11 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
             ok: false,
             error: "No token provided",
         });
+        return;
+    }
+
+    if (isBlacklisted(token)) {
+        res.status(401).json({ ok: false, error: "Token has been invalidated" });
         return;
     }
 

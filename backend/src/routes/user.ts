@@ -7,6 +7,8 @@ import bcrypt from "bcrypt";
 import { sendResetEmail } from "../utils/mailer.js";
 import { createUser } from "../models/userFactory.js"
 import { registerSchema } from "../utils/validator.js";
+import { addToBlacklist } from "../utils/auth.js";
+import { Console, log } from "console";
 
 const router = Router();
 
@@ -216,6 +218,18 @@ router.post("/reset-password", async (req, res) => {
     } catch {
         res.status(500).json({ ok: false });
     }
+});
+
+router.post("/logout", verifyToken, (req: AuthRequest, res) => {
+    const token = req.headers.authorization?.split(" ")[1];
+    
+    if (!token) {
+        return res.status(400).json({ ok: false, error: "No token provided" });
+    }
+
+    addToBlacklist(token);
+
+    return res.json({ ok: true, message: "Logged out successfully" });
 });
 
 export default router;
