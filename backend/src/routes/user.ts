@@ -12,8 +12,8 @@ import { Console, log } from "console";
 
 const router = Router();
 
-router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
-//router.get("/data", async (_req, res) => {
+router.get("/data", async (_req, res) => {
+// router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
     try {
         const { id } = _req.query;
         const _id = Number(id);
@@ -27,7 +27,20 @@ router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
         }
 
         const collection = await getUsersCollection();
-        const user = await collection.findOne({ _id });
+        const user = await collection.findOne({ _id }, {
+                projection: {
+                    _id: 1,
+                    username: 1,
+                    email: 1,
+                    avatar_url: 1,
+                    current_streak: 1,
+                    longest_streak: 1,
+                    games_played: 1,
+                    num_achievements: 1,
+                    global_rank: 1,
+                    created_at: 1
+                }
+            });
 
         if (!user) {
             res.status(404).json({
@@ -46,6 +59,159 @@ router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
         res.status(500).json({
             ok: false,
             error: message,
+        });
+    }
+});
+
+// router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
+router.get("/data/statistics", async (_req, res) => {
+
+    try {
+        const { id } = _req.query;
+        const _id = Number(id);
+
+        if (!_id || isNaN(_id)) {
+            res.status(400).json({
+                ok: false,
+                error: "Valid ID query parameter is required",
+            });
+            return;
+        }
+
+        const collection = await getUsersCollection();
+
+        const user = await collection.findOne(
+            { _id },
+            {
+                projection: {
+                    games: 1,
+                    achievements: 1
+                }
+            }
+        );
+
+        if (!user) {
+            res.status(404).json({
+                ok: false,
+                error: "User not found",
+            });
+            return;
+        }
+
+        const games = user.games || [];
+
+        // -----------------------------------------
+        // TEDENSKA STATISTIKA (pon=0 ... ned=6)
+        // -----------------------------------------
+
+        const week = [0, 0, 0, 0, 0, 0, 0];
+
+        const now = new Date();
+
+        // izračun ponedeljka tekočega tedna
+        const monday = new Date(now);
+
+        const day = monday.getDay();
+        // JS: ned=0, pon=1 ...
+        const offset = day === 0 ? -6 : 1 - day;
+
+        monday.setDate(monday.getDate() + offset);
+        monday.setHours(0,0,0,0);
+
+        const nextMonday = new Date(monday);
+        nextMonday.setDate(nextMonday.getDate() + 7);
+
+        games.forEach(game => {
+
+            if (!game.completed)
+                return;
+
+            const played = new Date(game.datePlayed);
+
+            if (
+                played >= monday &&
+                played < nextMonday
+            ) {
+                let weekday = played.getDay();
+
+                // JS: ned=0 -> 6
+                weekday = weekday === 0
+                    ? 6
+                    : weekday - 1;
+
+                week[weekday]++;
+            }
+        });
+
+        // -----------------------------------------
+        // STATISTIKA POSAMEZNIH IGER
+        // -----------------------------------------
+
+        const statsMap: Record<string, {
+            totalAttempts:number;
+            totalTime:number;
+            gamesPlayed:number;
+        }> = {};
+
+        games.forEach(game => {
+
+            if (!statsMap[game.title]) {
+                statsMap[game.title] = {
+                    totalAttempts: 0,
+                    totalTime: 0,
+                    gamesPlayed: 0
+                };
+            }
+
+            statsMap[game.title].totalAttempts += game.attempts;
+            statsMap[game.title].totalTime += game.timeTaken;
+            statsMap[game.title].gamesPlayed++;
+        });
+
+        const gameStats = Object.entries(statsMap)
+            .map(([title, data]) => ({
+                title,
+
+                averageAttempts:
+                    Number(
+                        (
+                            data.totalAttempts /
+                            data.gamesPlayed
+                        ).toFixed(1)
+                    ),
+
+                averageTime:
+                    Number(
+                        (
+                            data.totalTime /
+                            data.gamesPlayed
+                        ).toFixed(1)
+                    ),
+
+                gamesPlayed:
+                    data.gamesPlayed
+            }));
+
+        res.json({
+            ok: true,
+            data: {
+                week,
+                games: gameStats,
+                achievements:
+                    user.achievements || []
+            }
+        });
+
+    } catch (error) {
+
+        const message =
+            error instanceof Error
+                ? error.message
+                : "Unknown error";
+
+        res.status(500).json({
+            ok:false,
+            error:message
         });
     }
 });
@@ -177,7 +343,7 @@ router.post("/reset-password", async (req, res) => {
 
         const collection = await getUsersCollection();
         const users = await collection.find({
-            resetPasswordExpires: {$gt: new Date()}
+            resetPasswordExpires: { $gt: new Date() }
         }).toArray();
 
         let found = null;
@@ -222,7 +388,7 @@ router.post("/reset-password", async (req, res) => {
 
 router.post("/logout", verifyToken, (req: AuthRequest, res) => {
     const token = req.headers.authorization?.split(" ")[1];
-    
+
     if (!token) {
         return res.status(400).json({ ok: false, error: "No token provided" });
     }

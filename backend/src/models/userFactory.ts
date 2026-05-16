@@ -30,6 +30,8 @@ export const createUser = (
         achievements: [],
         friends: [],
 
+        games: [],
+
         createdAt: now,
         updatedAt: now,
 
