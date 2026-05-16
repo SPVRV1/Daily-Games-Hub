@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProfilePage from "./pages/profile/page";
+import MathSprint from "./pages/MathSprint";
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/math-sprint" element={<MathSprint />} />
             </Routes>
         </BrowserRouter>
     );
