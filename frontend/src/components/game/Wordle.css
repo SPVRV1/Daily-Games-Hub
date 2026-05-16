@@ -1,0 +1,365 @@
+/* ── Main container ──────────────────────────────────────── */
+.page {
+    padding: 25px;
+    background-color: var(--green-bg);
+}
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.back-link {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.language-switch {
+    border-radius: 8px;
+    display: flex;
+    overflow: hidden;
+}
+
+.language-switch button {
+    font-size: 13px;
+    background: var(--white);
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.language-switch .active {
+    color: var(--white);
+    background: var(--green-lt);
+    border-color: var(--green-lt);
+}
+
+/* ── Wordle section───────────────────────────────────────── */
+.wordle-wrapper {
+    margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ── Wordle grid ─────────────────────────────────────────── */
+.wordle-grid {
+    padding: 20px 15px 0 15px;
+    display: grid;
+    justify-content: center;
+    gap: 15px;
+    grid-template-columns: repeat(5, 56px);
+}
+
+.wordle-game-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+}
+
+/* ── Tiles ───────────────────────────────────────────────── */
+.tile {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: var(--text-dark);
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tile.gray {
+    background: var(--input-text);
+    border-color: var(--input-text);
+}
+
+.tile.yellow {
+    background: var(--yellow);
+    border-color: var(--yellow);
+}
+
+.tile.green {
+    background: var(--green-key);
+    border-color: var(--green-key);
+}
+
+.tile.green,
+.tile.yellow,
+.tile.gray {
+    color: var(--white);
+    animation: flip 0.4s ease;
+}
+
+.tile.reveal {
+    animation: flip 0.4s ease;
+    transform-origin: center;
+}
+
+.tile.pop {
+    animation: pop 0.12s ease-in-out;
+}
+
+@keyframes pop {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+@keyframes flip {
+    0% { transform: rotateX(0deg); }
+    50% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0deg); }
+}
+
+/* ── Keyboard ────────────────────────────────────────────── */
+.keyboard {
+    margin: 20px;
+    gap: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.keyboard-row {
+    gap: 6px;
+    display: flex;
+    justify-content: center;
+}
+
+.key {
+    min-width: 34px;
+    height: 46px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--light-grey);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.key.large {
+    padding: 0 14px;
+}
+
+.key.gray {
+    color: var(--white);
+    background: var(--input-text);
+}
+
+.key.yellow {
+    color: var(--white);
+    background: var(--yellow);
+}
+
+.key.green {
+    color: var(--white);
+    background: var(--green-key);
+}
+
+/* ── Toast ───────────────────────────────────────────────── */
+.toast {
+    top: 50%;
+    left: 50%;
+    z-index: 999;
+    position: fixed;
+    transform: translate(-50%, -50%);
+
+    color: var(--black);
+    font-size: 14px;
+    font-weight: 600;
+
+    background: var(--white);
+    padding: 14px 22px;
+    border-radius: 10px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+
+    animation: toastFade 1.8s ease forwards;
+}
+
+/* ── Result ──────────────────────────────────────────────── */
+.result-overlay {
+    inset: 0;
+    z-index: 1000;
+    position: fixed;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(3px);
+}
+
+.result-modal {
+    width: 90%;
+    max-width: 320px;
+
+    background: white;
+    border-radius: 16px;
+
+    padding: 28px 24px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+
+    animation: modalPop 0.25s ease;
+}
+
+.result-modal h2 {
+    color: black;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.result-modal button {
+    border: none;
+    cursor: pointer;
+
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+
+    border-radius: 10px;
+    background: var(--green-key);
+
+    padding: 12px 20px;
+
+    transition: 0.2s;
+}
+
+.result-modal button:hover {
+    opacity: 0.9;
+}
+
+@keyframes modalPop {
+    0% {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes toastFade {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 10px));
+    }
+
+    10% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% - 10px));
+    }
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .page {
+        padding: 16px;
+    }
+
+    .wordle-grid {
+        padding: 15px 10px 0 10px;
+        gap: 10px;
+        grid-template-columns: repeat(5, 48px);
+    }
+
+    .tile {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+        border-radius: 7px;
+    }
+
+    .keyboard {
+        margin: 16px 10px;
+        gap: 6px;
+    }
+
+    .key {
+        min-width: 30px;
+        height: 42px;
+        font-size: 11px;
+        border-radius: 6px;
+    }
+
+    .key.large {
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page {
+        padding: 12px;
+    }
+
+    .top-row {
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .back-link {
+        font-size: 13px;
+    }
+
+    .language-switch button {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .wordle-grid {
+        padding: 12px 5px 0 5px;
+        gap: 8px;
+        grid-template-columns: repeat(5, 40px);
+    }
+
+    .tile {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border-radius: 6px;
+    }
+
+    .keyboard {
+        margin: 12px 5px;
+        gap: 5px;
+    }
+
+    .keyboard-row {
+        gap: 4px;
+    }
+
+    .key {
+        min-width: 26px;
+        height: 38px;
+        font-size: 10px;
+        border-radius: 5px;
+    }
+
+    .key.large {
+        padding: 0 8px;
+    }
+}

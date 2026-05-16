@@ -3,6 +3,8 @@
 /* ── Palette variables ───────────────────────────────────── */
 :root {
     --white: #ffffff;
+    --light-grey: #d1d5dB;
+    --black: #000;
     --bg: #eaecef;
     --text: #414452;
     --text-dark: #2d2f3f;
@@ -18,8 +20,10 @@
 
     --green: #1db756;
     --green-lt: #22c55e;
+    --green-key: #6ca965;
     --green-bg: #f0fdf4;
 
+    --yellow: #c8b653;
     --orange: #f38e10;
     --pink: #ed4675;
     --purple: #8752f4;
