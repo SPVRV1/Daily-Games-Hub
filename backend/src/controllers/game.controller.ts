@@ -69,6 +69,21 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
 
         if (existing) return res.status(409).json({ message: 'Already submitted today' });
 
+        // Compute authoritative score for mathsprint: primary factor = correct answers, secondary = time bonus
+        let finalScore = typeof score === 'number' ? score : 0;
+        if (gameType === 'mathsprint') {
+            const challenge = generateMathSprintChallenge(today);
+            const timeLimit = challenge.challengeData.time_limit_seconds ?? 60;
+            const correct = Number(correct_answers ?? 0);
+            const timeUsed = Number(time_seconds ?? timeLimit);
+
+            const base = correct * 100; // 100 points per correct answer
+            const timeFactor = Math.max(0, (timeLimit - Math.min(timeUsed, timeLimit)) / timeLimit);
+            const timeBonus = Math.round(timeFactor * 50); // up to 50 bonus points for speed
+
+            finalScore = base + timeBonus;
+        }
+
         const result = await GameResult.create({
             user_id: req.user?._id,
             challenge_id: resolvedChallengeId,
@@ -76,7 +91,7 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
             attempts_used,
             correct_answers,
             time_seconds,
-            score,
+            score: finalScore,
         });
 
         res.status(201).json(result);
