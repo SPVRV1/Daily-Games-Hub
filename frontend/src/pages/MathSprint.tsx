@@ -1,28 +1,43 @@
 import { useState, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
+import GamePage from "../components/game/GamePage";
+import { GameChallenge, GameResult } from "../types/game.types";
 import "./MathSprint.css";
 
-type Screen = "idle" | "playing" | "finished";
-type Question = { text: string; answer: number };
+type Screen = "idle" | "playing";
 
-function generateQuestion(): Question {
-    const ops = ["+", "-", "×", "÷"];
-    const op = ops[Math.floor(Math.random() * ops.length)];
-    let a: number, b: number, answer: number;
-    if (op === "+")      { a = Math.floor(Math.random()*50)+1;  b = Math.floor(Math.random()*50)+1;  answer = a+b; }
-    else if (op === "-") { a = Math.floor(Math.random()*50)+10; b = Math.floor(Math.random()*a)+1;   answer = a-b; }
-    else if (op === "×") { a = Math.floor(Math.random()*12)+1;  b = Math.floor(Math.random()*12)+1;  answer = a*b; }
-    else                 { b = Math.floor(Math.random()*11)+1;  answer = Math.floor(Math.random()*11)+1; a = b*answer; }
-    return { text: `${a} ${op} ${b} = ?`, answer };
+interface MathSprintQuestion {
+    id: number;
+    left: number;
+    right: number;
+    operator: string;
+    expression: string;
+    answer: number;
 }
 
-export default function MathSprint() {
+interface MathSprintData {
+    title: string;
+    total_questions: number;
+    time_limit_seconds: number;
+    questions: MathSprintQuestion[];
+}
+
+function MathSprintGame({
+    challenge,
+    onFinish,
+}: {
+    challenge: GameChallenge;
+    onFinish: (result: GameResult) => void;
+}) {
+    const data = challenge.challengeData as unknown as MathSprintData;
+    const questions = data.questions;
+    const timeLimit = data.time_limit_seconds ?? 60;
+
     const [screen, setScreen] = useState<Screen>("idle");
-    const [timeLeft, setTimeLeft] = useState(60);
-    const [score, setScore] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(timeLimit);
     const [correct, setCorrect] = useState(0);
     const [wrong, setWrong] = useState(0);
-    const [question, setQuestion] = useState<Question>(generateQuestion());
+    const [currentIndex, setCurrentIndex] = useState(0);
     const [inputValue, setInputValue] = useState("");
     const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
 
@@ -34,25 +49,56 @@ export default function MathSprint() {
         if (screen !== "playing") return;
         timerRef.current = setInterval(() => {
             setTimeLeft((t) => {
-                if (t <= 1) { clearInterval(timerRef.current!); setScreen("finished"); return 0; }
+                if (t <= 1) {
+                    clearInterval(timerRef.current!);
+                    return 0;
+                }
                 return t - 1;
             });
         }, 1000);
         return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [screen]);
 
+
+    useEffect(() => {
+        if (timeLeft === 0 && screen === "playing") {
+            onFinish({
+                challenge_id: challenge.challengeData.challenge_id as string,
+                score: 0,
+                correct_answers: correct,
+                time_seconds: timeLimit,
+                attempts_used: correct + wrong,
+                completed: correct > 0,
+            });
+        }
+    }, [timeLeft]);
+
+    useEffect(() => {
+        if (screen === "playing" && currentIndex >= questions.length) {
+            clearInterval(timerRef.current!);
+            const timeUsed = timeLimit - timeLeft;
+            onFinish({
+                challenge_id: challenge.challengeData.challenge_id as string,
+                score: 0,
+                correct_answers: correct,
+                time_seconds: timeLimit,
+                attempts_used: correct + wrong,
+                completed: correct > 0,
+            });
+        }
+    }, [currentIndex]);
+
     useEffect(() => {
         if (screen === "playing") inputRef.current?.focus();
-    }, [screen, question]);
+    }, [screen, currentIndex]);
 
     function startGame() {
-        setTimeLeft(60);
-        setScore(0);
+        setTimeLeft(timeLimit);
         setCorrect(0);
         setWrong(0);
+        setCurrentIndex(0);
         setInputValue("");
         setFeedback(null);
-        setQuestion(generateQuestion());
         setScreen("playing");
     }
 
@@ -60,33 +106,33 @@ export default function MathSprint() {
         const val = parseInt(inputValue);
         if (isNaN(val)) return;
         if (feedbackRef.current) clearTimeout(feedbackRef.current);
-        if (val === question.answer) {
+
+        const currentQuestion = questions[currentIndex];
+        if (val === currentQuestion.answer) {
             setCorrect((c) => c + 1);
-            setScore((s) => s + 10);
             setFeedback("correct");
         } else {
             setWrong((w) => w + 1);
             setFeedback("wrong");
         }
+
         feedbackRef.current = setTimeout(() => {
             setInputValue("");
             setFeedback(null);
-            setQuestion(generateQuestion());
+            setCurrentIndex((i) => i + 1);
         }, 700);
     }
 
-    const accuracy = correct + wrong > 0 ? Math.round((correct / (correct + wrong)) * 100) : 0;
+    const currentQuestion = questions[currentIndex];
 
     return (
         <>
-            <Navbar activeLink="none" />
-
             {screen === "idle" && (
                 <div className="ms-screen">
-                    <a className="ms-back">← Back to Home</a>
+                    <a className="ms-back" href="/">← Back to Home</a>
                     <div className="ms-header">
                         <h1 className="ms-title">Math Sprint</h1>
-                        <p className="ms-subtitle">Solve as many math problems as you can in 60 seconds</p>
+                        <p className="ms-subtitle">Solve as many math problems as you can in {timeLimit} seconds</p>
                     </div>
                     <div className="ms-card">
                         <div className="ms-icon-circle">
@@ -94,7 +140,7 @@ export default function MathSprint() {
                         </div>
                         <h2 className="ms-ready-title">Ready to start?</h2>
                         <p className="ms-ready-desc">
-                            You'll have 60 seconds to solve as many math problems as possible.<br />
+                            You'll have {timeLimit} seconds to solve {data.total_questions} math problems.<br />
                             Test your speed and accuracy!
                         </p>
                         <button className="ms-btn-primary" onClick={startGame}>Start Game</button>
@@ -102,11 +148,11 @@ export default function MathSprint() {
                 </div>
             )}
 
-            {screen === "playing" && (
+            {screen === "playing" && currentQuestion && (
                 <div className="ms-screen">
                     <div className="ms-header">
                         <h1 className="ms-title">Math Sprint</h1>
-                        <p className="ms-subtitle">Solve as many problems as you can in 60 seconds</p>
+                        <p className="ms-subtitle">Solve as many problems as you can in {timeLimit} seconds</p>
                     </div>
                     <div className="ms-stats-row">
                         <div className={`ms-stat-box${timeLeft <= 10 ? " ms-stat-box--warning" : ""}`}>
@@ -114,18 +160,18 @@ export default function MathSprint() {
                             <div className="ms-stat-value ms-stat-value--orange">{timeLeft}s</div>
                         </div>
                         <div className="ms-stat-box">
-                            <div className="ms-stat-label">Score</div>
-                            <div className="ms-stat-value ms-stat-value--green">{score}</div>
+                            <div className="ms-stat-label">Question</div>
+                            <div className="ms-stat-value ms-stat-value--green">{currentIndex + 1}/{questions.length}</div>
                         </div>
                     </div>
                     <div className="ms-progress-wrap">
-                        <div className="ms-progress-fill" style={{ width: `${(timeLeft / 60) * 100}%` }} />
+                        <div className="ms-progress-fill" style={{ width: `${(timeLeft / timeLimit) * 100}%` }} />
                     </div>
                     <div className="ms-question-card">
-                        <div className="ms-question">{question.text}</div>
+                        <div className="ms-question">{currentQuestion.expression} = ?</div>
                         <div className={`ms-feedback${feedback ? ` ms-feedback--${feedback}` : ""}`}>
-                            {feedback === "correct" && "✓ Correct! +10"}
-                            {feedback === "wrong"   && `✗ Wrong — answer was ${question.answer}`}
+                            {feedback === "correct" && "✓ Correct!"}
+                            {feedback === "wrong" && `✗ Wrong — answer was ${currentQuestion.answer}`}
                         </div>
                         <input
                             ref={inputRef}
@@ -141,42 +187,20 @@ export default function MathSprint() {
                     </div>
                 </div>
             )}
+        </>
+    );
+}
 
-            {screen === "finished" && (
-                <div className="ms-screen">
-                    <div className="ms-overlay">
-                        <div className="ms-modal">
-                            <div className="ms-modal-emoji">
-                                {score >= 100 ? "🏆" : score >= 50 ? "🎉" : "💪"}
-                            </div>
-                            <h2 className="ms-modal-title">
-                                {score >= 100 ? "Outstanding!" : score >= 50 ? "Great job!" : "Keep practicing!"}
-                            </h2>
-                            <p className="ms-modal-subtitle">Here's how you did</p>
-                            <div className="ms-results-grid">
-                                <div className="ms-result-stat">
-                                    <div className="ms-result-label">Final Score</div>
-                                    <div className="ms-result-value ms-result-value--green">{score}</div>
-                                </div>
-                                <div className="ms-result-stat">
-                                    <div className="ms-result-label">Correct</div>
-                                    <div className="ms-result-value ms-result-value--orange">{correct}</div>
-                                </div>
-                                <div className="ms-result-stat">
-                                    <div className="ms-result-label">Wrong</div>
-                                    <div className="ms-result-value ms-result-value--pink">{wrong}</div>
-                                </div>
-                                <div className="ms-result-stat">
-                                    <div className="ms-result-label">Accuracy</div>
-                                    <div className="ms-result-value ms-result-value--blue">{accuracy}%</div>
-                                </div>
-                            </div>
-                            <button className="ms-btn-primary" onClick={startGame}>Play Again</button>
-                            <button className="ms-btn-secondary" onClick={() => setScreen("idle")}>Back</button>
-                        </div>
-                    </div>
-                </div>
-            )}
+export default function MathSprint() {
+    return (
+        <>
+            <Navbar activeLink="none" />
+            <GamePage
+                gameType="mathsprint"
+                renderGame={(challenge, onFinish) => (
+                    <MathSprintGame challenge={challenge} onFinish={onFinish} />
+                )}
+            />
         </>
     );
 }
