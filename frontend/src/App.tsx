@@ -6,20 +6,33 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProfilePage from "./pages/profile/page";
+import GamePage from "./components/game/GamePage";
+import Flagle from "./components/game/Flagle";
 
 function App() {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/friends" element={<Friends />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/profile" element={<ProfilePage />} />
-            </Routes>
-        </BrowserRouter>
-    );
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/friends" element={<Friends />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/flagle"
+          element={
+            <GamePage
+              gameType="flagle"
+              renderGame={(challenge, onFinish) => (
+                <Flagle data={challenge} onFinish={onFinish} />
+              )}
+            />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
