@@ -251,6 +251,7 @@ export default function Friends() {
 
   return (
     <div className={`home${dark ? " dark" : ""}`}>
+      {/* Navbar */}
       <div className="friends">
         <Navbar activeLink="friends" />
       </div>

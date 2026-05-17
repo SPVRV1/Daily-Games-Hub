@@ -1,0 +1,102 @@
+[
+  {
+    "id": "song_001",
+    "title": "Summer Breeze",
+    "artist": "Jahzzar",
+    "genre": "Jazz",
+    "previewUrl": "https://freepd.com/music/Summer%20Breeze.mp3",
+    "duration": 120,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_002",
+    "title": "Ambient Study",
+    "artist": "Sergey Cheremisinov",
+    "genre": "Ambient",
+    "previewUrl": "https://freepd.com/music/Ambient%20Study.mp3",
+    "duration": 180,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_003",
+    "title": "Electric Dreams",
+    "artist": "Kai Engel",
+    "genre": "Electronic",
+    "previewUrl": "https://freepd.com/music/Electric%20Dreams.mp3",
+    "duration": 150,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_004",
+    "title": "Folk Guitar",
+    "artist": "Podington Bear",
+    "genre": "Folk",
+    "previewUrl": "https://freepd.com/music/Folk%20Guitar.mp3",
+    "duration": 110,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_005",
+    "title": "Minimal Piano",
+    "artist": "Ólafur Arnalds",
+    "genre": "Classical",
+    "previewUrl": "https://freepd.com/music/Minimal%20Piano.mp3",
+    "duration": 140,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_006",
+    "title": "Urban Beat",
+    "artist": "Dyalla",
+    "genre": "Hip-Hop",
+    "previewUrl": "https://freepd.com/music/Urban%20Beat.mp3",
+    "duration": 120,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_007",
+    "title": "Rock Anthem",
+    "artist": "Nezihe Çevik",
+    "genre": "Rock",
+    "previewUrl": "https://freepd.com/music/Rock%20Anthem.mp3",
+    "duration": 160,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_008",
+    "title": "Latin Rhythm",
+    "artist": "La Campanella",
+    "genre": "Latin",
+    "previewUrl": "https://freepd.com/music/Latin%20Rhythm.mp3",
+    "duration": 130,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_009",
+    "title": "Indie Pop",
+    "artist": "Jef",
+    "genre": "Pop",
+    "previewUrl": "https://freepd.com/music/Indie%20Pop.mp3",
+    "duration": 125,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  },
+  {
+    "id": "song_010",
+    "title": "Electronic Chill",
+    "artist": "Ghostrifter Official",
+    "genre": "Electronic",
+    "previewUrl": "https://freepd.com/music/Electronic%20Chill.mp3",
+    "duration": 140,
+    "license": "Creative Commons",
+    "previewDuration": 30
+  }
+]

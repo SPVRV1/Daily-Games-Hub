@@ -4,9 +4,11 @@ dotenv.config();
 import cors from "cors";
 import express from "express";
 import { MongoClient } from "mongodb";
+import gameRoutes from './routes/game.routes.js';
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
+import gamesRoutes from "./routes/games.js";
 
 
 export const app = express();
@@ -19,11 +21,24 @@ let mongoClient: MongoClient | null = null;
 app.use(cors());
 app.use(express.json());
 app.use("/api/user", userRoutes);
+app.use('/api/games', gameRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {
         const db = await getMongoDb();
         return friendsRoutes(db)(req, res, next);
+    } catch (error) {
+        return res.status(503).json({
+            ok: false,
+            error: "Database connection failed",
+        });
+    }
+});
+
+app.use("/api/games", async (req, res, next) => {
+    try {
+        const db = await getMongoDb();
+        return gamesRoutes(db)(req, res, next);
     } catch (error) {
         return res.status(503).json({
             ok: false,
