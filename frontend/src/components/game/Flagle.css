@@ -1,0 +1,163 @@
+.flagle-page {
+    background: var(--primary-bg);
+    min-height: 100vh;
+}
+
+.content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.title{
+    text-align: center;
+}
+
+.title h1{
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;;
+}
+
+.title p{
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+    margin: 0;
+}
+
+.flag-container {
+    position: relative;
+    width: 420px;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+}
+
+.flag-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.flag-overlay {
+    position: absolute;
+    inset: 0;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+}
+
+.flag-overlay > * {
+    width: 100%;
+    height: 100%;
+}
+
+.tile {
+    background-clip: padding-box;
+    border: 1px solid var(--white);
+}
+
+.tile.grey {
+    background: var(--input-text);
+    border: 1px solid var(--white);
+}
+
+.tile.revealed {
+    background: transparent;
+    border: 1px solid var(--white);
+}
+
+
+.flagle-content{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--white);
+    padding: 24px;
+    border-radius: 16px;
+}
+
+.flagle-content input{
+    width: 300px;
+}
+
+.flagle-content input:focus{
+    outline: none;
+}
+
+.flagle-input{
+    margin: 20px 0 0 0;
+    width:auto;
+    border: 1px solid var(--input-text);
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.flagle-content p{
+    text-align: center;
+    margin: 6px 0 0 0;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text);
+}
+
+.attempt{
+    background: #fee2e2;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-top: 10px;
+    border: 1px solid var(--pink);
+    border-radius: 10px;
+}
+
+.attempt p{
+    margin-top: auto;
+    color: var(--pink);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.attempt :first-child{
+    margin-right: auto;
+}
+
+.attempt.correct{
+    background: var(--green-bg);
+    border: 1px solid var(--green);
+}
+
+.attempt.correct p{
+    color: var(--green);
+}
+
+.autocomplete{
+    position: absolute;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 4px;
+    width: 300px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background: var(--bg);
+}
+

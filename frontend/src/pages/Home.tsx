@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import "./Home.css";
+import { useNavigate } from "react-router-dom";
 
 const STATS = [
     {
@@ -80,6 +81,7 @@ const GAMES: Game[] = [
 ];
 
 export default function Home() {
+    const navigate = useNavigate();
     return (
         <div className={"home"}>
             {/* Navbar */}
@@ -128,6 +130,10 @@ export default function Home() {
                         <div
                             className={`game-card${game.completed ? " game-card--completed" : ""}`}
                             key={game.name}
+                            onClick={() => {
+                                if(game.name === "Flagle")
+                                    navigate("/flagle");
+                            }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>
                                 <img src={game.icon} alt={game.name} className="game-icon-img" />
