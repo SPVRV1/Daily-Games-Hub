@@ -1,41 +1,253 @@
-import { useState } from "react";
-import "./Friends.css";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import "./Friends.css";
 
-// Backend endpoints for friendships are prepared and tested:
-//
-// POST   /api/friends/request
-// GET    /api/friends/:userId
-// GET    /api/friends/:userId/requests
-// PATCH  /api/friends/:friendshipId/status
-// DELETE /api/friends/:friendshipId
+type FriendItem = {
+  friendship_id: string;
+  user: {
+    _id: number;
+    username?: string;
+    email?: string;
+    avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
+  };
+};
 
-//example info
-// backend call:
-// GET /api/friends/:userId
-const FRIENDS = [
-  { id: 1, name: "alex_games", streak: 14, games: "5/6", color: "#f38e10" },
-  { id: 2, name: "sarah_pro", streak: 21, games: "6/6", color: "#8752f4" },
-  { id: 3, name: "mike_master", streak: 7, games: "4/6", color: "#1ca0e2" },
-  { id: 4, name: "emma_plays", streak: 30, games: "5/6", color: "#ed4675" },
+type RequestItem = {
+  friendship_id: string;
+  requester: {
+    _id: number;
+    username?: string;
+    email?: string;
+    avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
+  };
+};
+
+type SearchResultItem = {
+  user: {
+    _id: number;
+    username?: string;
+    email?: string;
+    avatar_url?: string;
+    current_streak?: number;
+    games_played?: number;
+  };
+  relation: {
+    friendship_id?: string;
+    status: "pending" | "accepted" | "rejected";
+    requester_id: number;
+    receiver_id: number;
+  } | null;
+};
+
+const API = import.meta.env.VITE_API_URL ?? "";
+const AVATAR_COLORS = [
+  "#f38e10",
+  "#8752f4",
+  "#1ca0e2",
+  "#ed4675",
+  "#1db756",
+  "#505cea",
 ];
 
-// backend call:
-// GET /api/friends/:userId/requests
-const REQUESTS = [
-  { id: 5, name: "daily_gamer", streak: 5, games: "3/6", color: "#1db756" },
-  { id: 6, name: "puzzle_king", streak: 12, games: "6/6", color: "#505cea" },
-];
+const getAvatarColor = (seed: number) => {
+  const index = Math.abs(seed) % AVATAR_COLORS.length;
+  return AVATAR_COLORS[index];
+};
 
 export default function Friends() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [dark, setDark] = useState(false);
   const [tab, setTab] = useState<"friends" | "requests">("friends");
-  const [friends, setFriends] = useState(FRIENDS);
+  const [friends, setFriends] = useState<FriendItem[]>([]);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [searchMode, setSearchMode] = useState(false);
 
-  const filtered = (tab === "friends" ? friends : REQUESTS).filter((f) =>
-    f.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const userId = useMemo(() => {
+    const fromQuery = Number(searchParams.get("id"));
+
+    if (!Number.isNaN(fromQuery) && fromQuery > 0) {
+      return fromQuery;
+    }
+
+    const fromStorage = Number(localStorage.getItem("userId"));
+
+    if (!Number.isNaN(fromStorage) && fromStorage > 0) {
+      return fromStorage;
+    }
+
+    return 1;
+  }, [searchParams]);
+
+  const loadFriendsData = async () => {
+    setLoading(true);
+
+    try {
+      const [friendsRes, requestsRes] = await Promise.all([
+        fetch(`${API}/api/friends/${userId}`),
+        fetch(`${API}/api/friends/${userId}/requests`),
+      ]);
+
+      const friendsData = await friendsRes.json();
+      const requestsData = await requestsRes.json();
+
+      if (!friendsRes.ok || !friendsData?.ok) {
+        throw new Error(friendsData?.error || "Failed to load friends");
+      }
+
+      if (!requestsRes.ok || !requestsData?.ok) {
+        throw new Error(requestsData?.error || "Failed to load requests");
+      }
+
+      setFriends(friendsData.friends || []);
+      setRequests(requestsData.requests || []);
+    } catch (error) {
+      console.error("Failed to load friends page:", error);
+      setFriends([]);
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadFriendsData();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!search.trim()) {
+      setSearchMode(false);
+      setSearchResults([]);
+    }
+  }, [search]);
+
+  const filteredFriends = friends;
+
+  const filteredRequests = requests;
+
+  const filtered = tab === "friends" ? filteredFriends : filteredRequests;
+
+  const handleRequestAction = async (
+    friendshipId: string,
+    status: "accepted" | "rejected",
+  ) => {
+    try {
+      setActionLoadingId(friendshipId);
+
+      const response = await fetch(
+        `${API}/api/friends/${friendshipId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to update request to ${status}`);
+      }
+
+      await loadFriendsData();
+    } catch (error) {
+      console.error(`Failed to ${status} request:`, error);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleRemoveFriend = async (friendshipId: string) => {
+    try {
+      setActionLoadingId(friendshipId);
+
+      const response = await fetch(`${API}/api/friends/${friendshipId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to remove friend");
+      }
+
+      await loadFriendsData();
+    } catch (error) {
+      console.error("Failed to remove friend:", error);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleSearch = async () => {
+    const query = search.trim();
+
+    if (!query) {
+      setSearchMode(false);
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${API}/api/friends/search/users?userId=${userId}&query=${encodeURIComponent(query)}`,
+      );
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error || "Failed to search users");
+      }
+
+      setSearchResults(payload.users || []);
+      setSearchMode(true);
+    } catch (error) {
+      console.error("Failed to search users:", error);
+      setSearchResults([]);
+      setSearchMode(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendRequest = async (receiverId: number) => {
+    try {
+      setActionLoadingId(String(receiverId));
+
+      const response = await fetch(`${API}/api/friends/request`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requester_id: userId,
+          receiver_id: receiverId,
+        }),
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.error || "Failed to send friend request");
+      }
+
+      await Promise.all([loadFriendsData(), handleSearch()]);
+    } catch (error) {
+      console.error("Failed to send friend request:", error);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const isShowingFriends = !searchMode && tab === "friends";
+  const isShowingRequests = !searchMode && tab === "requests";
 
   return (
     <div className={`home${dark ? " dark" : ""}`}>
@@ -50,7 +262,6 @@ export default function Friends() {
           <p>Connect with friends and compare your gaming progress</p>
         </div>
 
-        {/* Search */}
         <div className="fp-card fp-search-card">
           <div className="fp-search-row">
             <input
@@ -60,11 +271,12 @@ export default function Friends() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <button className="fp-search-btn">Search</button>
+            <button className="fp-search-btn" onClick={handleSearch}>
+              Search
+            </button>
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="fp-tabs">
           <button
             className={`fp-tab${tab === "friends" ? " fp-tab--active" : ""}`}
@@ -72,62 +284,241 @@ export default function Friends() {
           >
             My Friends ({friends.length})
           </button>
-          <button
-            className={`fp-tab${tab === "requests" ? " fp-tab--active" : ""}`}
-            onClick={() => setTab("requests")}
-          >
-            Friend Requests
-            <span className="fp-badge">{REQUESTS.length}</span>
-          </button>
+          <div className="fp-tab-wrapper">
+            <button
+              className={`fp-tab${tab === "requests" ? " fp-tab--active" : ""}`}
+              onClick={() => setTab("requests")}
+            >
+              Friend Requests
+            </button>
+
+            {requests.length > 0 && (
+              <span className="fp-badge">{requests.length}</span>
+            )}
+          </div>
         </div>
 
-        {/* List */}
         <div className="fp-card">
-          {filtered.map((f, i) => (
-            <div
-              className={`fp-row${i < filtered.length - 1 ? " fp-row--border" : ""}`}
-              key={f.id}
-            >
-              <div className="fp-avatar" style={{ background: f.color }}>
-                {f.name[0].toUpperCase()}
-              </div>
-              <div className="fp-info">
-                <span className="fp-name">{f.name}</span>
-                <div className="fp-meta">
-                  <span className="fp-streak">🔥 {f.streak} days</span>
-                  <span className="fp-games">🏆 {f.games} today</span>
-                </div>
-              </div>
-              <div className="fp-actions">
-                {tab === "requests" ? (
-                  <>
-                    {/* PATCH /api/friends/:friendshipId/status
-                                            Body: { status: "accepted" } or { status: "rejected" }
-                                        */}
-                    <button className="fp-btn-accept">Accept</button>
-                    <button className="fp-btn-decline">Decline</button>
-                  </>
-                ) : (
-                  <>
-                    <button className="fp-btn-view">View Profile</button>
+          {loading && <p className="fp-empty">Loading...</p>}
 
-                    {/* DELETE /api/friends/:friendshipId*/}
+          {!loading &&
+            isShowingFriends &&
+            filtered.map((item, i) => {
+              const profile = "user" in item ? item.user : item.requester;
+
+              return (
+                <div
+                  className={`fp-row${i < filtered.length - 1 ? " fp-row--border" : ""}`}
+                  key={item.friendship_id}
+                >
+                  <div
+                    className="fp-avatar"
+                    style={{ background: getAvatarColor(profile._id) }}
+                  >
+                    {(profile.username?.[0] ?? "U").toUpperCase()}
+                  </div>
+                  <div className="fp-info">
+                    <span className="fp-name">
+                      {profile.username ?? `User ${profile._id}`}
+                    </span>
+                    <div className="fp-meta">
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
+                    </div>
+                  </div>
+                  <div className="fp-actions">
+                    <>
+                      <button
+                        className="fp-btn-view"
+                        onClick={() => navigate(`/profile?id=${profile._id}`)}
+                      >
+                        View Profile
+                      </button>
+                      <button
+                        className="fp-btn-remove"
+                        onClick={() => handleRemoveFriend(item.friendship_id)}
+                        disabled={actionLoadingId === item.friendship_id}
+                      >
+                        Remove
+                      </button>
+                    </>
+                  </div>
+                </div>
+              );
+            })}
+
+          {!loading &&
+            isShowingRequests &&
+            filtered.map((item, i) => {
+              const profile = "user" in item ? item.user : item.requester;
+
+              return (
+                <div
+                  className={`fp-row${i < filtered.length - 1 ? " fp-row--border" : ""}`}
+                  key={item.friendship_id}
+                >
+                  <div
+                    className="fp-avatar"
+                    style={{ background: getAvatarColor(profile._id) }}
+                  >
+                    {(profile.username?.[0] ?? "U").toUpperCase()}
+                  </div>
+                  <div className="fp-info">
+                    <span className="fp-name">
+                      {profile.username ?? `User ${profile._id}`}
+                    </span>
+                    <div className="fp-meta">
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
+                    </div>
+                  </div>
+                  <div className="fp-actions">
                     <button
-                      className="fp-btn-remove"
+                      className="fp-btn-accept"
                       onClick={() =>
-                        setFriends((prev) => prev.filter((x) => x.id !== f.id))
+                        handleRequestAction(item.friendship_id, "accepted")
                       }
+                      disabled={actionLoadingId === item.friendship_id}
                     >
-                      Remove
+                      Accept
                     </button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-          {filtered.length === 0 && (
-            <p className="fp-empty">No results found.</p>
-          )}
+                    <button
+                      className="fp-btn-decline"
+                      onClick={() =>
+                        handleRequestAction(item.friendship_id, "rejected")
+                      }
+                      disabled={actionLoadingId === item.friendship_id}
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+          {!loading &&
+            searchMode &&
+            searchResults.map((item, i) => {
+              const profile = item.user;
+              const relation = item.relation;
+              const isPendingIncoming =
+                relation?.status === "pending" &&
+                relation.receiver_id === userId;
+              const isPendingOutgoing =
+                relation?.status === "pending" &&
+                relation.requester_id === userId;
+              const isAccepted = relation?.status === "accepted";
+
+              return (
+                <div
+                  className={`fp-row${i < searchResults.length - 1 ? " fp-row--border" : ""}`}
+                  key={profile._id}
+                >
+                  <div
+                    className="fp-avatar"
+                    style={{ background: getAvatarColor(profile._id) }}
+                  >
+                    {(profile.username?.[0] ?? "U").toUpperCase()}
+                  </div>
+                  <div className="fp-info">
+                    <span className="fp-name">
+                      {profile.username ?? `User ${profile._id}`}
+                    </span>
+                    <div className="fp-meta">
+                      <span className="fp-streak">
+                        🔥 {profile.current_streak ?? 0} days
+                      </span>
+                      <span className="fp-games">
+                        🏆 {profile.games_played ?? 0}/6 today
+                      </span>
+                    </div>
+                  </div>
+                  <div className="fp-actions">
+                    {isAccepted ? (
+                      <>
+                        <button
+                          className="fp-btn-view"
+                          onClick={() => navigate(`/profile?id=${profile._id}`)}
+                        >
+                          View Profile
+                        </button>
+                        <button
+                          className="fp-btn-remove"
+                          onClick={() =>
+                            handleRemoveFriend(relation.friendship_id ?? "")
+                          }
+                          disabled={
+                            !relation.friendship_id ||
+                            actionLoadingId === relation.friendship_id
+                          }
+                        >
+                          Remove
+                        </button>
+                      </>
+                    ) : isPendingIncoming ? (
+                      <>
+                        <button
+                          className="fp-btn-accept"
+                          onClick={() =>
+                            handleRequestAction(
+                              relation.friendship_id ?? "",
+                              "accepted",
+                            )
+                          }
+                          disabled={
+                            !relation.friendship_id ||
+                            actionLoadingId === relation.friendship_id
+                          }
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="fp-btn-decline"
+                          onClick={() =>
+                            handleRequestAction(
+                              relation.friendship_id ?? "",
+                              "rejected",
+                            )
+                          }
+                          disabled={
+                            !relation.friendship_id ||
+                            actionLoadingId === relation.friendship_id
+                          }
+                        >
+                          Decline
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="fp-btn-accept"
+                        onClick={() => handleSendRequest(profile._id)}
+                        disabled={
+                          isPendingOutgoing ||
+                          actionLoadingId === String(profile._id)
+                        }
+                      >
+                        {isPendingOutgoing ? "Pending" : "Add Friend"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+          {!loading &&
+            ((isShowingFriends && filtered.length === 0) ||
+              (isShowingRequests && filtered.length === 0) ||
+              (searchMode && searchResults.length === 0)) && (
+              <p className="fp-empty">No results found.</p>
+            )}
         </div>
       </main>
     </div>

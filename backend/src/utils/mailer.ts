@@ -33,3 +33,24 @@ export const sendResetEmail = async (email: string, token: string) => {
         console.error("Mailer error: ", err.message)
     }
 };
+
+export const sendNewFriendEmail = async (
+    email: string,
+    username: string,
+    friendUsername: string
+) => {
+    try {
+        await transporter.sendMail({
+            to: email,
+            subject: "New friend on Daily Games Hub",
+            html: `
+      <h2>Hello ${username}!</h2>
+      <p>You are now friends with <strong>${friendUsername}</strong> on Daily Games Hub.</p>
+      <p>Open the app and compare your daily game results.</p>
+    `,
+        });
+    } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error("Mailer error: ", err.message);
+    }
+};
