@@ -12,8 +12,8 @@ import { Console, log } from "console";
 
 const router = Router();
 
-router.get("/data", async (_req, res) => {
-// router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
+// router.get("/data", async (_req, res) => {
+router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
     try {
         const { id } = _req.query;
         const _id = Number(id);
@@ -28,19 +28,19 @@ router.get("/data", async (_req, res) => {
 
         const collection = await getUsersCollection();
         const user = await collection.findOne({ _id }, {
-                projection: {
-                    _id: 1,
-                    username: 1,
-                    email: 1,
-                    avatar_url: 1,
-                    current_streak: 1,
-                    longest_streak: 1,
-                    games_played: 1,
-                    num_achievements: 1,
-                    global_rank: 1,
-                    created_at: 1
-                }
-            });
+            projection: {
+                _id: 1,
+                username: 1,
+                email: 1,
+                avatar_url: 1,
+                current_streak: 1,
+                longest_streak: 1,
+                games_played: 1,
+                num_achievements: 1,
+                global_rank: 1,
+                created_at: 1
+            }
+        });
 
         if (!user) {
             res.status(404).json({
@@ -63,8 +63,8 @@ router.get("/data", async (_req, res) => {
     }
 });
 
-// router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
-router.get("/data/statistics", async (_req, res) => {
+router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
+    // router.get("/data/statistics", async (_req, res) => {
 
     try {
         const { id } = _req.query;
@@ -116,7 +116,7 @@ router.get("/data/statistics", async (_req, res) => {
         const offset = day === 0 ? -6 : 1 - day;
 
         monday.setDate(monday.getDate() + offset);
-        monday.setHours(0,0,0,0);
+        monday.setHours(0, 0, 0, 0);
 
         const nextMonday = new Date(monday);
         nextMonday.setDate(nextMonday.getDate() + 7);
@@ -148,9 +148,9 @@ router.get("/data/statistics", async (_req, res) => {
         // -----------------------------------------
 
         const statsMap: Record<string, {
-            totalAttempts:number;
-            totalTime:number;
-            gamesPlayed:number;
+            totalAttempts: number;
+            totalTime: number;
+            gamesPlayed: number;
         }> = {};
 
         games.forEach(game => {
@@ -210,10 +210,90 @@ router.get("/data/statistics", async (_req, res) => {
                 : "Unknown error";
 
         res.status(500).json({
-            ok:false,
-            error:message
+            ok: false,
+            error: message
         });
     }
+});
+
+router.post("/data/edit", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const token = req.headers.authorization?.split(" ")[1];
+
+        if (!token) {
+            return res.status(400).json({ ok: false, error: "No token provided" });
+        }
+
+        const {
+            id,
+            username,
+            email,
+            avatar_url
+        } = req.body;
+
+        const userId = Number(id);
+        if (isNaN(userId)) {
+            return res.status(400).json({
+                ok: false,
+                error: "Invalid ID"
+            });
+        }
+
+        const updateFields: any = {};
+
+        // posodobi samo poslana polja
+        if (username !== undefined)
+            updateFields.username = username;
+
+        if (email !== undefined)
+            updateFields.email = email;
+
+        if (avatar_url !== undefined)
+            updateFields.avatar_url = avatar_url;
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({
+                ok: false,
+                error: "No fields to update"
+            });
+        }
+
+        const collection = await getUsersCollection();
+
+        updateFields.updatedAt = new Date();
+
+        const result =
+            await collection.updateOne(
+                { _id: userId },
+                {
+                    $set: updateFields
+                }
+            );
+
+        if (result.matchedCount === 0) {
+            return res.status(404).json({
+                ok: false,
+                error: "User not found"
+            });
+        }
+
+        return res.json({
+            ok: true,
+            message:
+                "Profile updated successfully"
+        });
+    } catch (error) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : "Unknown error";
+
+        return res.status(500).json({
+            ok: false,
+            error: message
+        });
+    }
+
 });
 
 router.post("/register", async (req, res) => {
@@ -275,7 +355,13 @@ router.post("/login", async (req, res) => {
         }
 
         const collection = await getUsersCollection();
-        const user = await collection.findOne({ username });
+        const user = await collection.findOne({ username }, {
+            projection: {
+                _id: 1,
+                username: 1,
+                password_hash: 1
+            }
+        });
 
         if (!user) {
             return res.status(401).json({ ok: false, error: "Invalid credentials" });
@@ -305,7 +391,15 @@ router.post("/forgot-password", async (req, res) => {
         }
 
         const collection = await getUsersCollection();
-        const user = await collection.findOne({ email });
+        const user = await collection.findOne({ email }, {
+            projection: {
+                _id: 1,
+                password_hash: 1,
+                email: 1,
+                resetPasswordToken: 1,
+                resetPasswordExpires: 1
+            }
+        });
 
         if (!user) {
             return res.json({ ok: true }); // security
