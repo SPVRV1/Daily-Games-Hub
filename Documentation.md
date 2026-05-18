@@ -112,4 +112,78 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 3. Zaženi frontend:
    - `cd frontend && npm run dev`
 
+---
 
+## Sprint 2
+
+### Nove funkcionalnosti
+
+#### Igre
+- **Wordle** – implementacija igre ugibanja besed (mreža 5 × 6); animacija razkrivanja rezultatov, zaslon za konec igre, sistem obvestil za neveljavne vnose; backend generira datoteko veljavnih besed in dnevno besedo
+- **Flagle** – implementacija igre ugibanja zastave; možnost igranja iger iz preteklih 3 dni
+- **Math Sprint** – deterministični generator 5 nalog na dan; lestvica težavnosti: easy | medium | hard; točkovanje: 100× pravilne + do 50 bonus točk
+
+#### Testiranje
+- Nastavitev testnega okolja
+- Osnovni testi: registracija, prijava, profil
+- Testiranje API endpointov
+- Testiranje UI komponent z `useEffect` in Hooks
+- Pomoč pri odkrivanju bugov
+
+---
+
+### Posodobljeni API endpointi
+
+#### Wordle
+- `GET /api/games/wordle/today` – pridobi današnjo besedo
+- `GET /api/games/wordle/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/wordle/result` – pošlje rezultat (število poskusov)
+
+#### Flagle
+- `GET /api/games/flagle/today` – pridobi današnjo zastavo
+- `GET /api/games/flagle/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/flagle/result` – pošlje rezultat
+- `GET /api/games/flagle/history` – pridobi igre iz preteklih 3 dni
+
+#### Math Sprint
+- `GET /api/games/mathsprint/today` – pridobi današnjih 5 nalog
+- `GET /api/games/mathsprint/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/mathsprint/result` – pošlje rezultat (točke, čas, težavnost)
+
+---
+
+### Posodobljena struktura projekta
+
+#### Backend (dopolnitev)
+- `backend/src/data/words.json` – seznam veljavnih besed za Wordle
+- `backend/src/data/flags/` – podatki o zastavah za Flagle
+- `backend/scripts/` – pomožni skripti (npr. generiranje besed)
+
+#### Frontend (dopolnitev)
+- `frontend/src/pages/WordlePage.tsx` – stran igre Wordle
+- `frontend/src/pages/FlaglePage.tsx` – stran igre Flagle
+- `frontend/src/pages/MathSprintPage.tsx` – stran igre Math Sprint
+- `frontend/src/components/` – komponente posameznih iger (mreža, tipkovnica, zasloni za konec igre)
+
+---
+
+### Zagotavljanje kakovosti (QA)
+
+V 2. sprintu je bila vzpostavljena osnovna infrastruktura za testiranje:
+- Testno okolje konfigurirano ločeno od produkcijskega
+- Pokritost testov: registracija in prijava, API endpointi, UI komponente z `useEffect` v Hooks
+
+---
+
+### Stanje ob koncu sprinta
+
+| Funkcionalnost | Status | Opomba |
+|---|---|---|
+| Wordle (frontend + backend) | Končano | |
+| Flagle (frontend + backend) | Končano | |
+| Math Sprint frontend | Končano | Urejena navigacija, 3 znane težave |
+| Math Sprint backend | Končano | Generator in točkovanje delujeta |
+| Registracija in prijava | V razvoju | Fix bugov v teku |
+| Uporabniški profil 2 | V razvoju | Avatarji, statistike, zavihki |
+| Pisanje avtomatskih testov | Končano | |
+| Dokumentacija | V razvoju | |
