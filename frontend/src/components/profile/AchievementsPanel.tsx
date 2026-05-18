@@ -4,7 +4,7 @@ import { Flag, Trophy } from "lucide-react";
 type Achievement = {
     title: string;
     description?: string;
-    unlockedAt?: string | Date | null;
+    unlockedAt?: string | Date | { $date?: string } | null;
 };
 
 type AchievementsPanelProps = {
@@ -23,7 +23,10 @@ export default function AchievementsPanel({ achievements = [] }: AchievementsPan
             <div className="mt-4 space-y-3">
                 {hasAchievements ? (
                     items.map((achievement) => {
-                        const isUnlocked = Boolean(achievement.unlockedAt);
+                        const unlockedAt = typeof achievement.unlockedAt === "object" && achievement.unlockedAt && "$date" in achievement.unlockedAt
+                            ? achievement.unlockedAt.$date
+                            : achievement.unlockedAt;
+                        const isUnlocked = Boolean(unlockedAt);
 
                         return (
                             <article

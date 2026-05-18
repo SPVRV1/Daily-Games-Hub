@@ -1,4 +1,4 @@
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
@@ -12,6 +12,15 @@ type LoginFormData = {
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const apiBaseUrl = useMemo(() => {
+    const envPort = import.meta.env.VITE_API_PORT;
+    if (envPort) {
+      return `http://localhost:${envPort}`;
+    }
+    return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+  }, []);
 
   const [formData, setFormData] = useState<LoginFormData>({
     username: "",
@@ -63,13 +72,35 @@ export default function Login() {
       return;
 
     setLoading(true);
+    setAuthError(null);
 
-    setTimeout(() => {
-      console.log("Login successful:", formData);
+    (async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}/api/user/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
+        });
 
-      setLoading(false);
-      navigate("/");
-    }, 1000);
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || !payload?.ok || !payload?.token) {
+          throw new Error(payload?.error || "Login failed");
+        }
+
+        localStorage.setItem("token", payload.token);
+        navigate("/");
+      } catch (err) {
+        setAuthError(err instanceof Error ? err.message : "Login failed");
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   return (
@@ -83,6 +114,11 @@ export default function Login() {
       
       {/* Form */}
       <form className="card" onSubmit={handleSubmit}>
+        {authError && (
+          <span className="error-text">
+            {authError}
+          </span>
+        )}
         <label htmlFor="username">Username</label>
         <input
           id="username"
