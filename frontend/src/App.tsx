@@ -6,8 +6,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProfilePage from "./pages/profile/page";
-import GamePage from "./components/game/GamePage";
-import Wordle from "./components/game/Wordle";
+import WordlePage from "./pages/WordlePage";
 
 function App() {
     return (
@@ -19,17 +18,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route
-                    path="/wordle"
-                    element={
-                        <GamePage
-                        gameType="wordle"
-                        renderGame={(challenge, onFinish) => (
-                            <Wordle data={challenge} onFinish={onFinish} />
-                        )}
-                        />
-                    }
-                />
+                <Route path="/wordle" element={<WordlePage/>}/>
             </Routes>
         </BrowserRouter>
     );

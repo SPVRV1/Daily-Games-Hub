@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
-
-import Navbar from "../../components/Navbar";
+import { useState, useEffect, useCallback } from "react";
 
 import "./Wordle.css";
 
@@ -10,20 +8,7 @@ const WORD_LENGTH = 5;
 
 const FLIP_DELAY = 250;
 
-export default function Wordle({ data, onFinish }: { 
-    data?: any;
-    onFinish?: (result: any) => void;
-}) {
-    const ANSWER = data?.challengeData?.answer ?? "HELLO"; // dummy word for testing win
-    const VALID_GUESSES = data?.challengeData?.validGuesses ?? [ // dummy words for testing valid guesses
-        "HELLO",
-        "WORLD",
-        "APPLE",
-        "HOUSE",
-        "WATER",
-        "LIGHT"
-    ];
-
+export default function Wordle({ data, onFinish }: any ) {
     const [language, setLanguage] = useState<"en" | "sl">("en");
 
     const [currentGuess, setCurrentGuess] = useState("");
@@ -35,6 +20,11 @@ export default function Wordle({ data, onFinish }: {
     const [popTile, setPopTile] = useState<string | null>(null);
     const [animating, setAnimating] = useState(false);
     const [toast, setToast] = useState("");
+    
+    const ANSWER = data?.challengeData?.answer ?? "";  
+    const VALID_GUESSES = data?.challengeData?.validGuesses ?? [
+        "HELLO"
+    ];
 
     // Typing letters in row
     const addLetter = (letter: string) => {
@@ -103,82 +93,75 @@ export default function Wordle({ data, onFinish }: {
     };
 
     // Submitting guess
-    const submitGuess = async () => {
-        if (gameOver || animating)
-            return;
+    const submitGuess = useCallback(async () => {
+    if (gameOver || animating) return;
 
-        if (currentGuess.length !== WORD_LENGTH) {
-            showToast("Not enough letters");
-            return;
-        }
-        const guess = currentGuess.toUpperCase();
+    if (currentGuess.length !== WORD_LENGTH) {
+        showToast("Not enough letters");
+        return;
+    }
 
-        if (!VALID_GUESSES.includes(guess)) {
-            showToast("Not in word list");
-            return;
-        }
-        const result = evaluateGuess(guess);
+    const guess = currentGuess.toUpperCase();
 
-        setAnimating(true);
-        setCurrentGuess("");
+    if (!VALID_GUESSES.includes(guess)) {
+        showToast("Not in word list");
+        return;
+    }
 
-        const rowIndex = guesses.length;
+    const result = evaluateGuess(guess);
 
-        setGuesses(prev => [...prev, guess]);
-        setStatuses(prev => [...prev, []]);
+    setAnimating(true);
+    setCurrentGuess("");
 
-        // Word flips to reveal correct letters
-        for (let i = 0; i < WORD_LENGTH; i++) {
-            await new Promise(res => setTimeout(res, FLIP_DELAY));
+    const rowIndex = guesses.length;
 
-            setStatuses(prev => {
-                const copy = [...prev];
-                const newRow = copy[rowIndex] ? [...copy[rowIndex]] : [];
-                newRow[i] = result[i];
-                copy[rowIndex] = newRow;
-                return copy;
+    setGuesses(prev => [...prev, guess]);
+    setStatuses(prev => [...prev, []]);
+
+    for (let i = 0; i < WORD_LENGTH; i++) {
+        await new Promise(res => setTimeout(res, FLIP_DELAY));
+
+        setStatuses(prev => {
+            const copy = [...prev];
+            const newRow = copy[rowIndex] ? [...copy[rowIndex]] : [];
+            newRow[i] = result[i];
+            copy[rowIndex] = newRow;
+            return copy;
+        });
+    }
+
+    const newMap = { ...keyboardStatus };
+
+    guess.split("").forEach((letter, i) => {
+        const current = newMap[letter];
+
+        if (result[i] === "green") newMap[letter] = "green";
+        else if (result[i] === "yellow" && current !== "green") newMap[letter] = "yellow";
+        else if (!current) newMap[letter] = "gray";
+    });
+
+    setKeyboardStatus(newMap);
+
+    setTimeout(() => {
+        setAnimating(false);
+
+        const isWin = guess === ANSWER;
+        const isLoss = guesses.length + 1 === MAX_ATTEMPTS;
+
+        if (isWin || isLoss) {
+            setGameOver(true);
+            onFinish?.({
+                challenge_id: data?.date ?? "wordle",
+                completed: isWin,
+                attempts_used: guesses.length + 1,
+                correct_answers: isWin ? 1 : 0,
+                time_seconds: 0,
+                score: isWin ? 100 : 0
             });
         }
+    }, 1200);
 
-        // Keyboard also updates tile colors of letters in guess
-        const newMap = { ...keyboardStatus };
-
-        guess.split("").forEach((letter, i) => {
-            const current = newMap[letter];
-
-            if (result[i] === "green")
-                newMap[letter] = "green";
-            
-            else if (result[i] === "yellow" && current !== "green")
-                newMap[letter] = "yellow";
-            
-            else if (!current)
-                newMap[letter] = "gray";
-        });
-
-        setKeyboardStatus(newMap);
-
-        // Game end
-        setTimeout(() => {
-            setAnimating(false);
-
-            const isWin = guess === ANSWER;
-            const isLoss = guesses.length + 1 === MAX_ATTEMPTS;
-
-            if (isWin || isLoss) {
-                setGameOver(true);
-
-                onFinish?.({
-                    challenge_id: data?.date ?? "wordle",
-                    completed: isWin,
-                    attempts_used: guesses.length + 1,
-                    correct_answers: isWin ? 1 : 0,
-                    time_seconds: 0,
-                    score: isWin ? 100 : 0
-                });
-            }
-        }, 1200);
-    };
+    }, [gameOver, animating, currentGuess, guesses, keyboardStatus, VALID_GUESSES, ANSWER]);
 
     // Enabled using physical keyboard, not just the on screen one
     useEffect(() => {
@@ -227,8 +210,6 @@ export default function Wordle({ data, onFinish }: {
 
     return (
         <div className="container auth-container w-full">
-            <Navbar/>
-
             <main className="page">
 
                 {/* Row for link to home page and language switch button */}

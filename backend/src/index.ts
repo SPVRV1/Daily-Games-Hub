@@ -4,12 +4,14 @@ dotenv.config();
 import cors from "cors";
 import express from "express";
 import { MongoClient } from "mongodb";
+import mongoose from "mongoose"
 import gameRoutes from './routes/game.routes.js';
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
 import gamesRoutes from "./routes/games.js";
 
+mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
 export const app = express();
 const port = Number(process.env.PORT) || 3000;
