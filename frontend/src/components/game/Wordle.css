@@ -2,6 +2,11 @@
 .page {
     padding: 25px;
     background-color: var(--green-bg);
+    flex: 1;
+}
+
+.container.auth-container {
+    min-height: 100vh;
 }
 
 .top-row {
@@ -109,15 +114,31 @@
 }
 
 @keyframes pop {
-    0% { transform: scale(0.8); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(0.8);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes flip {
-    0% { transform: rotateX(0deg); }
-    50% { transform: rotateX(90deg); }
-    100% { transform: rotateX(0deg); }
+    0% {
+        transform: rotateX(0deg);
+    }
+
+    50% {
+        transform: rotateX(90deg);
+    }
+
+    100% {
+        transform: rotateX(0deg);
+    }
 }
 
 /* ── Keyboard ────────────────────────────────────────────── */
@@ -180,7 +201,7 @@
     padding: 14px 22px;
     border-radius: 10px;
 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
     animation: toastFade 1.8s ease forwards;
 }
@@ -195,7 +216,7 @@
     align-items: center;
     justify-content: center;
 
-    background: rgba(0,0,0,0.35);
+    background: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(3px);
 }
 
