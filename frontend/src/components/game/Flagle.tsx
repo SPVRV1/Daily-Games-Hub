@@ -132,7 +132,7 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
     return (
         <div className="flagle-page">
             {!hideNavbar && <Navbar activeLink="home" />}
-            <main className="content">
+            <main className="main-flagle-content">
                 <div className="title">
                     <h1>Flagle</h1>
                     <p>Guess the country from its flag in {MAX_ATTEMPTS} attempts</p>

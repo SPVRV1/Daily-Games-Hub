@@ -1,5 +1,5 @@
-import { useState, ChangeEvent } from "react";
-import { Link } from "react-router-dom";
+import { useState, ChangeEvent, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
 import "./RegisterLoginPassword.css";
@@ -12,6 +12,19 @@ type RegisterFormData = {
 };
 
 export default function Register() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const apiBaseUrl = useMemo(() => {
+    const envPort = import.meta.env.VITE_API_PORT;
+
+    if (envPort)
+      return `http://localhost:${envPort}`;
+
+    return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+  }, []);
+
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
     email: "",
@@ -33,6 +46,13 @@ export default function Register() {
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+
+    setAuthError(null);
   };
 
   const validateForm = () => {
@@ -43,20 +63,32 @@ export default function Register() {
       confirmPassword: "",
     };
 
+    // Username validation
     if (!formData.username.trim())
       newErrors.username = "Username is required!";
 
+    else if (formData.username.length < 3)
+      newErrors.username = "Username must be at least 3 characters!";
+
+    // Email validation
     if (!formData.email.trim())
       newErrors.email = "Email is required!";
     
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Please enter a valid email!";
 
+    // Password validation
     if (!formData.password)
       newErrors.password = "Password is required!";
     
     else if (formData.password.length < 8)
       newErrors.password = "Password must be at least 8 characters long!";
+
+    else if (!/[A-Z]/.test(formData.password))
+      newErrors.password = "Password must contain uppercase letter!";
+    
+    else if (!/[0-9]/.test(formData.password))
+      newErrors.password = "Password must contain number!";
 
     if (!formData.confirmPassword)
       newErrors.confirmPassword = "Please confirm your password!";
@@ -69,7 +101,7 @@ export default function Register() {
     return Object.values(newErrors).every((value) => value === "");
   };
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const isValid = validateForm();
@@ -77,16 +109,56 @@ export default function Register() {
     if (!isValid)
       return;
 
-    console.log("Register data:", {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-    });
+    setLoading(true);
+    setAuthError(null);
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/user/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      // console.log("REGISTER RESPONSE:", data);
+
+      if (!response.ok || !data?.ok)
+        throw new Error(data?.error || "Registration failed");
+      
+      if (data.token)
+        localStorage.setItem("token", data.token);
+      
+      alert("User created successfully!");
+
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      navigate("/login"); // Redirect to login page after successfull registration
+
+    }
+    catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Registration failed");
+    }
+    finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="container auth-container">
-      <Navbar activeLink="home" variant="auth" />
+      <Navbar variant="auth" />
+
       <div className="auth-content">
         {/* Title */}
         <h1>Join Daily Games Hub</h1>
@@ -95,80 +167,88 @@ export default function Register() {
 
         {/* Form */}
         <form className="card" onSubmit={handleSubmit}>
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          name="username"
-          type="text"
-          placeholder="Choose a username"
-          autoComplete="username"
-          value={formData.username}
-          onChange={handleChange}
-        />
+          {authError && (
+            <span className="error-text">{authError}</span>
+          )}
+          
+          <label htmlFor="username">Username</label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            placeholder="Choose a username"
+            autoComplete="username"
+            value={formData.username}
+            onChange={handleChange}
+          />
 
-        {errors.username && (
-          <span className="error-text">
-            {errors.username}
+          {errors.username && (
+            <span className="error-text">
+              {errors.username}
+            </span>
+          )}
+
+          <label htmlFor="email">Email</label>
+          <input 
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Choose an email"
+            autoComplete="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
+
+          {errors.email && (
+            <span className="error-text">
+              {errors.email}
+            </span>
+          )}
+
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            placeholder="Create a password"
+            autoComplete="new-password"
+            value={formData.password}
+            onChange={handleChange}
+          />
+
+          {errors.password && (
+            <span className="error-text">
+              {errors.password}
+            </span>
+          )}
+
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            placeholder="Confirm your password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+          />
+
+          {errors.confirmPassword && (
+            <span className="error-text">
+              {errors.confirmPassword}
+            </span>
+          )}
+
+          {/* Submit button */}
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading
+              ? "Creating account..."
+              : "Create Account"}
+          </button>
+
+          {/* Link to login page */}
+          <span className="form-link">
+            Already have an account? <Link to="/login">Sign in</Link>
           </span>
-        )}
-
-        <label htmlFor="email">Email</label>
-        <input 
-          id="email"
-          name="email"
-          type="email"
-          placeholder="Choose an email"
-          autoComplete="email"
-          value={formData.email}
-          onChange={handleChange}
-        />
-
-        {errors.email && (
-          <span className="error-text">
-            {errors.email}
-          </span>
-        )}
-
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Create a password"
-          autoComplete="new-password"
-          value={formData.password}
-          onChange={handleChange}
-        />
-
-        {errors.password && (
-          <span className="error-text">
-            {errors.password}
-          </span>
-        )}
-
-        <label htmlFor="confirmPassword">Confirm Password</label>
-        <input
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm your password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-        />
-
-        {errors.confirmPassword && (
-          <span className="error-text">
-            {errors.confirmPassword}
-          </span>
-        )}
-
-        {/* Submit button */}
-        <button type="submit" className="submit-btn">Create Account</button>
-
-        {/* Link to login page */}
-        <span className="form-link">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </span>
         </form>
       </div>
     </div>
