@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import GameResult from '../models/gameResult.js';
-import { generateMathSprintChallenge, generateMathSprintChallengeId, getTodayDate } from '../utils/gameHelpers.js';
+import { generateMathSprintChallenge, generateMathSprintChallengeId, getTodayDate, normalizeMathSprintDifficulty } from '../utils/gameHelpers.js';
 import { GameType } from '../types/game.types.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { GameModel as Game } from '../models/game.js';
@@ -13,7 +13,13 @@ export const getTodayChallenge = async (req: Request, res: Response) => {
         const today = getTodayDate()
 
         if (gameType === 'mathsprint') {
-            return res.json(generateMathSprintChallenge(today));
+            const difficulty = normalizeMathSprintDifficulty(req.query.difficulty as string | undefined);
+
+            if (!difficulty) {
+                return res.status(400).json({ message: 'Invalid difficulty' });
+            }
+
+            return res.json(generateMathSprintChallenge(today, difficulty));
         }
 
         const game = await Game.findOne({ name: gameType })
@@ -39,7 +45,13 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
         let result;
 
         if (gameType === 'mathsprint') {
-            const challengeId = generateMathSprintChallengeId(today);
+            const difficulty = normalizeMathSprintDifficulty(req.query.difficulty as string | undefined);
+
+            if (!difficulty) {
+                return res.status(400).json({ message: 'Invalid difficulty' });
+            }
+
+            const challengeId = generateMathSprintChallengeId(today, difficulty);
             result = await GameResult.findOne({ user_id: req.user?._id, challenge_id: challengeId });
         } else {
             result = await GameResult.findOne({ userId: req.user?._id, gameType, date: today } as any);
@@ -58,10 +70,23 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
     try {
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
-        const { challenge_id, completed, attempts_used, correct_answers, time_seconds, score } = req.body;
+        const { challenge_id, completed, attempts_used, correct_answers, time_seconds, score, difficulty: rawDifficulty } = req.body;
+        const difficulty = gameType === 'mathsprint'
+            ? normalizeMathSprintDifficulty(rawDifficulty)
+            : undefined;
+
+        if (gameType === 'mathsprint' && !difficulty) {
+            return res.status(400).json({ message: 'Invalid difficulty' });
+        }
+
+        const resolvedDifficulty = difficulty ?? undefined;
         const resolvedChallengeId = gameType === 'mathsprint'
-            ? generateMathSprintChallengeId(today)
+            ? generateMathSprintChallengeId(today, resolvedDifficulty as 'easy' | 'medium' | 'hard')
             : challenge_id;
+
+        if (gameType === 'mathsprint' && challenge_id && challenge_id !== resolvedChallengeId) {
+            return res.status(400).json({ message: 'Challenge id does not match difficulty' });
+        }
 
         const existing = gameType === 'mathsprint'
             ? await GameResult.findOne({ user_id: req.user?._id, challenge_id: resolvedChallengeId })
@@ -87,6 +112,7 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         const result = await GameResult.create({
             user_id: req.user?._id,
             challenge_id: resolvedChallengeId,
+            difficulty: resolvedDifficulty,
             completed,
             attempts_used,
             correct_answers,

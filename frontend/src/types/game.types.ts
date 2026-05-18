@@ -8,6 +8,7 @@ export interface GameChallenge<T = Record<string, unknown>> {
 
 export interface GameResult {
   challenge_id: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
   completed: boolean;
   attempts_used?: number;
   correct_answers?: number;

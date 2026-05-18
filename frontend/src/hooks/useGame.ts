@@ -3,12 +3,16 @@ import { GameType, GameChallenge, GameResult, GameState } from '../types/game.ty
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
-export const useGame = (gameType: GameType) => {
+type GameQueryParams = Record<string, string>;
+
+export const useGame = (gameType: GameType, queryParams?: GameQueryParams) => {
     const [state, setState] = useState<GameState>({
         status: 'loading',
         challenge: null,
         result: null,
     });
+
+    const queryString = queryParams ? `?${new URLSearchParams(queryParams).toString()}` : '';
 
     useEffect(() => {
         const init = async () => {
@@ -17,7 +21,7 @@ export const useGame = (gameType: GameType) => {
             const headers = { Authorization: `Bearer ${token}` };
 
             // does not yet work JWT not implemented
-            const playedRes = await fetch(`${API}/api/games/${gameType}/played-today`, { headers });
+            const playedRes = await fetch(`${API}/api/games/${gameType}/played-today${queryString}`, { headers });
             const playedData = await playedRes.json();
 
             if (playedData.played) {
@@ -25,14 +29,14 @@ export const useGame = (gameType: GameType) => {
                 return;
             }
 
-            const challengeRes = await fetch(`${API}/api/games/${gameType}/today`, { headers });
+            const challengeRes = await fetch(`${API}/api/games/${gameType}/today${queryString}`, { headers });
             const challenge: GameChallenge = await challengeRes.json();
 
             setState({ status: 'playing', challenge, result: null });
         };
 
         init();
-    }, [gameType]);
+    }, [gameType, queryString]);
 
     const submitResult = async (result: GameResult) => {
         // if JWT is saved in localStorage
