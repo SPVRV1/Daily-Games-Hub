@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 const GameResultsSchema = new Schema({
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     challenge_id: { type: Schema.Types.ObjectId, ref: 'DailyChallenge', required: true },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'] },
     completed: { type: Boolean, default: false },
     attempts_used: { type: Number },
     correct_answers: { type: Number },
