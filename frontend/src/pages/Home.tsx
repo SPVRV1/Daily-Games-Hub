@@ -1,6 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "./Home.css";
-import { useNavigate } from "react-router-dom";
 
 const STATS = [
     {
@@ -133,6 +133,8 @@ export default function Home() {
                             onClick={() => {
                                 if(game.name === "Flagle")
                                     navigate("/flagle");
+                                if(game.name === "Math Sprint")
+                                    navigate("/math-sprint");
                             }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>

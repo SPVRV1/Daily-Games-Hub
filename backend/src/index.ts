@@ -3,6 +3,7 @@ dotenv.config();
 
 import cors from "cors";
 import express from "express";
+import path from "path";
 import { MongoClient } from "mongodb";
 import mongoose from "mongoose";
 import gameRoutes from './routes/game.routes.js';
@@ -24,6 +25,13 @@ let mongoClient: MongoClient | null = null;
 
 app.use(cors());
 app.use(express.json());
+// Serve user-supplied music in src/data/music at /audio/songless
+app.use(
+    "/audio/songless",
+    express.static(path.join(process.cwd(), "src", "data", "music"))
+);
+// Serve local audio files placed in backend/public/audio at /audio/*
+app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
 app.use("/api/user", userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/countries', countriesRoutes);
