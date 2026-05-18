@@ -12,14 +12,14 @@ const difficultyOptions: Array<{
   title: string;
   description: string;
 }> = [
-  { value: "easy", title: "Easy", description: "Addition only" },
-  { value: "medium", title: "Medium", description: "Addition and subtraction" },
-  {
-    value: "hard",
-    title: "Hard",
-    description: "Addition, subtraction, and multiplication",
-  },
-];
+    { value: "easy", title: "Easy", description: "Addition only" },
+    { value: "medium", title: "Medium", description: "Addition and subtraction" },
+    {
+      value: "hard",
+      title: "Hard",
+      description: "Addition, subtraction, and multiplication",
+    },
+  ];
 
 interface MathSprintQuestion {
   id: number;
@@ -79,6 +79,7 @@ function MathSprintGame({
 
   useEffect(() => {
     if (timeLeft === 0 && screen === "playing") {
+      setScreen("idle");
       onFinish({
         challenge_id: challenge.challengeData.challenge_id as string,
         difficulty: data.difficulty,
@@ -94,6 +95,7 @@ function MathSprintGame({
   useEffect(() => {
     if (screen === "playing" && currentIndex >= questions.length) {
       clearInterval(timerRef.current!);
+      setScreen("idle");
       //const timeUsed = timeLimit - timeLeft;
       onFinish({
         challenge_id: challenge.challengeData.challenge_id as string,
@@ -145,9 +147,9 @@ function MathSprintGame({
   const currentQuestion = questions[currentIndex];
 
   return (
-    <>
+    <div className="ms-screen">
       {screen === "idle" && (
-        <div className="ms-screen">
+        <>
           <a className="ms-back" href="/">
             ← Back to Home
           </a>
@@ -178,11 +180,11 @@ function MathSprintGame({
               Start Game
             </button>
           </div>
-        </div>
+        </>
       )}
 
       {screen === "playing" && currentQuestion && (
-        <div className="ms-screen">
+        <>
           <div className="ms-header">
             <h1 className="ms-title">Math Sprint</h1>
             <p className="ms-subtitle">
@@ -234,9 +236,10 @@ function MathSprintGame({
               Submit
             </button>
           </div>
-        </div>
+        </>
       )}
-    </>
+
+    </div>
   );
 }
 

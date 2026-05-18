@@ -22,13 +22,17 @@ const GamePage = ({
 
   if (state.status === "loading") return <div>Loading...</div>;
 
-  if (state.status === "already_played")
-    return <AlreadyPlayed result={state.result!} />;
-
-  if (state.status === "finished")
-    return <GameResultScreen result={state.result!} />;
-
-  return <>{renderGame(state.challenge!, submitResult)}</>;
+  return (
+    <>
+      {state.challenge ? renderGame(state.challenge, submitResult) : null}
+      {state.status === "already_played" ? (
+        <AlreadyPlayed result={state.result!} />
+      ) : null}
+      {state.status === "finished" ? (
+        <GameResultScreen result={state.result!} />
+      ) : null}
+    </>
+  );
 };
 
 export default GamePage;
