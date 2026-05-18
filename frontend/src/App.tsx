@@ -8,6 +8,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ProfilePage from "./pages/profile/page";
 import FlaglePage from "./pages/FlaglePage";
 import MathSprint from "./pages/MathSprint";
+import WordlePage from "./pages/WordlePage";
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/flagle" element={<FlaglePage />} />
         <Route path="/math-sprint" element={<MathSprint />} />
+        <Route path="/wordle" element={<WordlePage />} />
       </Routes>
     </BrowserRouter>
   );

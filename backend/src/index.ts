@@ -13,6 +13,7 @@ import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
 import gamesRoutes from "./routes/games.js";
 
+mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
 mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 

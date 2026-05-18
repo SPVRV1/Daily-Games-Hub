@@ -131,6 +131,8 @@ export default function Home() {
                             className={`game-card${game.completed ? " game-card--completed" : ""}`}
                             key={game.name}
                             onClick={() => {
+                                if (game.name === "Wordle")
+                                    navigate("/wordle");
                                 if(game.name === "Flagle")
                                     navigate("/flagle");
                                 if(game.name === "Math Sprint")
