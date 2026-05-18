@@ -144,7 +144,7 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
                         <div className="flag-overlay">
                             {[...Array(MAX_ATTEMPTS)].map((_, i) => {
                                 const isRevealed = revealOrder.indexOf(i) < revealCount;
-                                return <div key={i} className={`tile ${isRevealed ? "revealed" : "grey"}`} />;
+                                return <div key={i} className={`flagle-tile ${isRevealed ? "revealed" : "grey"}`} />;
                             })}
                         </div>
                     </div>

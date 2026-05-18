@@ -58,17 +58,17 @@
     height: 100%;
 }
 
-.tile {
+.flagle-tile {
     background-clip: padding-box;
     border: 1px solid var(--white);
 }
 
-.tile.grey {
+.flagle-tile.grey {
     background: var(--input-text);
     border: 1px solid var(--white);
 }
 
-.tile.revealed {
+.flagle-tile.revealed {
     background: transparent;
     border: 1px solid var(--white);
 }
