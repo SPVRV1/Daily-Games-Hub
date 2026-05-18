@@ -32,13 +32,33 @@ interface FlagleProps {
 }
 
 export default function Flagle({ data, onFinish, hideNavbar = false }: FlagleProps) {
+    const challenge = data.challengeData as unknown as ChallengeData;
+
     const [guess, setGuess] = useState("");
     const [attempts, setAttempts] = useState<Attempt[]>([]);
     const [finished, setFinished] = useState(false);
-    const [revealed, setRevealed] = useState(0);
+    const [revealOrder] = useState<number[]>(() => {
+        // Seed the shuffle with the challengeId so all players get the same order each day
+        let seed = 0;
+        for (let i = 0; i < challenge.challengeId.length; i++) {
+            seed = (seed << 5) - seed + challenge.challengeId.charCodeAt(i);
+            seed |= 0;
+        }
+        const seededRand = () => {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            return (seed >>> 0) / 0xffffffff;
+        };
+        const order = Array.from({ length: MAX_ATTEMPTS }, (_, i) => i);
+        for (let i = order.length - 1; i > 0; i--) {
+            const j = Math.floor(seededRand() * (i + 1));
+            [order[i], order[j]] = [order[j], order[i]];
+        }
+        return order;
+    });
+    const [revealCount, setRevealCount] = useState(0);
     const [countries, setCountries] = useState<Country[]>([]);
-
-    const challenge = data.challengeData as unknown as ChallengeData;
 
     useEffect(() => {
         fetch("/api/countries")
@@ -93,10 +113,10 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
         setAttempts(newAttempts);
         setGuess("");
 
-        if (!isCorrect) setRevealed((p) => p + 1);
+        if (!isCorrect) setRevealCount((p) => p + 1);
 
         if (isCorrect || newAttempts.length >= MAX_ATTEMPTS) {
-            setRevealed(MAX_ATTEMPTS);
+            setRevealCount(MAX_ATTEMPTS);
             setFinished(true);
             onFinish({
                 challenge_id: challenge.challengeId,
@@ -122,9 +142,10 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
                     <div className="flag-container">
                         <img src={challenge.flagUrl} className="flag-image" alt="Flag" />
                         <div className="flag-overlay">
-                            {[...Array(MAX_ATTEMPTS)].map((_, i) => (
-                                <div key={i} className={`tile ${i < revealed ? "revealed" : "grey"}`} />
-                            ))}
+                            {[...Array(MAX_ATTEMPTS)].map((_, i) => {
+                                const isRevealed = revealOrder.indexOf(i) < revealCount;
+                                return <div key={i} className={`tile ${isRevealed ? "revealed" : "grey"}`} />;
+                            })}
                         </div>
                     </div>
 
