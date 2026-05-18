@@ -1,22 +1,26 @@
 import { useTheme } from "../../context/ThemeContext";
 
 type GameStat = {
-	game: string;
-	averageLabel: string;
-	averageValue: string;
-	bestValue: string;
+	title: string;
+	averageAttempts: number;
+	averageTime: number;
 	gamesPlayed: number;
 };
 
-const GAME_STATS: GameStat[] = [
-	{ game: "Wordle", averageLabel: "Avg attempts", averageValue: "4.2", bestValue: "2", gamesPlayed: 42 },
-	{ game: "Flagle", averageLabel: "Avg attempts", averageValue: "3.1", bestValue: "1", gamesPlayed: 38 },
-	{ game: "Math Sprint", averageLabel: "Avg time", averageValue: "52s", bestValue: "38s", gamesPlayed: 45 },
-	{ game: "Worldle", averageLabel: "Avg attempts", averageValue: "4.5", bestValue: "2", gamesPlayed: 35 },
+const DEFAULT_GAME_STATS: GameStat[] = [
+	{ title: "Wordle", averageAttempts: 4.2, averageTime: 120, gamesPlayed: 42 },
+	{ title: "Flagle", averageAttempts: 3.1, averageTime: 115, gamesPlayed: 38 },
+	{ title: "Math Sprint", averageAttempts: 2.7, averageTime: 52, gamesPlayed: 45 },
+	{ title: "Worldle", averageAttempts: 4.5, averageTime: 140, gamesPlayed: 35 },
 ];
 
-export default function GameStatistics() {
+type GameStatisticsProps = {
+	games?: GameStat[];
+};
+
+export default function GameStatistics({ games }: GameStatisticsProps) {
 	const { isDark } = useTheme();
+	const stats = games && games.length > 0 ? games : DEFAULT_GAME_STATS;
 
 	return (
 		<section className={`rounded-2xl border p-5 shadow-sm transition-colors ${isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-linear-to-br from-white to-emerald-50/20"}`}>
@@ -25,23 +29,23 @@ export default function GameStatistics() {
 			</h2>
 
 			<div className="mt-4">
-				{GAME_STATS.map((stat, index) => (
+				{stats.map((stat, index) => (
 					<article
-						key={stat.game}
+						key={stat.title}
 						className={[
 							"grid items-center gap-3 py-4 transition-colors sm:grid-cols-[minmax(0,1fr)_auto]",
 							isDark ? "hover:bg-slate-800/40" : "hover:bg-emerald-50/40",
-							index !== GAME_STATS.length - 1 ? (isDark ? "border-b border-slate-800" : "border-b border-slate-200") : "",
+							index !== stats.length - 1 ? (isDark ? "border-b border-slate-800" : "border-b border-slate-200") : "",
 						].join(" ")}
 					>
 						<div className="min-w-0">
 							<p className={`text-2xl font-semibold leading-tight ${isDark ? "text-slate-100" : "text-slate-800"}`}>
-								{stat.game}
+								{stat.title}
 							</p>
 							<p className={`mt-1 text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-								{stat.averageLabel}: <span className={`font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>{stat.averageValue}</span>
+								Avg attempts: <span className={`font-semibold ${isDark ? "text-slate-200" : "text-slate-700"}`}>{stat.averageAttempts.toFixed(1)}</span>
 								<span className="mx-2"> </span>
-								Best: <span className="font-semibold text-emerald-500">{stat.bestValue}</span>
+								Avg time: <span className="font-semibold text-emerald-500">{Math.round(stat.averageTime)}s</span>
 							</p>
 						</div>
 

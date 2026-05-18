@@ -6,18 +6,18 @@ type DayActivity = {
     level: number;
 };
 
-const ACTIVITY: DayActivity[] = [
-    { day: "Mon", level: 5 },
-    { day: "Tue", level: 1 },
-    { day: "Wed", level: 7 },
-    { day: "Thu", level: 3 },
-    { day: "Fri", level: 5 },
-    { day: "Sat", level: 7 },
-    { day: "Sun", level: 1 },
-];
+type WeeklyActivityProps = {
+    week?: number[];
+};
 
-export default function WeeklyActivity() {
+export default function WeeklyActivity({ week }: WeeklyActivityProps) {
     const { isDark } = useTheme();
+    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const hasWeekData = Array.isArray(week) && week.length === 7;
+    const activity: DayActivity[] = days.map((day, index) => ({
+        day,
+        level: hasWeekData ? Math.max(0, Number(week[index]) || 0) : 0,
+    }));
 
     return (
         <section className={`rounded-2xl border p-5 shadow-sm transition-colors ${isDark ? "border-slate-800 bg-slate-900" : "border-slate-200 bg-linear-to-br from-white to-amber-50/25"}`}>
@@ -27,7 +27,7 @@ export default function WeeklyActivity() {
             </h2>
 
             <div className="mt-4 grid h-56 grid-cols-7 gap-1.5 sm:gap-2">
-                {ACTIVITY.map((item) => (
+                {activity.map((item) => (
                     <div key={item.day} className="flex flex-col">
                         <div className={`flex flex-1 items-end rounded-xl p-0.5 ${isDark ? "bg-slate-800" : "bg-slate-100"}`}>
                             <div

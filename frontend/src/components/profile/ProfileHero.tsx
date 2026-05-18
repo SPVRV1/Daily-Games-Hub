@@ -4,9 +4,12 @@ type ProfileHeroProps = {
     name: string;
     memberSince: string;
     initial: string;
+    onEditProfile?: () => void;
+    editLabel?: string;
+    editDisabled?: boolean;
 };
 
-export default function ProfileHero({ name, memberSince, initial }: ProfileHeroProps) {
+export default function ProfileHero({ name, memberSince, initial, onEditProfile, editLabel = "Edit Profile", editDisabled }: ProfileHeroProps) {
     const { isDark } = useTheme();
 
     return (
@@ -24,9 +27,11 @@ export default function ProfileHero({ name, memberSince, initial }: ProfileHeroP
 
                 <button
                     type="button"
-                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    onClick={onEditProfile}
+                    disabled={editDisabled}
                 >
-                    Edit Profile
+                    {editLabel}
                 </button>
             </div>
         </section>
