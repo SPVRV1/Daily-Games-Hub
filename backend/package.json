@@ -8,8 +8,8 @@
         "build": "tsc -p tsconfig.json",
         "start": "node dist/index.js",
         "test": "vitest run",
-        "test:watch": "vitest"
-        "seed:wordle": "tsx src/seeds/wordle.seed.ts"
+        "test:watch": "vitest",
+        "seed:wordle": "tsx src/seeds/wordle.seed.ts",
         "seed:flagle": "tsx src/seeds/flagle.seed.ts"
     },
     "keywords": [],
