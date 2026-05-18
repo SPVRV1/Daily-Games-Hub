@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-
 import Navbar from "../components/Navbar";
 import "./Home.css";
 
@@ -83,7 +82,6 @@ const GAMES: Game[] = [
 
 export default function Home() {
     const navigate = useNavigate();
-    
     return (
         <div className={"home"}>
             {/* Navbar */}
@@ -135,6 +133,10 @@ export default function Home() {
                             onClick={() => {
                                 if (game.name === "Wordle")
                                     navigate("/wordle");
+                                if(game.name === "Flagle")
+                                    navigate("/flagle");
+                                if(game.name === "Math Sprint")
+                                    navigate("/math-sprint");
                             }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>

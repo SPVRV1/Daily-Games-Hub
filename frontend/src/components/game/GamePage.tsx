@@ -1,28 +1,37 @@
-import React from 'react';
-import { GameType, GameChallenge, GameResult } from '../../types/game.types';
-import { useGame } from '../../hooks/useGame';
-import GameResultScreen from './GameResult';
-import AlreadyPlayed from './AlreadyPlayed';
+import React from "react";
+import { GameType, GameChallenge, GameResult } from "../../types/game.types";
+import { useGame } from "../../hooks/useGame";
+import GameResultScreen from "./GameResult";
+import AlreadyPlayed from "./AlreadyPlayed";
 
 interface GamePageProps {
   gameType: GameType;
-  renderGame: (challenge: GameChallenge, onFinish: (result: GameResult) => void) => React.ReactNode;
+  challengeQueryParams?: Record<string, string>;
+  renderGame: (
+    challenge: GameChallenge,
+    onFinish: (result: GameResult) => void,
+  ) => React.ReactNode;
 }
 // Wrapper around every game, which is in one of 3 states: loading, already played => (showes reuslts) and finised
-const GamePage = ({ gameType, renderGame }: GamePageProps) => {
-  const { state, submitResult } = useGame(gameType);
+const GamePage = ({
+  gameType,
+  challengeQueryParams,
+  renderGame,
+}: GamePageProps) => {
+  const { state, submitResult } = useGame(gameType, challengeQueryParams);
 
-  if (state.status === 'loading') return <div>Loading...</div>;
+  if (state.status === "loading") return <div>Loading...</div>;
 
-  if (state.status === 'already_played') return <AlreadyPlayed result={state.result!} />;
+  if (state.status === "already_played")
+    return <AlreadyPlayed result={state.result!} />;
 
-  if (state.status === 'finished') return <GameResultScreen result={state.result!} />;
+  if (state.status === "finished")
+    return <GameResultScreen result={state.result!} />;
 
   return <>{renderGame(state.challenge!, submitResult)}</>;
 };
 
 export default GamePage;
-
 
 /*
 WHAT HAPPENS BEHIND THE SCENES:
