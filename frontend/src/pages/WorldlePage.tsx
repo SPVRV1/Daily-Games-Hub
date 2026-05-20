@@ -1,16 +1,19 @@
 import Navbar from "../components/Navbar";
 import GamePage from "../components/game/GamePage";
-import Wordle from "../components/game/Wordle";
+import Worldle from "../components/game/Worldle";
 
-export default function WordlePage() {
+export default function WorldlePage() {
     return (
         <>
             <Navbar />
 
             <GamePage
-                gameType="wordle"
+                gameType="worldle"
                 renderGame={(challenge, onFinish) => (
-                    <Wordle data={challenge} onFinish={onFinish} />
+                    <Worldle
+                        data={challenge}
+                        onFinish={onFinish}
+                    />
                 )}
             />
         </>
