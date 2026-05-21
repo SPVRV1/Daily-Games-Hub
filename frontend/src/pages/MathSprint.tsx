@@ -12,14 +12,14 @@ const difficultyOptions: Array<{
   title: string;
   description: string;
 }> = [
-    { value: "easy", title: "Easy", description: "Addition only" },
-    { value: "medium", title: "Medium", description: "Addition and subtraction" },
-    {
-      value: "hard",
-      title: "Hard",
-      description: "Addition, subtraction, and multiplication",
-    },
-  ];
+  { value: "easy", title: "Easy", description: "Addition only" },
+  { value: "medium", title: "Medium", description: "Addition and subtraction" },
+  {
+    value: "hard",
+    title: "Hard",
+    description: "Addition, subtraction, and multiplication",
+  },
+];
 
 interface MathSprintQuestion {
   id: number;
@@ -38,6 +38,22 @@ interface MathSprintData {
   questions: MathSprintQuestion[];
 }
 
+const difficultyStorageKey = "math-sprint:selected-difficulty";
+
+const readStoredDifficulty = (): MathSprintDifficulty | null => {
+  try {
+    const stored = localStorage.getItem(difficultyStorageKey);
+
+    if (stored === "easy" || stored === "medium" || stored === "hard") {
+      return stored;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 function MathSprintGame({
   challenge,
   onFinish,
@@ -48,72 +64,148 @@ function MathSprintGame({
   const data = challenge.challengeData as unknown as MathSprintData;
   const questions = data.questions;
   const timeLimit = data.time_limit_seconds ?? 60;
+  const storageKey = `math-sprint:${challenge.challenge_id ?? challenge.date}:${data.difficulty}`;
 
-  const [screen, setScreen] = useState<Screen>("idle");
-  const [timeLeft, setTimeLeft] = useState(timeLimit);
-  const [correct, setCorrect] = useState(0);
-  const [wrong, setWrong] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [inputValue, setInputValue] = useState("");
+  type MathSprintProgress = {
+    timeLeft: number;
+    correct: number;
+    wrong: number;
+    currentIndex: number;
+    inputValue: string;
+  };
+
+  const loadProgress = (): MathSprintProgress | null => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (!saved) return null;
+      return JSON.parse(saved) as MathSprintProgress;
+    } catch {
+      return null;
+    }
+  };
+
+  const savedProgress = loadProgress();
+
+  const [screen, setScreen] = useState<Screen>(
+    savedProgress ? "playing" : "idle",
+  );
+  const [timeLeft, setTimeLeft] = useState(
+    savedProgress?.timeLeft ?? timeLimit,
+  );
+  const [correct, setCorrect] = useState(savedProgress?.correct ?? 0);
+  const [wrong, setWrong] = useState(savedProgress?.wrong ?? 0);
+  const [currentIndex, setCurrentIndex] = useState(
+    savedProgress?.currentIndex ?? 0,
+  );
+  const [inputValue, setInputValue] = useState(savedProgress?.inputValue ?? "");
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const feedbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishedRef = useRef(false);
+
+  function clearTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  function clearFeedbackTimer() {
+    if (feedbackRef.current) {
+      clearTimeout(feedbackRef.current);
+      feedbackRef.current = null;
+    }
+  }
+
+  function finishGame() {
+    if (finishedRef.current) return;
+
+    finishedRef.current = true;
+    clearTimer();
+    clearFeedbackTimer();
+
+    try {
+      localStorage.removeItem(storageKey);
+      localStorage.removeItem(difficultyStorageKey);
+    } catch {
+      // Ignore storage errors and still finish the game.
+    }
+
+    setScreen("idle");
+    onFinish({
+      challenge_id: challenge.challenge_id ?? "",
+      difficulty: data.difficulty,
+      score: 0,
+      correct_answers: correct,
+      time_seconds: timeLimit,
+      attempts_used: correct + wrong,
+      completed: correct > 0,
+    });
+  }
 
   useEffect(() => {
     if (screen !== "playing") return;
+    clearTimer();
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
-          clearInterval(timerRef.current!);
+          clearTimer();
           return 0;
         }
         return t - 1;
       });
     }, 1000);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      clearTimer();
     };
   }, [screen]);
 
   useEffect(() => {
-    if (timeLeft === 0 && screen === "playing") {
-      setScreen("idle");
-      onFinish({
-        challenge_id: challenge.challengeData.challenge_id as string,
-        difficulty: data.difficulty,
-        score: 0,
-        correct_answers: correct,
-        time_seconds: timeLimit,
-        attempts_used: correct + wrong,
-        completed: correct > 0,
-      });
+    if (screen !== "playing") return;
+
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          timeLeft,
+          correct,
+          wrong,
+          currentIndex,
+          inputValue,
+        }),
+      );
+    } catch {
+      // Ignore storage errors; gameplay still continues normally.
     }
-  }, [timeLeft]);
+  }, [screen, storageKey, timeLeft, correct, wrong, currentIndex, inputValue]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && screen === "playing") {
+      finishGame();
+    }
+  }, [timeLeft, screen, correct, wrong]);
 
   useEffect(() => {
     if (screen === "playing" && currentIndex >= questions.length) {
-      clearInterval(timerRef.current!);
-      setScreen("idle");
-      //const timeUsed = timeLimit - timeLeft;
-      onFinish({
-        challenge_id: challenge.challengeData.challenge_id as string,
-        difficulty: data.difficulty,
-        score: 0,
-        correct_answers: correct,
-        time_seconds: timeLimit,
-        attempts_used: correct + wrong,
-        completed: correct > 0,
-      });
+      finishGame();
     }
-  }, [currentIndex]);
+  }, [currentIndex, screen, correct, wrong]);
 
   useEffect(() => {
     if (screen === "playing") inputRef.current?.focus();
   }, [screen, currentIndex]);
 
   function startGame() {
+    finishedRef.current = false;
+    clearTimer();
+    clearFeedbackTimer();
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // Ignore storage errors and start a fresh run anyway.
+    }
     setTimeLeft(timeLimit);
     setCorrect(0);
     setWrong(0);
@@ -126,7 +218,8 @@ function MathSprintGame({
   function submitAnswer() {
     const val = parseInt(inputValue);
     if (isNaN(val)) return;
-    if (feedbackRef.current) clearTimeout(feedbackRef.current);
+    if (finishedRef.current) return;
+    clearFeedbackTimer();
 
     const currentQuestion = questions[currentIndex];
     if (val === currentQuestion.answer) {
@@ -238,15 +331,24 @@ function MathSprintGame({
           </div>
         </>
       )}
-
     </div>
   );
 }
 
 export default function MathSprint() {
   const [difficulty, setDifficulty] = useState<MathSprintDifficulty | null>(
-    null,
+    () => readStoredDifficulty(),
   );
+
+  useEffect(() => {
+    if (!difficulty) return;
+
+    try {
+      localStorage.setItem(difficultyStorageKey, difficulty);
+    } catch {
+      // Ignore storage errors and keep the current session usable.
+    }
+  }, [difficulty]);
 
   return (
     <>
