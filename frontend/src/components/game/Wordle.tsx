@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 import "./Wordle.css";
 
@@ -9,22 +9,76 @@ const WORD_LENGTH = 5;
 const FLIP_DELAY = 250;
 
 export default function Wordle({ data, onFinish }: any ) {
-    const [language, setLanguage] = useState<"en" | "sl">("en");
+    const STORAGE_KEY = useMemo(() => {
+        const id = data?.challengeData?.challengeId;
 
-    const [currentGuess, setCurrentGuess] = useState("");
-    const [guesses, setGuesses] = useState<string[]>([]);
-    const [statuses, setStatuses] = useState<string[][]>([]); 
-    const [keyboardStatus, setKeyboardStatus] = useState<Record<string, string>>({});
-    const [gameOver, setGameOver] = useState(false);
+        if (!id)
+            return "wordle-fallback";
+
+        const cleanId = id.replace(/^wordle-/, "");
+
+        return `wordle-${cleanId}`;
+    }, [data?.challengeData?.challengeId]);
+   
+    // const STORAGE_KEY = "wordle-test";
+
+    const safeParse = (value: string | null, fallback: any) => {
+        try {
+            return value ? JSON.parse(value) : fallback;
+        }
+        catch {
+            return fallback;
+        }
+    };
+
+    // Load from local storage so refresh does not restart game state
+    const [currentGuess, setCurrentGuess] = useState(() => {
+        return localStorage.getItem(`${STORAGE_KEY}-current`) || "";
+    });
+
+    const [guesses, setGuesses] = useState<string[]>(() => {
+        return safeParse(localStorage.getItem(`${STORAGE_KEY}-guesses`), []);
+    });
+
+    const [statuses, setStatuses] = useState<string[][]>(() => {
+        return safeParse(localStorage.getItem(`${STORAGE_KEY}-statuses`), []);
+    });
+
+    const [keyboardStatus, setKeyboardStatus] = useState<Record<string, string>>(() => {
+        return safeParse(localStorage.getItem(`${STORAGE_KEY}-keyboard`), {});
+    });
+
+    const [gameOver, setGameOver] = useState(() => {
+        return safeParse(localStorage.getItem(`${STORAGE_KEY}-gameover`), false);
+    });
 
     const [popTile, setPopTile] = useState<string | null>(null);
     const [animating, setAnimating] = useState(false);
     const [toast, setToast] = useState("");
     
     const ANSWER = data?.challengeData?.answer ?? "";  
-    const VALID_GUESSES = data?.challengeData?.validGuesses ?? [
-        "HELLO"
-    ];
+    const VALID_GUESSES = data?.challengeData?.validGuesses ?? [ "HELLO" ];
+
+    // Saving to local storage
+    useEffect(() => {
+        localStorage.setItem(`${STORAGE_KEY}-current`, currentGuess);
+    }, [currentGuess, STORAGE_KEY]);
+
+    useEffect(() => {
+        localStorage.setItem(`${STORAGE_KEY}-guesses`, JSON.stringify(guesses));
+    }, [guesses, STORAGE_KEY]);
+
+    useEffect(() => {
+        localStorage.setItem(`${STORAGE_KEY}-statuses`, JSON.stringify(statuses));
+    }, [statuses, STORAGE_KEY]);
+
+    useEffect(() => {
+        localStorage.setItem(`${STORAGE_KEY}-keyboard`, JSON.stringify(keyboardStatus));
+    }, [keyboardStatus, STORAGE_KEY]);
+
+    useEffect(() => {
+        localStorage.setItem(`${STORAGE_KEY}-gameover`, JSON.stringify(gameOver));
+    }, [gameOver, STORAGE_KEY]);
 
     // Typing letters in row
     const addLetter = (letter: string) => {
@@ -94,74 +148,80 @@ export default function Wordle({ data, onFinish }: any ) {
 
     // Submitting guess
     const submitGuess = useCallback(async () => {
-    if (gameOver || animating) return;
+        if (gameOver || animating) return;
 
-    if (currentGuess.length !== WORD_LENGTH) {
-        showToast("Not enough letters");
-        return;
-    }
-
-    const guess = currentGuess.toUpperCase();
-
-    if (!VALID_GUESSES.includes(guess)) {
-        showToast("Not in word list");
-        return;
-    }
-
-    const result = evaluateGuess(guess);
-
-    setAnimating(true);
-    setCurrentGuess("");
-
-    const rowIndex = guesses.length;
-
-    setGuesses(prev => [...prev, guess]);
-    setStatuses(prev => [...prev, []]);
-
-    for (let i = 0; i < WORD_LENGTH; i++) {
-        await new Promise(res => setTimeout(res, FLIP_DELAY));
-
-        setStatuses(prev => {
-            const copy = [...prev];
-            const newRow = copy[rowIndex] ? [...copy[rowIndex]] : [];
-            newRow[i] = result[i];
-            copy[rowIndex] = newRow;
-            return copy;
-        });
-    }
-
-    const newMap = { ...keyboardStatus };
-
-    guess.split("").forEach((letter, i) => {
-        const current = newMap[letter];
-
-        if (result[i] === "green") newMap[letter] = "green";
-        else if (result[i] === "yellow" && current !== "green") newMap[letter] = "yellow";
-        else if (!current) newMap[letter] = "gray";
-    });
-
-    setKeyboardStatus(newMap);
-
-    setTimeout(() => {
-        setAnimating(false);
-
-        const isWin = guess === ANSWER;
-        const isLoss = guesses.length + 1 === MAX_ATTEMPTS;
-
-        if (isWin || isLoss) {
-            setGameOver(true);
-            onFinish?.({
-                challenge_id: data?.date ?? "wordle",
-                completed: isWin,
-                attempts_used: guesses.length + 1,
-                correct_answers: isWin ? 1 : 0,
-                time_seconds: 0,
-                score: isWin ? 100 : 0
-            });
+        if (currentGuess.length !== WORD_LENGTH) {
+            showToast("Not enough letters");
+            return;
         }
-    }, 1200);
 
-    }, [gameOver, animating, currentGuess, guesses, keyboardStatus, VALID_GUESSES, ANSWER]);
+        const guess = currentGuess.toUpperCase();
+
+        if (!VALID_GUESSES.includes(guess)) {
+            showToast("Not in word list");
+            return;
+        }
+
+        const result = evaluateGuess(guess);
+
+        setAnimating(true);
+        setCurrentGuess("");
+
+        setGuesses(prev => {
+            const updated = [...prev, guess];
+            const rowIndex = updated.length - 1;
+
+            setStatuses(prevStatuses => [...prevStatuses, []]);
+
+            (async () => {
+                for (let i = 0; i < WORD_LENGTH; i++) {
+                    await new Promise(res => setTimeout(res, FLIP_DELAY));
+
+                    setStatuses(prev => {
+                        const copy = [...prev];
+                        const row = copy[rowIndex] ? [...copy[rowIndex]] : [];
+                        row[i] = result[i];
+                        copy[rowIndex] = row;
+                        return copy;
+                    });
+                }
+                const newMap = { ...keyboardStatus };
+
+                guess.split("").forEach((letter, i) => {
+                    const current = newMap[letter];
+
+                    if (result[i] === "green") newMap[letter] = "green";
+                    else if (result[i] === "yellow" && current !== "green") newMap[letter] = "yellow";
+                    else if (!current) newMap[letter] = "gray";
+                });
+
+                setKeyboardStatus(newMap);
+
+                setTimeout(() => {
+                    setAnimating(false);
+
+                    const isWin = guess === ANSWER;
+                    const isLoss = updated.length === MAX_ATTEMPTS;
+
+                    if (isWin || isLoss) {
+                        setGameOver(true);
+
+                        onFinish?.({
+                            challenge_id: data?.challengeData?.challengeId,
+                            completed: isWin,
+                            attempts_used: updated.length,
+                            correct_answers: isWin ? 1 : 0,
+                            time_seconds: 0,
+                            score: isWin ? 100 : 0
+                        });
+                    }
+                }, 1200);
+            })();
+
+            return updated;
+        });
+
+    }, [gameOver, animating, currentGuess, VALID_GUESSES, ANSWER, keyboardStatus, guesses, statuses, onFinish, data]);
 
     // Enabled using physical keyboard, not just the on screen one
     useEffect(() => {
@@ -212,25 +272,9 @@ export default function Wordle({ data, onFinish }: any ) {
         <div className="container auth-container w-full">
             <main className="page">
 
-                {/* Row for link to home page and language switch button */}
+                {/* Row for link to home page */}
                 <div className="top-row">
                     <Link to="/" className="back-link">← Back to Home</Link>
-
-                    <div className="language-switch">
-                        <button
-                            className={language === "en" ? "active" : ""}
-                            onClick={() => setLanguage("en")}
-                        >
-                            English
-                        </button>
-
-                        <button
-                            className={language === "sl" ? "active" : ""}
-                            onClick={() => setLanguage("sl")}
-                        >
-                            Slovenian
-                        </button>
-                    </div>
                 </div>
 
                 {/* Wordle part of site */}
