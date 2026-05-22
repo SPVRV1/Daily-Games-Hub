@@ -1,7 +1,10 @@
 import "../pages/Home.css";
 import { Link } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useNotifications } from "../hooks/useNotifications";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
+import NotificationDropdown from "./NotificationDropdown";
+import { useState } from "react";
 
 type NavbarProps = {
     activeLink?: "home" | "friends" | "statistics" | "none";
@@ -10,7 +13,9 @@ type NavbarProps = {
 
 export default function Navbar({ activeLink = "none", variant = "default" }: NavbarProps) {
     const { isDark, toggleTheme } = useTheme();
+    const { unreadCount } = useNotifications();
     const isAuth = variant === "auth";
+    const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
     return (
         <nav className={`navbar${isAuth ? " navbar--auth" : ""} w-full`}>
@@ -32,10 +37,20 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                 </button>
                 {!isAuth && (
                     <>
-                        <button className="icon-btn" aria-label="Notifications">
-                            <Bell size={22} strokeWidth={2} />
-                            <span className="notif-dot" />
-                        </button>
+                        <div className="relative">
+                            <button
+                                className="icon-btn"
+                                aria-label="Notifications"
+                                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                            >
+                                <Bell size={22} strokeWidth={2} />
+                                {unreadCount > 0 && <span className="notif-dot" />}
+                            </button>
+                            <NotificationDropdown
+                                isOpen={isNotificationOpen}
+                                onClose={() => setIsNotificationOpen(false)}
+                            />
+                        </div>
                         <Link to="/profile" className="icon-btn" aria-label="Profile">
                             <div className="avatar">Z</div>
                         </Link>
