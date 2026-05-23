@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { Notification, NotificationContextType } from '../types/notification.types';
 
 export const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -45,45 +45,117 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
 ];
 
+const API_BASE = 'http://localhost:3000/api'; // change port
+
+function getToken(): string | null {
+    return localStorage.getItem('token'); // adjust if you store it differently
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, read: true } : notif
-      )
+    // fetch on mount
+    useEffect(() => {
+        fetchNotifications();
+    }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const token = getToken();
+            if (!token) return;
+
+            const res = await fetch(`${API_BASE}/notifications`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+                setNotifications(
+                    data.notifications.map((n: any) => ({
+                        id: String(n._id),
+                        type: n.type,
+                        message: n.message,
+                        timestamp: new Date(n.created_at),
+                        read: n.read,
+                        actor: n.actor,
+                        actionUrl: n.action_url,
+                    }))
+                );
+            }
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error);
+        }
+    };
+
+    const markAsRead = async (id: string) => {
+        try {
+            const token = getToken();
+            await fetch(`${API_BASE}/notifications/${id}/read`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+            );
+        } catch (error) {
+            console.error('Failed to mark as read:', error);
+        }
+    };
+
+    const markAllAsRead = async () => {
+        try {
+            const token = getToken();
+            await fetch(`${API_BASE}/notifications/read-all`, {
+                method: 'PATCH',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+        } catch (error) {
+            console.error('Failed to mark all as read:', error);
+        }
+    };
+
+    const deleteNotification = async (id: string) => {
+        try {
+            const token = getToken();
+            await fetch(`${API_BASE}/notifications/${id}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setNotifications((prev) => prev.filter((n) => n.id !== id));
+        } catch (error) {
+            console.error('Failed to delete notification:', error);
+        }
+    };
+
+    const clearAll = async () => {
+        try {
+            const token = getToken();
+            await fetch(`${API_BASE}/notifications`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setNotifications([]);
+        } catch (error) {
+            console.error('Failed to clear notifications:', error);
+        }
+    };
+
+    const unreadCount = notifications.filter((n) => !n.read).length;
+
+    return (
+        <NotificationContext.Provider value={{
+            notifications,
+            unreadCount,
+            markAsRead,
+            markAllAsRead,
+            deleteNotification,
+            clearAll,
+        }}>
+            {children}
+        </NotificationContext.Provider>
     );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notif) => ({ ...notif, read: true }))
-    );
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((notif) => notif.id !== id));
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const value: NotificationContextType = {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAll,
-  };
-
-  return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
-  );
 }

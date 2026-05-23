@@ -12,6 +12,10 @@ import countriesRoutes from './routes/countries.routes.js';
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
 import gamesRoutes from "./routes/games.js";
+import notificationRoutes from './routes/notification.js';
+
+
+import testRouter from "./routes/test.js";
 
 mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
@@ -36,6 +40,9 @@ app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
 app.use("/api/user", userRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/countries', countriesRoutes);
+app.use('/api/notifications', notificationRoutes);
+
+//app.use('/api', testRouter);      //FOR TESTING
 
 app.use("/api/friends", async (req, res, next) => {
     try {
