@@ -100,6 +100,11 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 - `GET /api/friends/:userId/requests` - pridobi čakajoče prošnje za prijateljstvo
 - `DELETE /api/friends/:friendshipId` - odstrani sprejeto prijateljstvo
 
+### Statistika
+- `GET /api/stats/user/:userId` - statistika posameznega uporabnika (streaki, povprecja, completion rate)
+- `GET /api/stats/user/me` - statistika prijavljenega uporabnika (zahteva JWT)
+- `GET /api/stats/leaderboard?period=day|week|month|all&limit=50` - globalna lestvica po skupnem rezultatu
+
 ---
 
 ## Kratek način zagona
