@@ -69,11 +69,15 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
             .catch(() => {});
     }, []);
 
+    const guessed = new Set(attempts.map((a) => a.guess.toLowerCase()));
+
     const filtered =
         guess.trim().length === 0
             ? []
-            : countries.filter((c) =>
-                  c.name.toLowerCase().includes(guess.toLowerCase())
+            : countries.filter(
+                  (c) =>
+                      c.name.toLowerCase().includes(guess.toLowerCase()) &&
+                      !guessed.has(c.name.toLowerCase())
               );
 
     const handleGuess = (value: string) => {
