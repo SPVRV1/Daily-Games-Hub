@@ -131,12 +131,12 @@ export default function Home() {
                             className={`game-card${game.completed ? " game-card--completed" : ""}`}
                             key={game.name}
                             onClick={() => {
-                                if (game.name === "Wordle")
-                                    navigate("/wordle");
-                                if(game.name === "Flagle")
-                                    navigate("/flagle");
-                                if(game.name === "Math Sprint")
-                                    navigate("/math-sprint");
+                                if (game.name === "Wordle") navigate("/wordle");
+                                if (game.name === "Flagle") navigate("/flagle");
+                                if (game.name === "Math Sprint") navigate("/math-sprint");
+                                if (game.name === "Songless") navigate("/songless");
+                                if (game.name === "Worldle") navigate("/worldle");
+                                if (game.name === "More or Less") navigate("/more-or-less");
                             }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>

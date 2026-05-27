@@ -10,7 +10,8 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "seed:wordle": "tsx src/seeds/wordle.seed.ts",
-        "seed:flagle": "tsx src/seeds/flagle.seed.ts"
+        "seed:flagle": "tsx src/seeds/flagle.seed.ts",
+        "seed:songless": "tsx src/seeds/songless.seed.ts"
     },
     "keywords": [],
     "author": "",
