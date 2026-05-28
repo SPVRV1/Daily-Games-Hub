@@ -1,125 +1,74 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+    bearing,
+    countryCoords,
+    haversineDistance,
+} from "../../data/countryCoords";
 
 import "./Worldle.css";
 
 const MAX_ATTEMPTS = 6;
 
-// Dummy data to test distances between countries
-const testDistances = [
-    { distance: 800, direction: "N" },
-    { distance: 600, direction: "S" },
-    { distance: 400, direction: "E" },
-    { distance: 200, direction: "W" },
-    { distance: 1000, direction: "NE" },
-    { distance: 50, direction: "SW" },
-];
+interface Country {
+    name: string;
+    code: string;
+}
 
-// Dummy data for arrows to appear in attempt based on the test location of the country
-const directionToArrow = (direction: string) => {
-    const directions: Record<string, string> = {
-        N: "↑",
-        S: "↓",
-        E: "→",
-        W: "←",
-        NE: "↗",
-        NW: "↖",
-        SE: "↘",
-        SW: "↙",
-    };
+interface Attempt {
+    name: string;
+    correct: boolean;
+    distance: number | null;
+    direction: string | null;
+}
 
-    return directions[direction] || "";
-};
+const directionToArrow = (direction: string | null) => direction ?? "";
 
 export default function Worldle({ data, onFinish }: any) {
     const [guess, setGuess] = useState("");
-    const [guesses, setGuesses] = useState<any[]>([]);
+    const [guesses, setGuesses] = useState<Attempt[]>([]);
     const [gameOver, setGameOver] = useState(false);
     const [toast, setToast] = useState("");
+    const [countries, setCountries] = useState<Country[]>([]);
 
-    const TODAYS_COUNTRY = data?.challengeData?.answer ?? "Slovenia"; // Dummy data for answer
-    
-    // Dummy data for valid country guesses
-    const VALID_COUNTRIES =
-        data?.challengeData?.validCountries ?? [
-            "Slovenia",
-            "Germany",
-            "France",
-            "Italy",
-            "Croatia",
-            "Austria",
-            "Hungary"
-        ];
+    const TODAYS_COUNTRY = data?.challengeData?.answer ?? "";
+    const VALID_COUNTRIES: string[] = data?.challengeData?.validCountries ?? [];
+    const SILHOUETTE = data?.challengeData?.silhouette ?? "";
 
-    // Dummy data for country silhouette testing
-    const testSloveniaGeoJSON = {
-        type: "Feature",
-        id: "SVN",
-        properties: { name: "Slovenia" },
-        geometry: {
-            type: "Polygon",
-            coordinates: [[
-                [13.806475, 46.509306],
-                [14.632472, 46.431817],
-                [15.137092, 46.658703],
-                [16.011664, 46.683611],
-                [16.202298, 46.852386],
-                [16.370505, 46.841327],
-                [16.564808, 46.503751],
-                [15.768733, 46.238108],
-                [15.67153, 45.834154],
-                [15.323954, 45.731783],
-                [15.327675, 45.452316],
-                [14.935244, 45.471695],
-                [14.595109, 45.634941],
-                [14.411968, 45.466166],
-                [13.71506, 45.500324],
-                [13.93763, 45.591016],
-                [13.69811, 46.016778],
-                [13.806475, 46.509306]
-            ]]
-        }
-    };
+    useEffect(() => {
+        const loadCountries = async () => {
+            try {
+                const response = await fetch("/api/countries");
+                const list: Country[] = await response.json();
+                setCountries(
+                    list.filter((country) =>
+                        VALID_COUNTRIES.includes(country.name),
+                    ),
+                );
+            } catch {
+                setCountries([]);
+            }
+        };
 
-    // Testing the silhouette
-    const SILHOUETTE = data?.challengeData?.silhouette ?? geoJSONToPath(testSloveniaGeoJSON);
+        loadCountries();
+    }, [VALID_COUNTRIES]);
+
+    const countryByName = useMemo(() => {
+        return new Map(
+            countries.map((country) => [country.name.toLowerCase(), country]),
+        );
+    }, [countries]);
+
+    const targetCountry =
+        countryByName.get(TODAYS_COUNTRY.toLowerCase()) ?? null;
 
     // For countries to appear on autocomplete dropdown while user is typing guess
     const filteredCountries =
         guess.trim().length === 0
             ? []
-            : VALID_COUNTRIES.filter((country: string) =>
-                    country.toLowerCase().includes(guess.toLowerCase())
-                );
-
-    // Helper function to convert geojson data to svg silhouette of the country
-    function geoJSONToPath(feature: any) {
-        const coords = feature.geometry.coordinates[0];
-        const lons = coords.map((c: number[]) => c[0]);
-        const lats = coords.map((c: number[]) => c[1]);
-
-        const minLon = Math.min(...lons);
-        const maxLon = Math.max(...lons);
-        const minLat = Math.min(...lats);
-        const maxLat = Math.max(...lats);
-
-        const scale = (lon: number, lat: number) => {
-            const x = ((lon - minLon) / (maxLon - minLon)) * 230;
-            const y = ((maxLat - lat) / (maxLat - minLat)) * 150;
-            return [x, y];
-        };
-
-        let path = "";
-
-        coords.forEach((c: number[], i: number) => {
-            const [x, y] = scale(c[0], c[1]);
-            path += i === 0 ? `M${x} ${y}` : ` L${x} ${y}`;
-        });
-
-        path += " Z";
-
-        return path;
-    }
+            : VALID_COUNTRIES.filter((country) =>
+                  country.toLowerCase().includes(guess.toLowerCase()),
+              );
 
     // Hints for user
     const showToast = (message: string) => {
@@ -133,8 +82,7 @@ export default function Worldle({ data, onFinish }: any) {
     const submitGuess = (value?: string) => {
         const raw = (value ?? guess).trim();
 
-        if (gameOver)
-            return;
+        if (gameOver) return;
 
         if (!raw) {
             showToast("Enter a country");
@@ -142,7 +90,11 @@ export default function Worldle({ data, onFinish }: any) {
         }
         const formattedGuess = raw;
 
-        if (guesses.some(g => g.name.toLowerCase() === formattedGuess.toLowerCase())) {
+        if (
+            guesses.some(
+                (g) => g.name.toLowerCase() === formattedGuess.toLowerCase(),
+            )
+        ) {
             showToast("Already guessed this country");
             return;
         }
@@ -150,11 +102,40 @@ export default function Worldle({ data, onFinish }: any) {
             showToast("Country not found");
             return;
         }
-        const isCorrect = formattedGuess.toLowerCase() === TODAYS_COUNTRY.toLowerCase();
+
+        const guessedCountry = countryByName.get(formattedGuess.toLowerCase());
+        const isCorrect =
+            formattedGuess.toLowerCase() === TODAYS_COUNTRY.toLowerCase();
+        let distance: number | null = null;
+        let direction: string | null = null;
+
+        if (!isCorrect && guessedCountry && targetCountry) {
+            const guessCoords =
+                countryCoords[guessedCountry.code.toLowerCase()];
+            const targetCoords =
+                countryCoords[targetCountry.code.toLowerCase()];
+
+            if (guessCoords && targetCoords) {
+                distance = haversineDistance(
+                    guessCoords[0],
+                    guessCoords[1],
+                    targetCoords[0],
+                    targetCoords[1],
+                );
+                direction = bearing(
+                    guessCoords[0],
+                    guessCoords[1],
+                    targetCoords[0],
+                    targetCoords[1],
+                );
+            }
+        }
 
         const newGuess = {
             name: formattedGuess,
-            correct: isCorrect
+            correct: isCorrect,
+            distance,
+            direction,
         };
 
         const updatedGuesses = [...guesses, newGuess];
@@ -173,7 +154,7 @@ export default function Worldle({ data, onFinish }: any) {
                 attempts_used: updatedGuesses.length,
                 correct_answers: isCorrect ? 1 : 0,
                 time_seconds: 0,
-                score: isCorrect ? 100 : 0
+                score: isCorrect ? 100 : 0,
             });
         }
     };
@@ -185,15 +166,15 @@ export default function Worldle({ data, onFinish }: any) {
     return (
         <div className="container auth-container w-full">
             <main className="worldle-page">
-
                 {/* Top row */}
                 <div className="top-row">
-                    <Link to="/" className="back-link">← Back to Home</Link>
+                    <Link to="/" className="back-link">
+                        ← Back to Home
+                    </Link>
                 </div>
 
                 {/* Worldle part of site */}
                 <div className="wordle-wrapper">
-
                     {toast && <div className="toast">{toast}</div>}
 
                     <h1>Worldle</h1>
@@ -201,11 +182,13 @@ export default function Worldle({ data, onFinish }: any) {
 
                     {/* Worldle card */}
                     <div className="worldle-game-card">
-
                         {/* Silhouette of country */}
                         <div className="silhouette-container">
                             <svg viewBox="0 0 230 150" className="country-svg">
-                                <path d={SILHOUETTE} className="country-shape" />
+                                <path
+                                    d={SILHOUETTE}
+                                    className="country-shape"
+                                />
                             </svg>
                         </div>
 
@@ -220,18 +203,13 @@ export default function Worldle({ data, onFinish }: any) {
                         {guesses.map((g, index) => (
                             <div
                                 key={index}
-                                className={`attempt ${g.correct ? "correct" : "wrong"}`}
-                            >
+                                className={`attempt ${g.correct ? "correct" : "wrong"}`}>
                                 <p>{g.name}</p>
 
-                                {!g.correct && (
+                                {!g.correct && g.distance !== null && (
                                     <p>
-                                        {testDistances[index] && (
-                                            <>
-                                                {testDistances[index].distance ?? 0} km{" "}
-                                                {directionToArrow(testDistances[index].direction ?? "")}
-                                            </>
-                                        )}
+                                        {g.distance.toLocaleString()} km{" "}
+                                        {directionToArrow(g.direction)}
                                     </p>
                                 )}
 
@@ -250,8 +228,7 @@ export default function Worldle({ data, onFinish }: any) {
                                 className="worldle-input"
                                 onChange={(e) => setGuess(e.target.value)}
                                 onKeyDown={(e) => {
-                                    if (e.key === "Enter")
-                                        submitGuess();
+                                    if (e.key === "Enter") submitGuess();
                                 }}
                                 disabled={gameOver}
                             />
@@ -259,23 +236,25 @@ export default function Worldle({ data, onFinish }: any) {
                             {/* Autocomplete dropdown menu */}
                             {filteredCountries.length > 0 && !gameOver && (
                                 <div className="worldle-autocomplete">
-                                    {filteredCountries.slice(0, 8).map((country: string) => (
-                                        <div
-                                            key={country}
-                                            className="autocomplete-item"
-                                            onClick={() => { submitGuess(country);}}
-                                        >
-                                            {country}
-                                        </div>
-                                    ))}
+                                    {filteredCountries
+                                        .slice(0, 8)
+                                        .map((country: string) => (
+                                            <div
+                                                key={country}
+                                                className="autocomplete-item"
+                                                onClick={() => {
+                                                    submitGuess(country);
+                                                }}>
+                                                {country}
+                                            </div>
+                                        ))}
                                 </div>
                             )}
 
                             <button
                                 className="worldle-button"
                                 onClick={handleSubmitClick}
-                                disabled={gameOver}
-                            >
+                                disabled={gameOver}>
                                 Answer
                             </button>
                         </div>

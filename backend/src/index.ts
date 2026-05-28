@@ -6,8 +6,9 @@ import express from "express";
 import path from "path";
 import { MongoClient } from "mongodb";
 import mongoose from "mongoose";
-import gameRoutes from './routes/game.routes.js';
-import countriesRoutes from './routes/countries.routes.js';
+import worldleRoutes from "./routes/worldle.routes.js";
+import gameRoutes from "./routes/game.routes.js";
+import countriesRoutes from "./routes/countries.routes.js";
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
@@ -34,8 +35,9 @@ app.use(
 // Serve local audio files placed in backend/public/audio at /audio/*
 app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
 app.use("/api/user", userRoutes);
-app.use('/api/games', gameRoutes);
-app.use('/api/countries', countriesRoutes);
+app.use("/api/games", worldleRoutes);
+app.use("/api/games", gameRoutes);
+app.use("/api/countries", countriesRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {
