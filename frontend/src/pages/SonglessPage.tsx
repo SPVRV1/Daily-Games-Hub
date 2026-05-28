@@ -212,8 +212,9 @@ function Songless({ data, onFinish, hideNavbar = false }: SonglessProps) {
         <>
             {!hideNavbar && <Navbar activeLink="home" />}
             <audio
+                key={challenge.previewUrl}
                 ref={audioRef}
-                src={`${API}${challenge.previewUrl}`}
+                src={`${API}${challenge.previewUrl}?v=${challenge.challengeId}`}
                 preload="auto"
             />
             <main className="songless-main">
@@ -346,37 +347,50 @@ function Songless({ data, onFinish, hideNavbar = false }: SonglessProps) {
     );
 }
 
-// Static demo challenge — replace with GamePage when backend is seeded
-const STATIC_CHALLENGE: GameChallenge = {
-    gameType: "songless",
-    date: "today",
-    challengeData: {
-        challengeId: "songless-demo",
-        previewUrl: "", // no audio yet
-        title: "Titanium",
-        artist: "David Guetta ft. Sia",
-        allSongs: [
-            { title: "Titanium", artist: "David Guetta ft. Sia" },
-            { title: "I Gotta Feeling", artist: "Black Eyed Peas" },
-            { title: "Prada", artist: "Cassö, RAYE, D-Block Europe" },
-            { title: "The Rhythm of the Night", artist: "Corona" },
-            { title: "(It Goes Like) Nanana", artist: "Peggy Gou" },
-            { title: "Moje sonce", artist: "Slovenian artist" },
-            { title: "Gorenjska ljubljena", artist: "Slovenian artist" },
-            { title: "Siva pot", artist: "Slovenian artist" },
-            { title: "Soba 102", artist: "Slovenian artist" },
-        ],
-    } as unknown as Record<string, unknown>,
-};
-
 export default function SonglessPage() {
+    const [challenge, setChallenge] = useState<GameChallenge | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetch(`${API}/api/games/songless/today`)
+            .then((r) => {
+                if (!r.ok) throw new Error(`Server error: ${r.status}`);
+                return r.json();
+            })
+            .then((data) => setChallenge(data))
+            .catch((err) => setError(err.message));
+    }, []);
+
+    if (error) {
+        return (
+            <div className="songless-page">
+                <Navbar activeLink="home" />
+                <main className="songless-main">
+                    <p style={{ textAlign: "center", color: "red", marginTop: "2rem" }}>
+                        Failed to load today's challenge: {error}
+                    </p>
+                </main>
+            </div>
+        );
+    }
+
+    if (!challenge) {
+        return (
+            <div className="songless-page">
+                <Navbar activeLink="home" />
+                <main className="songless-main">
+                    <p style={{ textAlign: "center", opacity: 0.5, marginTop: "2rem" }}>Loading...</p>
+                </main>
+            </div>
+        );
+    }
+
     return (
         <div className="songless-page">
-            <Navbar activeLink="home" />
             <Songless
-                data={STATIC_CHALLENGE}
+                data={challenge}
                 onFinish={() => {}}
-                hideNavbar
+                hideNavbar={false}
             />
         </div>
     );

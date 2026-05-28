@@ -1,7 +1,7 @@
 export const getTodayDate = (): string => {
     const d = new Date();
     const day = String(d.getUTCDate()).padStart(2, '0');
-    const month = String(d.getUTCMonth()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
     const year = d.getUTCFullYear()
     return `${day}-${month}-${year}`
 }
@@ -147,3 +147,51 @@ export const generateMathSprintChallenge = (date: string, difficulty: MathSprint
         },
     };
 };
+
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+ 
+interface SongEntry {
+    id: string;
+    title: string;
+    artist: string;
+    previewUrl: string | null;
+}
+ 
+function cleanSongTitle(title: string): string {
+    return title.replace(/^\[SPOTDOWNLOADER\.COM\]\s*/i, "").trim();
+}
+ 
+function pickIndexForDate(date: string, total: number): number {
+    let hash = 0;
+    for (let i = 0; i < date.length; i++) {
+        hash = (hash << 5) - hash + date.charCodeAt(i);
+        hash |= 0;
+    }
+    return Math.abs(hash) % total;
+}
+ 
+export function generateSonglessChallenge(date: string) {
+    const songs: SongEntry[] = require("../data/songless.json");
+    const validSongs = songs.filter((s) => s.previewUrl !== null);
+ 
+    if (validSongs.length === 0) throw new Error("No valid songs in songless.json");
+ 
+    const song = validSongs[pickIndexForDate(date, validSongs.length)];
+ 
+    return {
+        gameType: "songless",
+        date,
+        challengeData: {
+            challengeId: `songless-${date}`,
+            previewUrl: song.previewUrl,
+            title: cleanSongTitle(song.title),
+            artist: song.artist,
+            allSongs: validSongs.map((s) => ({
+                title: cleanSongTitle(s.title),
+                artist: s.artist,
+            })),
+        },
+    };
+}
+ 
