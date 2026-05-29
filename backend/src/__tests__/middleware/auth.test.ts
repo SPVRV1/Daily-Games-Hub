@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { verifyToken, AuthRequest } from "../../middleware/auth.ts";
+import { verifyToken, AuthRequest } from "../../middleware/auth.js";
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 

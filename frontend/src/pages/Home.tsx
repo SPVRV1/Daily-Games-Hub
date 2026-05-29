@@ -137,6 +137,8 @@ export default function Home() {
                                     navigate("/flagle");
                                 if(game.name === "Math Sprint")
                                     navigate("/math-sprint");
+                                if (game.name === "Worldle")
+                                    navigate("/worldle");
                             }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>
