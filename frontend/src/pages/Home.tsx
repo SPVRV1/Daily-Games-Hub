@@ -32,7 +32,7 @@ type Game = {
     result?: string;
 };
 
-const GAMES: Game[] = [
+const BASE_GAMES: Game[] = [
     {
         name: "Wordle",
         description: "Guess the 5-letter word in 6 attempts",
@@ -80,8 +80,44 @@ const GAMES: Game[] = [
     },
 ];
 
+function formatDate(d: Date): string {
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    const month = String(d.getUTCMonth()).padStart(2, "0");
+    const year = d.getUTCFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+function getMoreLessResult() {
+    const today = formatDate(new Date());
+    const storageKey = `moreless-moreless-${today}`;
+    const finished = localStorage.getItem(`${storageKey}-finished`) === "true";
+
+    if (!finished) return null;
+
+    try {
+        const savedResult = localStorage.getItem(`${storageKey}-result`);
+        const result = savedResult ? JSON.parse(savedResult) : null;
+
+        if (typeof result?.score === "number") {
+            return `Score: ${result.score}`;
+        }
+    } catch {
+        // Ignore broken local storage and fall back to the stored score below.
+    }
+
+    const score = Number(JSON.parse(localStorage.getItem(`${storageKey}-score`) ?? "0"));
+    return `Score: ${score * 10}`;
+}
+
 export default function Home() {
     const navigate = useNavigate();
+    const moreLessResult = getMoreLessResult();
+    const games = BASE_GAMES.map((game) =>
+        game.name === "More or Less" && moreLessResult
+            ? { ...game, completed: true, result: moreLessResult }
+            : game
+    );
+
     return (
         <div className={"home"}>
             {/* Navbar */}
@@ -126,7 +162,7 @@ export default function Home() {
                 {/* Games */}
                 <h2 className="section-title">Today's Games</h2>
                 <div className="games-grid">
-                    {GAMES.map((game) => (
+                    {games.map((game) => (
                         <div
                             className={`game-card${game.completed ? " game-card--completed" : ""}`}
                             key={game.name}

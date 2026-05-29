@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import "./MoreLess.css";
+import GameResultScreen from "./GameResult";
+import { GameResult } from "../../types/game.types";
 
 const mockData = {
   challengeData: {
@@ -47,12 +49,35 @@ interface MoreLessProps {
 
 export default function MoreLess({ data, onFinish }: MoreLessProps) {
   const challengeData = data.challengeData ?? mockData.challengeData;
+  const storageKey = useMemo(() => {
+    return `moreless-${challengeData?.challengeId ?? "fallback"}`;
+  }, [challengeData?.challengeId]);
+
+  const safeParse = <T,>(value: string | null, fallback: T): T => {
+    try {
+      return value ? (JSON.parse(value) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  };
 
   const items = challengeData?.items ?? [];
 
-  const [roundIndex, setRoundIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [finished, setFinished] = useState(false);
+  const [roundIndex, setRoundIndex] = useState(() =>
+    safeParse(localStorage.getItem(`${storageKey}-round`), 0),
+  );
+  const [score, setScore] = useState(() =>
+    safeParse(localStorage.getItem(`${storageKey}-score`), 0),
+  );
+  const [finished, setFinished] = useState(() =>
+    safeParse(localStorage.getItem(`${storageKey}-finished`), false),
+  );
+  const [savedResult, setSavedResult] = useState<GameResult | null>(() =>
+    safeParse(localStorage.getItem(`${storageKey}-result`), null),
+  );
+  const [wasFinishedOnLoad] = useState(() =>
+    safeParse(localStorage.getItem(`${storageKey}-finished`), false),
+  );
   const [sliding, setSliding] = useState(false);
 
   const [showAnswer, setShowAnswer] = useState(false);
@@ -67,6 +92,24 @@ export default function MoreLess({ data, onFinish }: MoreLessProps) {
   const [guessResult, setGuessResult] = useState<"correct" | "wrong" | null>(
     null,
   );
+
+  useEffect(() => {
+    localStorage.setItem(`${storageKey}-round`, JSON.stringify(roundIndex));
+  }, [roundIndex, storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storageKey}-score`, JSON.stringify(score));
+  }, [score, storageKey]);
+
+  useEffect(() => {
+    localStorage.setItem(`${storageKey}-finished`, JSON.stringify(finished));
+  }, [finished, storageKey]);
+
+  useEffect(() => {
+    if (savedResult) {
+      localStorage.setItem(`${storageKey}-result`, JSON.stringify(savedResult));
+    }
+  }, [savedResult, storageKey]);
 
   const handleGuess = (guess: "more" | "less") => {
     if (finished) return;
@@ -95,17 +138,19 @@ export default function MoreLess({ data, onFinish }: MoreLessProps) {
     setTimeout(() => {
       if (isLastRound) {
         const finalScore = correct ? score + 1 : score;
-
-        setFinished(true);
-
-        onFinish?.({
+        const result: GameResult = {
           challenge_id: challengeData?.challengeId,
           completed: finalScore > 0,
           score: finalScore * 10,
           attempts_used: roundIndex + 1,
           correct_answers: finalScore,
           time_seconds: 0,
-        });
+        };
+
+        setFinished(true);
+        setSavedResult(result);
+
+        onFinish?.(result);
 
         return;
       }
@@ -118,6 +163,19 @@ export default function MoreLess({ data, onFinish }: MoreLessProps) {
       setGuessResult(null);
     }, 1500);
   };
+
+  if (wasFinishedOnLoad) {
+    const recoveredResult: GameResult = savedResult ?? {
+      challenge_id: challengeData?.challengeId,
+      completed: score > 0,
+      score: score * 10,
+      attempts_used: Math.min(roundIndex + 1, MAX_ATTEMPTS),
+      correct_answers: score,
+      time_seconds: 0,
+    };
+
+    return <GameResultScreen result={recoveredResult} />;
+  }
 
   return (
     <div className="more-less-page">
