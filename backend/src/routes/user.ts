@@ -644,6 +644,44 @@ router.get("/avatar", verifyToken, async (req: AuthRequest, res) => {
     }
 });
 
+router.get("/avatar/:fileId", async (req, res) => {
+    try {
+        const { fileId } = req.params;
+
+        if (!ObjectId.isValid(fileId)) {
+            return res.status(400).json({ ok: false, error: "Invalid file ID" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        // Poišči metadata za Content-Type
+        const files = await bucket.find({ _id: new ObjectId(fileId) }).toArray();
+
+        if (!files.length) {
+            return res.status(404).json({ ok: false, error: "Avatar not found" });
+        }
+
+        const file = files[0];
+        const mimetype = file.metadata?.mimetype ?? "image/jpeg";
+
+        res.setHeader("Content-Type", mimetype);
+        res.setHeader("Cache-Control", "public, max-age=86400"); // 1 dan cache
+
+        const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+
+        downloadStream.on("error", () => {
+            res.status(404).json({ ok: false, error: "File not found" });
+        });
+
+        downloadStream.pipe(res);
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
 export async function addGame(userId: number, title: string, attempts: number, timeTaken: number, completed: boolean): Promise<U_Game> {
     const game: U_Game = {
         _id: Date.now(),
@@ -658,7 +696,10 @@ export async function addGame(userId: number, title: string, attempts: number, t
 
     const result = await collection.updateOne(
         { _id: userId },
-        { $push: { games: game } }
+        { 
+            $push: { games: game }, 
+            $inc: { games_played: 1 } 
+        }
     );
 
     if (result.matchedCount === 0) {
@@ -784,5 +825,28 @@ async function recalculateStreak(userId: number): Promise<{ current_streak: numb
 
     return { current_streak, longest_streak };
 }
+
+router.get("/leaderboard", async (_req, res) => {
+    try {
+        const collection = await getUsersCollection();
+
+        const users = await collection.find({}, {
+            projection: {
+                _id: 0,
+                username: 1,
+                current_streak: 1,
+                longest_streak: 1,
+                games_played: 1,
+                avatar_file_id: 1
+            }
+        }).toArray();
+
+        return res.json({ ok: true, users });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
 
 export default router;
