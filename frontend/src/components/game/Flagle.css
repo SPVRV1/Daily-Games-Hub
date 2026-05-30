@@ -116,11 +116,9 @@
     border-radius: 10px;
     margin-top: 10px;
     border: 1px solid var(--pink);
-    border-radius: 10px;
 }
 
 .attempt p{
-    margin-top: auto;
     color: var(--pink);
     font-weight: bold;
     font-size: 14px;
@@ -131,7 +129,7 @@
 }
 
 .attempt.correct{
-    background: var(--green-bg);
+    background: var(--light-green);
     border: 1px solid var(--green);
 }
 
@@ -139,9 +137,10 @@
     color: var(--green);
 }
 
-.autocomplete{
+.autocomplete {
     position: absolute;
-    background: white;
+    background: var(--white);
+    color: var(--black);
     border: 1px solid #ddd;
     border-radius: 8px;
     margin-top: 4px;
@@ -158,6 +157,6 @@
 }
 
 .autocomplete-item:hover {
-    background: var(--bg);
+    background: var(--light-grey);
 }
 

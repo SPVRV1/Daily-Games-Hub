@@ -25,3 +25,5 @@ uv.lock
 .idea/
 bin/
 obj/
+
+backend/dist
