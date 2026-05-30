@@ -23,6 +23,7 @@ export interface User {
     email: string;
     password_hash: string;
     avatar_url?: string;
+    avatar_file_id?: string;
     current_streak: number;
     longest_streak: number;
     games_played: number;

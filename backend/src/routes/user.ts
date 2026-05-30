@@ -9,21 +9,21 @@ import { createUser } from "../models/userFactory.js"
 import { registerSchema } from "../utils/validator.js";
 import { addToBlacklist } from "../utils/auth.js";
 import { Console, log } from "console";
+import multer from "multer";
+import { GridFSBucket, ObjectId } from "mongodb";
+import { getDb } from "../db.js"; // prilagodi glede na tvoj db export
 
 const router = Router();
 
-// router.get("/data", async (_req, res) => {
 router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
     try {
-        const { id } = _req.query;
-        const _id = Number(id);
+        const _id = _req.userId;
 
-        if (!_id || typeof _id !== "number" || isNaN(_id)) {
-            res.status(400).json({
+        if (!_id) {
+            return res.status(401).json({
                 ok: false,
-                error: "Valid ID query parameter is required",
+                error: "Unauthorized",
             });
-            return;
         }
 
         const collection = await getUsersCollection();
@@ -64,18 +64,14 @@ router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
 });
 
 router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
-    // router.get("/data/statistics", async (_req, res) => {
-
     try {
-        const { id } = _req.query;
-        const _id = Number(id);
+        const _id = _req.userId;
 
-        if (!_id || isNaN(_id)) {
-            res.status(400).json({
+        if (!_id) {
+            return res.status(401).json({
                 ok: false,
-                error: "Valid ID query parameter is required",
+                error: "Unauthorized",
             });
-            return;
         }
 
         const collection = await getUsersCollection();
@@ -225,13 +221,21 @@ router.post("/data/edit", verifyToken, async (req: AuthRequest, res) => {
         }
 
         const {
-            id,
             username,
             email,
             avatar_url
         } = req.body;
 
-        const userId = Number(id);
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({
+                ok: false,
+                error: "Unauthorized",
+            });
+        }
+
+        const userId = Number(_id);
         if (isNaN(userId)) {
             return res.status(400).json({
                 ok: false,
@@ -490,6 +494,151 @@ router.post("/logout", verifyToken, (req: AuthRequest, res) => {
     addToBlacklist(token);
 
     return res.json({ ok: true, message: "Logged out successfully" });
+});
+
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (_req, file, cb) => {
+        const allowed = ["image/jpeg", "image/png", "image/webp"];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only JPEG, PNG and WebP images are allowed"));
+        }
+    }
+});
+
+router.post("/avatar/upload", verifyToken, upload.single("avatar"), async (req: AuthRequest, res) => {
+    try {
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ ok: false, error: "No file provided" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        const userId = Number(_id);
+
+        // Izbriši star avatar če obstaja
+        const collection = await getUsersCollection();
+        const user = await collection.findOne({ _id: userId });
+
+        if (user?.avatar_file_id) {
+            try {
+                await bucket.delete(new ObjectId(user.avatar_file_id));
+            } catch {
+                // ignoriramo če datoteka ne obstaja
+            }
+        }
+
+        // Shrani novo sliko
+        const filename = `avatar_${userId}_${Date.now()}`;
+        const uploadStream = bucket.openUploadStream(filename, {
+            metadata: {
+                userId,
+                mimetype: req.file.mimetype
+            }
+        });
+
+        await new Promise<void>((resolve, reject) => {
+            uploadStream.on("finish", resolve);
+            uploadStream.on("error", reject);
+            uploadStream.end(req.file!.buffer);
+        });
+
+        const fileId = uploadStream.id.toString();
+
+        // Shrani fileId v user dokument
+        await collection.updateOne(
+            { _id: userId },
+            {
+                $set: {
+                    avatar_file_id: fileId,
+                    avatar_url: `/user/avatar/${fileId}`, // opcijsko
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        return res.status(201).json({
+            ok: true,
+            avatar_url: `/user/avatar/${fileId}`
+        });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
+router.get("/avatar", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        const userId = Number(_id);
+        if (isNaN(userId)) {
+            return res.status(400).json({ ok: false, error: "Invalid ID" });
+        }
+
+        // Poišči avatar_file_id v user dokumentu
+        const collection = await getUsersCollection();
+        const user = await collection.findOne(
+            { _id: userId },
+            { projection: { avatar_file_id: 1 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({ ok: false, error: "User not found" });
+        }
+
+        if (!user.avatar_file_id) {
+            return res.status(404).json({ ok: false, error: "No avatar uploaded" });
+        }
+
+        const fileId = user.avatar_file_id;
+
+        if (!ObjectId.isValid(fileId)) {
+            return res.status(400).json({ ok: false, error: "Invalid file ID" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        const files = await bucket.find({ _id: new ObjectId(fileId) }).toArray();
+
+        if (!files.length) {
+            return res.status(404).json({ ok: false, error: "Avatar not found" });
+        }
+
+        const mimetype = files[0].metadata?.mimetype ?? "image/jpeg";
+
+        res.setHeader("Content-Type", mimetype);
+        res.setHeader("Cache-Control", "public, max-age=86400");
+
+        const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+
+        downloadStream.on("error", () => {
+            res.status(404).json({ ok: false, error: "File not found" });
+        });
+
+        downloadStream.pipe(res);
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
 });
 
 export default router;
