@@ -172,20 +172,17 @@ const ProfilePage = () => {
     const memberSince = user ? formatMonthYear(user.created_at) : "";
     const initial = user?.username?.charAt(0).toUpperCase() ?? "?";
 
-    // Compute avatar URL for display (always use /api/user/avatar/:fileId if available)
     let avatarUrl: string | undefined = undefined;
     if (user) {
         if (user.avatar_file_id) {
             avatarUrl = `${apiBaseUrl}/api/user/avatar/${user.avatar_file_id}`;
         } else if (user.avatar_url) {
-            // If avatar_url is absolute and matches /user/avatar/:fileId, rewrite to /api/user/avatar/:fileId
             const fileIdMatch = user.avatar_url.match(/\/user\/avatar\/([a-f\d]{24})$/);
             if (fileIdMatch) {
                 avatarUrl = `${apiBaseUrl}/api/user/avatar/${fileIdMatch[1]}`;
             } else if (/^https?:\/\//.test(user.avatar_url)) {
                 avatarUrl = user.avatar_url;
             } else if (user.avatar_url.startsWith("/user/avatar/")) {
-                // If it's a relative path but missing /api, add it
                 avatarUrl = `${apiBaseUrl}/api${user.avatar_url}`;
             } else if (user.avatar_url.startsWith("/api/")) {
                 avatarUrl = `${apiBaseUrl}${user.avatar_url}`;
@@ -228,9 +225,6 @@ const ProfilePage = () => {
                 throw new Error("Not authenticated. Please log in.");
             }
 
-            // 1. Upload avatar first if a new file was selected.
-            //    Use the URL returned directly by the upload endpoint; fall back to
-            //    a separate GET if the upload response doesn't include one.
             let uploadedAvatarUrl: string | undefined = undefined;
             if (editForm.avatarFile) {
                 const formData = new FormData();
@@ -247,13 +241,11 @@ const ProfilePage = () => {
                 }
                 const uploadPayload = await uploadRes.json().catch(() => null);
                 console.log("[Avatar Upload] Response:", uploadPayload);
-                // Support both common response shapes: { url } or { avatar_url }
                 if (uploadPayload?.url) {
                     uploadedAvatarUrl = uploadPayload.url;
                 } else if (uploadPayload?.avatar_url) {
                     uploadedAvatarUrl = uploadPayload.avatar_url;
                 } else {
-                    // Fallback: ask the dedicated avatar endpoint for the new URL
                     const avatarRes = await fetch(`${apiBaseUrl}/api/user/avatar`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
@@ -261,20 +253,17 @@ const ProfilePage = () => {
                         const avatarPayload = await avatarRes.json().catch(() => null);
                         uploadedAvatarUrl = avatarPayload?.url ?? avatarPayload?.avatar_url;
                     }
-                    // Last resort: use a cache-busted URL so the image refreshes
                     if (!uploadedAvatarUrl) {
                         uploadedAvatarUrl = `${apiBaseUrl}/api/user/avatar?t=${Date.now()}`;
                     }
                 }
             }
 
-            // 2. Build the profile-edit payload with only changed fields.
             const payload: Record<string, unknown> = { id: userId };
 
 
             const usernameChanged = editForm.username !== user.username;
             const emailChanged = (editForm.email || "") !== (user.email || "");
-            // Consider avatarChanged if a new file was selected OR a new avatar URL was returned
             const avatarChanged = Boolean(editForm.avatarFile) || Boolean(uploadedAvatarUrl);
 
             if (usernameChanged) {
@@ -285,7 +274,6 @@ const ProfilePage = () => {
             }
             if (avatarChanged && uploadedAvatarUrl) {
                 let avatarUrl = uploadedAvatarUrl;
-                // If backend returns a file id, construct the URL
                 if (/^[a-f\d]{24}$/i.test(avatarUrl)) {
                     avatarUrl = `${apiBaseUrl}/api/user/avatar/${avatarUrl}`;
                 } else if (avatarUrl && avatarUrl.startsWith("/")) {
@@ -300,7 +288,6 @@ const ProfilePage = () => {
                 return;
             }
 
-            // Always call /api/user/data/edit if avatar, username, or email changed (per backend contract)
             const response = await fetch(`${apiBaseUrl}/api/user/data/edit`, {
                 method: "POST",
                 headers: {
@@ -315,7 +302,6 @@ const ProfilePage = () => {
                 throw new Error(responsePayload?.error || "Failed to update profile");
             }
 
-            // 4. Update local state so the UI reflects the changes immediately.
             setUser((prevUser) =>
                 prevUser
                     ? {
@@ -341,7 +327,6 @@ const ProfilePage = () => {
         }
     };
 
-    // Sync user context for Navbar avatar
     useEffect(() => {
         setUserContext(user
             ? {
@@ -350,7 +335,6 @@ const ProfilePage = () => {
             }
             : null
         );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, avatarUrl]);
 
     return (

@@ -26,7 +26,7 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                 <div className="navbar-links">
                     <Link to="/" className={`nav-link${activeLink === "home" ? " active" : ""}`}>Home</Link>
                     <Link to="/friends" className={`nav-link${activeLink === "friends" ? " active" : ""}`}>Friends</Link>
-                    <Link to="/statistics" className={`nav-link${activeLink === "statistics" ? " active" : ""}`}>Statistics</Link>
+                    <Link to="/leaderboard" className={`nav-link${activeLink === "leaderboard" ? " active" : ""}`}>Leaderboard</Link>
                 </div>
             )}
             <div className="navbar-right">
