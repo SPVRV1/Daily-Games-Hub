@@ -5,7 +5,7 @@ import {
     hashPassword,
     comparePassword,
     generateToken,
-} from "../../utils/auth.ts";
+} from "../../utils/auth.js";
 
 describe("Auth Utils", () => {
     describe("Token Blacklist", () => {

@@ -1,0 +1,212 @@
+.more-less-page {
+  background-color: var(--streak-bg);
+  min-height: 100vh;
+}
+
+.more-less-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.more-less-top-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-family: var(--font-body);
+  font-weight: bold;
+}
+
+.back-link {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.more-less-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.more-less-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.more-less-title {
+  text-align: center;
+}
+
+.more-less-title h1 {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 6px;
+  letter-spacing: -0.5px;
+}
+
+.more-less-title p {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+.more-less-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.more-less-content p {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--white);
+  margin: 20px 0 0 20px;
+}
+
+.more-less-content h2 {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--white);
+  margin: 5px 0 0 20px;
+}
+
+.more-less-original {
+  background-color: var(--blue);
+  width: 300px;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+}
+
+.more-less-guess {
+  background-color: var(--purple);
+  width: 300px;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+}
+
+.more-less-original-value {
+  background-color: #538df4;
+  border-radius: 8px;
+  width: 90%;
+  height: 65px;
+  margin-left: 5%;
+  margin-top: 10px;
+  justify-content: center;
+  display: flex;
+}
+
+.more-less-original-value p {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--white);
+  margin: 0;
+  margin-top: 15px;
+}
+
+.more-less-guess-value {
+  background-color: #986af4;
+  border-radius: 8px;
+  width: 90%;
+  height: 65px;
+  margin-left: 5%;
+  margin-top: 10px;
+  justify-content: center;
+  display: flex;
+}
+
+.more-less-guess-value p {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--white);
+  margin: 0;
+  margin-top: 15px;
+}
+
+.more-less-guess button {
+  background-color: var(--bg);
+  width: 90%;
+  margin-left: 5%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  color: var(--purple);
+  font-weight: bold;
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.more-less-wrapper {
+  position: relative;
+  width: 620px;
+  height: 260px;
+}
+
+.more-less-original,
+.more-less-guess {
+  position: absolute;
+  top: 0;
+  width: 300px;
+  height: 260px;
+
+  transition:
+    transform 0.7s ease,
+    opacity 0.7s ease;
+}
+
+.more-less-original {
+  left: 0;
+  z-index: 1;
+}
+
+.more-less-guess {
+  right: 0;
+  z-index: 2;
+}
+
+.more-less-guess.slide-left {
+  transform: translateX(-320px);
+}
+
+.guess-more-button,
+.guess-less-button {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    transform 0.2s ease;
+}
+
+.guess-more-button.correct,
+.guess-less-button.correct {
+  background-color: var(--green-lt);
+  color: white;
+}
+
+.guess-more-button.wrong,
+.guess-less-button.wrong {
+  background-color: var(--pink);
+  color: white;
+}
+
+.guess-more-button.correct,
+.guess-less-button.correct,
+.guess-more-button.wrong,
+.guess-less-button.wrong {
+  transform: scale(1.05);
+}

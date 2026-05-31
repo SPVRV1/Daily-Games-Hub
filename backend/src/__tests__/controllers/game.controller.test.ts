@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getTodayChallenge } from "../../controllers/game.controller.ts";
+import { getTodayChallenge } from "../../controllers/game.controller.js";
 import { Request, Response } from "express";
 
 vi.mock("../../models/game.js", () => ({

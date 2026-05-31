@@ -1,0 +1,167 @@
+/* ── Some styles are reused from Flagle.css and Wordle.css!  */
+
+/* ── Main container ──────────────────────────────────────── */
+.worldle-page {
+    padding: 25px;
+    background-color: var(--blue-bg);
+    flex: 1;
+}
+
+/* ── Card with silhouette ────────────────────────────────── */
+.worldle-game-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Silhouette of country ───────────────────────────────── */
+.silhouette-container {
+    height: 250px;
+    background: var(--light-blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.country-svg {
+    width: 90%;
+    height: 90%;
+}
+
+.country-shape {
+    fill: var(--dark-blue);
+}
+
+/* ── Attempts ────────────────────────────────────────────── */
+.attempt-counter {
+    width: fit-content;
+    padding: 5px 12px;
+    margin-top: 12px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--black);
+    background: var(--light-blue);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 15px;
+}
+
+/* ── Guess cards ─────────────────────────────────────────── */
+.guesses-container {
+    width: 100%;
+    max-width: 380px;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ── Input card ──────────────────────────────────────────── */
+.worldle-input-card {
+    width: 100%;
+    max-width: 380px;
+    margin-top: 14px;
+    color: var(--text);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.worldle-input {
+    height: 46px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    outline: none;
+}
+
+.worldle-input:focus {
+    border-color: var(--blue);
+}
+
+.worldle-button {
+    height: 46px;
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+
+    background: linear-gradient(
+        90deg,
+        var(--sky),
+        var(--blue)
+    );
+
+    transition: 0.2s;
+}
+
+.worldle-button:hover {
+    opacity: 0.92;
+}
+
+.worldle-autocomplete {
+    width: 300px;
+    max-height: 200px;
+    margin-top: 50px;
+    color: var(--black);
+    background: var(--white);
+    border: 1px solid var(--white);
+    border-radius: 8px;
+    position: absolute;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+    .page {
+        padding: 14px;
+    }
+
+    .worldle-wrapper h1 {
+        font-size: 34px;
+    }
+
+    .worldle-game-card,
+    .guesses-container,
+    .worldle-input-card {
+        max-width: 100%;
+    }
+
+    .silhouette-container {
+        height: 220px;
+    }
+
+    .country-svg {
+        width: 60%;
+        height: 60%;
+    }
+
+    .guess-card {
+        padding: 10px;
+    }
+
+    .guess-info {
+        gap: 8px;
+        font-size: 12px;
+    }
+
+    .similarity-bar {
+        width: 50px;
+    }
+}

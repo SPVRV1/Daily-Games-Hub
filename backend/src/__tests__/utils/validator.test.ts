@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { registerSchema } from "../../utils/validator.ts";
+import { registerSchema } from "../../utils/validator.js";
 
 describe("Validator Utils", () => {
     describe("registerSchema", () => {
