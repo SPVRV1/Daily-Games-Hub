@@ -39,6 +39,7 @@ interface MathSprintData {
 }
 
 const difficultyStorageKey = "math-sprint:selected-difficulty";
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const readStoredDifficulty = (): MathSprintDifficulty | null => {
   try {
@@ -126,6 +127,10 @@ function MathSprintGame({
     clearTimer();
     clearFeedbackTimer();
 
+    const token = localStorage.getItem("token");
+    const attemptsUsed = correct + wrong;
+    const timeTaken = Math.max(0, timeLimit - timeLeft);
+
     try {
       localStorage.removeItem(storageKey);
       localStorage.removeItem(difficultyStorageKey);
@@ -139,9 +144,25 @@ function MathSprintGame({
       difficulty: data.difficulty,
       score: 0,
       correct_answers: correct,
-      time_seconds: timeLimit,
-      attempts_used: correct + wrong,
+      time_seconds: timeTaken,
+      attempts_used: attemptsUsed,
       completed: correct > 0,
+    });
+
+    void fetch(`${API}/api/user/data/game`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: "mathsprint",
+        attempts: attemptsUsed,
+        timeTaken,
+        completed: correct > 0,
+      }),
+    }).catch((error) => {
+      console.error("Failed to save MathSprint game to user profile:", error);
     });
   }
 
