@@ -109,6 +109,16 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 - `GET /api/stats/me?period=day|week|month|all&gameType=<ime_igre>` - filtrirana statistika za grafične prikaze
 - `GET /api/stats/leaderboard` - lestvica vseh uporabnikov za frontend sortiranje
 
+#### Minimalni response format
+
+- `GET /api/stats/me`
+  - `user`: osnovni podatki prijavljenega uporabnika
+  - `filters`: aktivni filtri (`period`, `gameType`)
+  - `stats`: `currentStreak`, `longestStreak`, `gamesPlayed`, `completedGames`, `completionRate`, `averageAttempts`, `averageTime`, `perGame`
+  - `history`: seznam odigranih iger za grafe in best results
+- `GET /api/stats/leaderboard`
+  - `leaderboard`: sortirani uporabniki z `rank`, `username`, `current_streak`, `longest_streak`, `games_played`
+
 ### Prijatelji
 
 - `POST /api/friends/request` - pošlji prošnjo za prijateljstvo
