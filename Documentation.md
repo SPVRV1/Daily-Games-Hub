@@ -1,27 +1,31 @@
 # Dokumentacija
 
 ## Ideja
-Daily Games Hub je spletna stran, ki na enem mestu zbira več kratkih dnevnih iger. Namesto da bi vsak dan šel na 5 različnih spletnih strani, imaš vse igre na enem mestu, skupaj s prijatelji, s katerimi vsak dan primerjaš rezultate. Cilj je rešiti čim več dnevnih izzivov z čim manj poskusi in biti najboljši na lestvici med prijatelji. 
 
-Vsaka igra se ponovi enkrat na dan in je za vse igralce enaka. Ko se igra reši, se tvoj rezultat (število poskusov, čas) shrani in primerja z rezultati prijateljev. 
+Daily Games Hub je spletna stran, ki na enem mestu zbira več kratkih dnevnih iger. Namesto da bi vsak dan šel na 5 različnih spletnih strani, imaš vse igre na enem mestu, skupaj s prijatelji, s katerimi vsak dan primerjaš rezultate. Cilj je rešiti čim več dnevnih izzivov z čim manj poskusi in biti najboljši na lestvici med prijatelji.
+
+Vsaka igra se ponovi enkrat na dan in je za vse igralce enaka. Ko se igra reši, se tvoj rezultat (število poskusov, čas) shrani in primerja z rezultati prijateljev.
 
 ---
 
 ## Tehnologije
 
 ### Frontend
+
 - React
 - Vite
 - TypeScript
 - HTML / CSS
 
 ### Backend
+
 - Node.js
 - Express
 - TypeScript
 - MongoDB
 
 ### Ostalo
+
 - JWT avtentikacija za zaščito uporabniških zahtevkov
 - bcrypt za varno hrambo gesel
 - Nodemailer za pošiljanje e-pošte ob obnovitvi gesla
@@ -31,6 +35,7 @@ Vsaka igra se ponovi enkrat na dan in je za vse igralce enaka. Ko se igra reši,
 ## Arhitektura
 
 Aplikacija je zgrajena po ločeni arhitekturi:
+
 - `frontend/` je klientska aplikacija, ki teče v brskalniku
 - `backend/` je REST API strežnik, ki obdeluje podatke in upravlja s podatkovno bazo
 - Backend uporablja MongoDB kot primarno shrambo za uporabnike, igre, rezultate in prijatelje
@@ -42,10 +47,12 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ## Struktura projekta
 
 ### Vrhnje mape
+
 - `frontend/` - React aplikacija
 - `backend/` - Express API strežnik
 
 ### Frontend
+
 - `frontend/src/` - izvorna koda aplikacije
 - `frontend/src/components/` - komponente UI-ja
 - `frontend/src/pages/` - strani aplikacije
@@ -54,10 +61,11 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 - `frontend/public/` - statične datoteke in ikone
 
 ### Backend
+
 - `backend/src/index.ts` - glavni vstopni strežnik
 - `backend/src/routes/` - definicije API poti
 - `backend/src/controllers/` - logika za obdelavo zahtevkov
-- `backend/src/models/` - podatkovni modeli 
+- `backend/src/models/` - podatkovni modeli
 - `backend/src/middleware/` - preverjanje avtentikacije
 - `backend/src/utils/` - pomočne funkcije (avtentikacija, pošiljanje e-pošte, validacija)
 - `backend/src/data/` - igre in podatkovne datoteke za nekatere izzive
@@ -79,6 +87,7 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ## API endpointi
 
 ### Avtorizacija in uporabnik
+
 - `POST /api/user/register` - registracija novega uporabnika
 - `POST /api/user/login` - prijava in pridobitev JWT žetona
 - `GET /api/user/data?id=<userId>` - pridobi podatke uporabnika (zahteva žeton)
@@ -86,14 +95,22 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 - `POST /api/user/reset-password` - nastavi novo geslo z žetonom
 
 ### Igre
+
 - `GET /api/games/active` - seznam aktivnih iger
 - `GET /api/games/all` - seznam vseh iger
 - `GET /api/games/:id` - podrobnosti o določeni igri
 - `GET /api/games/:gameType/today` - pridobi današnji izziv za izbrano igro
-- `GET /api/games/:gameType/played-today` - preveri, ali je uporabnik igro danes že igral 
+- `GET /api/games/:gameType/played-today` - preveri, ali je uporabnik igro danes že igral
 - `POST /api/games/:gameType/result` - pošlje rezultat igre
 
+### Statistika
+
+- `GET /api/stats/me` - statistika prijavljenega uporabnika prek JWT (streaki, povprečja, zgodovina iger)
+- `GET /api/stats/me?period=day|week|month|all&gameType=<ime_igre>` - filtrirana statistika za grafične prikaze
+- `GET /api/stats/leaderboard` - lestvica vseh uporabnikov za frontend sortiranje
+
 ### Prijatelji
+
 - `POST /api/friends/request` - pošlji prošnjo za prijateljstvo
 - `PATCH /api/friends/:friendshipId/status` - sprejmi ali zavrni prošnjo
 - `GET /api/friends/:userId` - pridobi seznam prijateljev uporabnika
@@ -119,11 +136,13 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ### Nove funkcionalnosti
 
 #### Igre
+
 - **Wordle** – implementacija igre ugibanja besed (mreža 5 × 6); animacija razkrivanja rezultatov, zaslon za konec igre, sistem obvestil za neveljavne vnose; backend generira datoteko veljavnih besed in dnevno besedo
 - **Flagle** – implementacija igre ugibanja zastave; možnost igranja iger iz preteklih 3 dni
 - **Math Sprint** – deterministični generator 5 nalog na dan; lestvica težavnosti: easy | medium | hard; točkovanje: 100× pravilne + do 50 bonus točk
 
 #### Testiranje
+
 - Nastavitev testnega okolja
 - Osnovni testi: registracija, prijava, profil
 - Testiranje API endpointov
@@ -135,17 +154,20 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ### Posodobljeni API endpointi
 
 #### Wordle
+
 - `GET /api/games/wordle/today` – pridobi današnjo besedo
 - `GET /api/games/wordle/played-today` – preveri, ali je uporabnik igro danes že igral
 - `POST /api/games/wordle/result` – pošlje rezultat (število poskusov)
 
 #### Flagle
+
 - `GET /api/games/flagle/today` – pridobi današnjo zastavo
 - `GET /api/games/flagle/played-today` – preveri, ali je uporabnik igro danes že igral
 - `POST /api/games/flagle/result` – pošlje rezultat
 - `GET /api/games/flagle/history` – pridobi igre iz preteklih 3 dni
 
 #### Math Sprint
+
 - `GET /api/games/mathsprint/today` – pridobi današnjih 5 nalog
 - `GET /api/games/mathsprint/played-today` – preveri, ali je uporabnik igro danes že igral
 - `POST /api/games/mathsprint/result` – pošlje rezultat (točke, čas, težavnost)
@@ -155,11 +177,13 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ### Posodobljena struktura projekta
 
 #### Backend (dopolnitev)
+
 - `backend/src/data/words.json` – seznam veljavnih besed za Wordle
 - `backend/src/data/flags/` – podatki o zastavah za Flagle
 - `backend/scripts/` – pomožni skripti (npr. generiranje besed)
 
 #### Frontend (dopolnitev)
+
 - `frontend/src/pages/WordlePage.tsx` – stran igre Wordle
 - `frontend/src/pages/FlaglePage.tsx` – stran igre Flagle
 - `frontend/src/pages/MathSprintPage.tsx` – stran igre Math Sprint
@@ -170,6 +194,7 @@ Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so ne
 ### Zagotavljanje kakovosti (QA)
 
 V 2. sprintu je bila vzpostavljena osnovna infrastruktura za testiranje:
+
 - Testno okolje konfigurirano ločeno od produkcijskega
 - Pokritost testov: registracija in prijava, API endpointi, UI komponente z `useEffect` v Hooks
 
@@ -177,13 +202,13 @@ V 2. sprintu je bila vzpostavljena osnovna infrastruktura za testiranje:
 
 ### Stanje ob koncu sprinta
 
-| Funkcionalnost | Status | Opomba |
-|---|---|---|
-| Wordle (frontend + backend) | Končano | |
-| Flagle (frontend + backend) | Končano | |
-| Math Sprint frontend | Končano | Urejena navigacija, 3 znane težave |
-| Math Sprint backend | Končano | Generator in točkovanje delujeta |
-| Registracija in prijava | V razvoju | Fix bugov v teku |
-| Uporabniški profil 2 | V razvoju | Avatarji, statistike, zavihki |
-| Pisanje avtomatskih testov | Končano | |
-| Dokumentacija | V razvoju | |
+| Funkcionalnost              | Status    | Opomba                             |
+| --------------------------- | --------- | ---------------------------------- |
+| Wordle (frontend + backend) | Končano   |                                    |
+| Flagle (frontend + backend) | Končano   |                                    |
+| Math Sprint frontend        | Končano   | Urejena navigacija, 3 znane težave |
+| Math Sprint backend         | Končano   | Generator in točkovanje delujeta   |
+| Registracija in prijava     | V razvoju | Fix bugov v teku                   |
+| Uporabniški profil 2        | V razvoju | Avatarji, statistike, zavihki      |
+| Pisanje avtomatskih testov  | Končano   |                                    |
+| Dokumentacija               | V razvoju |                                    |
