@@ -1,4 +1,5 @@
 import Navbar from "../../components/Navbar";
+import { useUser } from "../../context/UserContext";
 import ProfileHero from "../../components/profile/ProfileHero";
 import OverviewSection from "../../components/profile/OverviewSection";
 import WeeklyActivity from "../../components/profile/WeeklyActivity";
@@ -63,6 +64,7 @@ const formatMonthYear = (value?: string | Date | { $date?: string } | null) => {
 const ProfilePage = () => {
     const { isDark } = useTheme();
     const [user, setUser] = useState<UserProfile | null>(null);
+    const { setUser: setUserContext } = useUser();
     const [statistics, setStatistics] = useState<StatisticsData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -170,18 +172,25 @@ const ProfilePage = () => {
     const memberSince = user ? formatMonthYear(user.created_at) : "";
     const initial = user?.username?.charAt(0).toUpperCase() ?? "?";
 
-    // Compute avatar URL for display
+    // Compute avatar URL for display (always use /api/user/avatar/:fileId if available)
     let avatarUrl: string | undefined = undefined;
     if (user) {
         if (user.avatar_file_id) {
             avatarUrl = `${apiBaseUrl}/api/user/avatar/${user.avatar_file_id}`;
         } else if (user.avatar_url) {
-            if (/^https?:\/\//.test(user.avatar_url)) {
+            // If avatar_url is absolute and matches /user/avatar/:fileId, rewrite to /api/user/avatar/:fileId
+            const fileIdMatch = user.avatar_url.match(/\/user\/avatar\/([a-f\d]{24})$/);
+            if (fileIdMatch) {
+                avatarUrl = `${apiBaseUrl}/api/user/avatar/${fileIdMatch[1]}`;
+            } else if (/^https?:\/\//.test(user.avatar_url)) {
                 avatarUrl = user.avatar_url;
-            } else if (user.avatar_url.startsWith("/")) {
+            } else if (user.avatar_url.startsWith("/user/avatar/")) {
+                // If it's a relative path but missing /api, add it
+                avatarUrl = `${apiBaseUrl}/api${user.avatar_url}`;
+            } else if (user.avatar_url.startsWith("/api/")) {
                 avatarUrl = `${apiBaseUrl}${user.avatar_url}`;
             } else {
-                avatarUrl = `${apiBaseUrl}/api/user/avatar`;
+                avatarUrl = undefined;
             }
         }
     }
@@ -331,6 +340,18 @@ const ProfilePage = () => {
             setIsSaving(false);
         }
     };
+
+    // Sync user context for Navbar avatar
+    useEffect(() => {
+        setUserContext(user
+            ? {
+                username: user.username,
+                avatarUrl: avatarUrl,
+            }
+            : null
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user, avatarUrl]);
 
     return (
         <div className={`min-h-screen transition-colors ${isDark ? "bg-slate-950" : "bg-slate-100"} flex flex-col`}>
