@@ -3,13 +3,14 @@ import { useTheme } from "../../context/ThemeContext";
 type ProfileEditFormValues = {
     username: string;
     email: string;
-    avatar_url: string;
+    avatarFile?: File | null;
 };
 
 type ProfileEditFormProps = {
     values: ProfileEditFormValues;
     onChange: (values: ProfileEditFormValues) => void;
     onSave: () => void;
+    onAvatarFileChange: (file: File | null) => void;
     onCancel: () => void;
     isSaving?: boolean;
     error?: string | null;
@@ -20,6 +21,7 @@ export default function ProfileEditForm({
     values,
     onChange,
     onSave,
+    onAvatarFileChange,
     onCancel,
     isSaving,
     error,
@@ -81,17 +83,23 @@ export default function ProfileEditForm({
                 </label>
 
                 <label className="grid gap-1">
-                    <span className={`text-sm font-medium ${isDark ? "text-slate-200" : "text-slate-700"}`}>Avatar URL</span>
+                    <span className={`text-sm font-medium ${isDark ? "text-slate-200" : "text-slate-700"}`}>Avatar Photo</span>
                     <input
-                        value={values.avatar_url}
-                        onChange={(event) => onChange({ ...values, avatar_url: event.target.value })}
-                        className={`rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${isDark
-                            ? "border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500 focus:border-slate-500"
-                            : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-400"}`}
-                        placeholder="https://..."
-                        inputMode="url"
+                        type="file"
+                        accept="image/*"
+                        onChange={e => {
+                            const file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+                            onAvatarFileChange(file);
+                        }}
                         disabled={Boolean(isSaving)}
                     />
+                    {values.avatarFile && (
+                        <img
+                            src={URL.createObjectURL(values.avatarFile)}
+                            alt="Avatar preview"
+                            className="mt-2 h-24 w-24 rounded-xl object-cover border"
+                        />
+                    )}
                 </label>
 
                 <div className="mt-2 flex flex-wrap gap-2">

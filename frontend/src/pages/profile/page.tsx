@@ -32,6 +32,7 @@ type UserProfile = {
     username: string;
     email?: string;
     avatar_url?: string;
+    avatar_file_id?: string;
     current_streak: number;
     longest_streak?: number;
     games_played: number;
@@ -72,7 +73,7 @@ const ProfilePage = () => {
     const [editForm, setEditForm] = useState({
         username: "",
         email: "",
-        avatar_url: "",
+        avatarFile: null as File | null,
     });
     const apiBaseUrl = useMemo(() => {
         const envPort = import.meta.env.VITE_API_PORT;
@@ -87,11 +88,10 @@ const ProfilePage = () => {
         if (!user || isEditing) {
             return;
         }
-
         setEditForm({
             username: user.username ?? "",
             email: user.email ?? "",
-            avatar_url: user.avatar_url ?? "",
+            avatarFile: null,
         });
     }, [user, isEditing]);
 
@@ -112,7 +112,7 @@ const ProfilePage = () => {
                     Authorization: `Bearer ${token}`,
                 };
 
-                const response = await fetch(`${apiBaseUrl}/api/user/data?id=${userId}`, {
+                const response = await fetch(`${apiBaseUrl}/api/user/data`, {
                     headers: {
                         ...authHeaders,
                     },
@@ -127,7 +127,7 @@ const ProfilePage = () => {
 
                 setUser(payload.user as UserProfile);
 
-                const statisticsResponse = await fetch(`${apiBaseUrl}/api/user/data/statistics?id=${userId}`, {
+                const statisticsResponse = await fetch(`${apiBaseUrl}/api/user/data/statistics`, {
                     headers: {
                         ...authHeaders,
                     },
@@ -170,6 +170,22 @@ const ProfilePage = () => {
     const memberSince = user ? formatMonthYear(user.created_at) : "";
     const initial = user?.username?.charAt(0).toUpperCase() ?? "?";
 
+    // Compute avatar URL for display
+    let avatarUrl: string | undefined = undefined;
+    if (user) {
+        if (user.avatar_file_id) {
+            avatarUrl = `${apiBaseUrl}/api/user/avatar/${user.avatar_file_id}`;
+        } else if (user.avatar_url) {
+            if (/^https?:\/\//.test(user.avatar_url)) {
+                avatarUrl = user.avatar_url;
+            } else if (user.avatar_url.startsWith("/")) {
+                avatarUrl = `${apiBaseUrl}${user.avatar_url}`;
+            } else {
+                avatarUrl = `${apiBaseUrl}/api/user/avatar`;
+            }
+        }
+    }
+
     const handleToggleEdit = () => {
         setSaveError(null);
         setSaveSuccess(null);
@@ -180,7 +196,7 @@ const ProfilePage = () => {
                 setEditForm({
                     username: user.username ?? "",
                     email: user.email ?? "",
-                    avatar_url: user.avatar_url ?? "",
+                    avatarFile: null,
                 });
             }
             return next;
@@ -203,27 +219,79 @@ const ProfilePage = () => {
                 throw new Error("Not authenticated. Please log in.");
             }
 
-            const payload: Record<string, unknown> = {
-                id: userId,
-            };
+            // 1. Upload avatar first if a new file was selected.
+            //    Use the URL returned directly by the upload endpoint; fall back to
+            //    a separate GET if the upload response doesn't include one.
+            let uploadedAvatarUrl: string | undefined = undefined;
+            if (editForm.avatarFile) {
+                const formData = new FormData();
+                formData.append("avatar", editForm.avatarFile);
+                const uploadRes = await fetch(`${apiBaseUrl}/api/user/avatar/upload`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: formData,
+                });
+                if (!uploadRes.ok) {
+                    const errorText = await uploadRes.text();
+                    console.error("[Avatar Upload] Error:", uploadRes.status, errorText);
+                    throw new Error("Failed to upload avatar: " + errorText);
+                }
+                const uploadPayload = await uploadRes.json().catch(() => null);
+                console.log("[Avatar Upload] Response:", uploadPayload);
+                // Support both common response shapes: { url } or { avatar_url }
+                if (uploadPayload?.url) {
+                    uploadedAvatarUrl = uploadPayload.url;
+                } else if (uploadPayload?.avatar_url) {
+                    uploadedAvatarUrl = uploadPayload.avatar_url;
+                } else {
+                    // Fallback: ask the dedicated avatar endpoint for the new URL
+                    const avatarRes = await fetch(`${apiBaseUrl}/api/user/avatar`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (avatarRes.ok) {
+                        const avatarPayload = await avatarRes.json().catch(() => null);
+                        uploadedAvatarUrl = avatarPayload?.url ?? avatarPayload?.avatar_url;
+                    }
+                    // Last resort: use a cache-busted URL so the image refreshes
+                    if (!uploadedAvatarUrl) {
+                        uploadedAvatarUrl = `${apiBaseUrl}/api/user/avatar?t=${Date.now()}`;
+                    }
+                }
+            }
 
-            if (editForm.username !== user.username) {
+            // 2. Build the profile-edit payload with only changed fields.
+            const payload: Record<string, unknown> = { id: userId };
+
+
+            const usernameChanged = editForm.username !== user.username;
+            const emailChanged = (editForm.email || "") !== (user.email || "");
+            // Consider avatarChanged if a new file was selected OR a new avatar URL was returned
+            const avatarChanged = Boolean(editForm.avatarFile) || Boolean(uploadedAvatarUrl);
+
+            if (usernameChanged) {
                 payload.username = editForm.username;
             }
-
-            if ((editForm.email || "") !== (user.email || "")) {
+            if (emailChanged) {
                 payload.email = editForm.email;
             }
-
-            if ((editForm.avatar_url || "") !== (user.avatar_url || "")) {
-                payload.avatar_url = editForm.avatar_url;
+            if (avatarChanged && uploadedAvatarUrl) {
+                let avatarUrl = uploadedAvatarUrl;
+                // If backend returns a file id, construct the URL
+                if (/^[a-f\d]{24}$/i.test(avatarUrl)) {
+                    avatarUrl = `${apiBaseUrl}/api/user/avatar/${avatarUrl}`;
+                } else if (avatarUrl && avatarUrl.startsWith("/")) {
+                    avatarUrl = `${apiBaseUrl}${avatarUrl}`;
+                }
+                payload.avatar_url = avatarUrl || `${apiBaseUrl}/api/user/avatar?t=${Date.now()}`;
             }
 
-            if (Object.keys(payload).length === 1) {
+
+            if (!usernameChanged && !emailChanged && !avatarChanged) {
                 setSaveError("No changes to save.");
                 return;
             }
 
+            // Always call /api/user/data/edit if avatar, username, or email changed (per backend contract)
             const response = await fetch(`${apiBaseUrl}/api/user/data/edit`, {
                 method: "POST",
                 headers: {
@@ -234,17 +302,26 @@ const ProfilePage = () => {
             });
 
             const responsePayload = await response.json().catch(() => null);
-
             if (!response.ok || !responsePayload?.ok) {
                 throw new Error(responsePayload?.error || "Failed to update profile");
             }
 
-            setUser((prevUser) => (prevUser ? {
-                ...prevUser,
-                username: payload.username !== undefined ? String(payload.username) : prevUser.username,
-                email: payload.email !== undefined ? String(payload.email) : prevUser.email,
-                avatar_url: payload.avatar_url !== undefined ? String(payload.avatar_url) : prevUser.avatar_url,
-            } : prevUser));
+            // 4. Update local state so the UI reflects the changes immediately.
+            setUser((prevUser) =>
+                prevUser
+                    ? {
+                          ...prevUser,
+                          username: payload.username !== undefined ? String(payload.username) : prevUser.username,
+                          email: payload.email !== undefined ? String(payload.email) : prevUser.email,
+                          avatar_url: payload.avatar_url !== undefined
+                              ?
+                                    /^[a-f\d]{24}$/i.test(String(payload.avatar_url))
+                                        ? `${apiBaseUrl}/api/user/avatar/${payload.avatar_url}`
+                                        : (String(payload.avatar_url).startsWith("/") ? `${apiBaseUrl}${payload.avatar_url}` : String(payload.avatar_url))
+                              : prevUser.avatar_url || `${apiBaseUrl}/api/user/avatar?t=${Date.now()}`,
+                      }
+                    : prevUser,
+            );
 
             setIsEditing(false);
             setSaveSuccess("Profile updated successfully.");
@@ -266,6 +343,7 @@ const ProfilePage = () => {
                             name={user?.username ?? (isLoading ? "Loading..." : "Unknown user")}
                             memberSince={memberSince || "-"}
                             initial={initial}
+                            avatarUrl={avatarUrl}
                             onEditProfile={handleToggleEdit}
                             editLabel={isEditing ? "Cancel" : "Edit Profile"}
                             editDisabled={isLoading || isSaving}
@@ -275,6 +353,7 @@ const ProfilePage = () => {
                             <ProfileEditForm
                                 values={editForm}
                                 onChange={setEditForm}
+                                onAvatarFileChange={(file) => setEditForm((prev) => ({ ...prev, avatarFile: file }))}
                                 onSave={() => void handleSaveProfile()}
                                 onCancel={handleToggleEdit}
                                 isSaving={isSaving}

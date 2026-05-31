@@ -4,12 +4,13 @@ type ProfileHeroProps = {
     name: string;
     memberSince: string;
     initial: string;
+    avatarUrl?: string;
     onEditProfile?: () => void;
     editLabel?: string;
     editDisabled?: boolean;
 };
 
-export default function ProfileHero({ name, memberSince, initial, onEditProfile, editLabel = "Edit Profile", editDisabled }: ProfileHeroProps) {
+export default function ProfileHero({ name, memberSince, initial, avatarUrl, onEditProfile, editLabel = "Edit Profile", editDisabled }: ProfileHeroProps) {
     const { isDark } = useTheme();
 
     return (
@@ -18,8 +19,17 @@ export default function ProfileHero({ name, memberSince, initial, onEditProfile,
 
             <div className="-mt-8 flex flex-wrap items-end justify-between gap-4 px-2 sm:-mt-9">
                 <div>
-                    <div className={`flex h-16 w-16 items-center justify-center rounded-2xl border-4 bg-blue-600 text-3xl font-semibold text-white shadow-sm ${isDark ? "border-slate-900" : "border-white"}`}>
-                        {initial}
+                    <div className={`relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 bg-blue-600 text-3xl font-semibold text-white shadow-sm ${isDark ? "border-slate-900" : "border-white"}`}>
+                        {avatarUrl ? (
+                            <img
+                                src={avatarUrl}
+                                alt={`${name}'s avatar`}
+                                className="h-full w-full object-cover"
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                            />
+                        ) : (
+                            initial
+                        )}
                     </div>
                     <h1 className={`mt-2 text-3xl font-bold tracking-tight ${isDark ? "text-slate-100" : "text-slate-900"}`}>{name}</h1>
                     <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>Member since {memberSince}</p>
