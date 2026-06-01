@@ -12,6 +12,7 @@ import MathSprint from "./pages/MathSprint";
 import WordlePage from "./pages/WordlePage";
 import MoreLessPage from "./pages/MoreLessPage";
 import WorldlePage from "./pages/WorldlePage";
+import SonglessPage from "./pages/SonglessPage";
 import { UserContext } from "./context/UserContext";
 
 function App() {
@@ -100,7 +101,7 @@ function App() {
           <Route path="/wordle" element={<WordlePage />} />
           <Route path="/moreless" element={<MoreLessPage />} />
           <Route path="/worldle" element={<WorldlePage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
+          <Route path="/songless" element={<SonglessPage />} />
         </Routes>
       </BrowserRouter>
     </UserContext.Provider>

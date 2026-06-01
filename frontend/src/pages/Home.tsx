@@ -118,6 +118,7 @@ export default function Home() {
             : game
     );
 
+
     return (
         <div className={"home"}>
             {/* Navbar */}
@@ -169,14 +170,16 @@ export default function Home() {
                             onClick={() => {
                                 if (game.name === "Wordle")
                                     navigate("/wordle");
-                                if(game.name === "Flagle")
+                                if (game.name === "Flagle")
                                     navigate("/flagle");
-                                if(game.name === "Math Sprint")
+                                if (game.name === "Math Sprint")
                                     navigate("/math-sprint");
-                                if(game.name === "More or Less")
+                                if (game.name === "More or Less")
                                     navigate("/moreless");
                                 if (game.name === "Worldle")
                                     navigate("/worldle");
+                                if (game.name === "Songless")
+                                    navigate("/songless");
                             }}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>

@@ -16,11 +16,9 @@ export const useGame = (gameType: GameType, queryParams?: GameQueryParams) => {
 
     useEffect(() => {
         const init = async () => {
-            // if JWT is saved in localStorage
             const token = localStorage.getItem('token');
             const headers = { Authorization: `Bearer ${token}` };
 
-            // does not yet work JWT not implemented
             const playedRes = await fetch(`${API}/api/games/${gameType}/played-today${queryString}`, { headers });
             const playedData = await playedRes.json();
 
@@ -39,10 +37,8 @@ export const useGame = (gameType: GameType, queryParams?: GameQueryParams) => {
     }, [gameType, queryString]);
 
     const submitResult = async (result: GameResult) => {
-        // if JWT is saved in localStorage
         const token = localStorage.getItem('token');
 
-        // does not yet work JWT not implemented
         await fetch(`${API}/api/games/${gameType}/result`, {
             method: 'POST',
             headers: {

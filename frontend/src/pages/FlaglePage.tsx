@@ -76,7 +76,7 @@ export default function FlaglePage() {
     if (daysBack === 0) {
         return (
             <>
-                <Navbar />
+                <Navbar activeLink="home" />
                 {nav}
                 <GamePage
                     gameType="flagle"

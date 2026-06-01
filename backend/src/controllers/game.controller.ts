@@ -92,6 +92,24 @@ export const getChallengeByDate = async (req: Request, res: Response) => {
     }
 };
 
+// GET /api/games/:gameType/date/:date
+export const getChallengeByDate = async (req: Request, res: Response) => {
+    try {
+        const { gameType, date } = req.params as { gameType: GameType; date: string };
+
+        const game = await Game.findOne({ name: gameType });
+        if (!game) return res.status(404).json({ message: 'Game not found' });
+
+        const challenge = game.challenges.find(c => c.date === date);
+        if (!challenge) return res.status(404).json({ message: 'No challenge for that date' });
+
+        res.json({ gameType, date, challengeData: challenge.challengeData });
+    } catch (error) {
+        console.error('Error fetching challenge by date:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
 // GET /api/games/:gameType/played-today
 // it checks if user has already finished the game for certian type, if he has finished then it returns the reuslts
 export const getPlayedToday = async (req: AuthRequest, res: Response) => {

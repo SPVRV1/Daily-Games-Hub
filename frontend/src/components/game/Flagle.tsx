@@ -4,6 +4,24 @@ import "./Flagle.css";
 import { GameChallenge, GameResult } from "../../types/game.types";
 import { countryCoords, haversineDistance, bearing } from "../../data/countryCoords";
 
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+function saveGameToProfile(result: GameResult) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch(`${API}/api/user/data/game`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+            title: "Flagle",
+            attempts: result.attempts_used ?? 0,
+            timeTaken: result.time_seconds ?? 0,
+            completed: result.completed,
+        }),
+    }).catch(() => {});
+}
+
+
 const MAX_ATTEMPTS = 6;
 
 interface ChallengeData {
@@ -59,6 +77,7 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
     });
     const [revealCount, setRevealCount] = useState(0);
     const [countries, setCountries] = useState<Country[]>([]);
+
 
     useEffect(() => {
         fetch("/api/countries")
@@ -122,14 +141,16 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
         if (isCorrect || newAttempts.length >= MAX_ATTEMPTS) {
             setRevealCount(MAX_ATTEMPTS);
             setFinished(true);
-            onFinish({
+            const result: GameResult = {
                 challenge_id: challenge.challengeId,
                 completed: isCorrect,
                 score: isCorrect ? Math.max(10, 100 - (newAttempts.length - 1) * 15) : 0,
                 attempts_used: newAttempts.length,
                 correct_answers: isCorrect ? 1 : 0,
                 time_seconds: 0,
-            });
+            };
+            onFinish(result);
+            saveGameToProfile(result);
         }
     };
 
