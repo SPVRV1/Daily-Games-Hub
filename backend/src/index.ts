@@ -14,6 +14,10 @@ import statsRoutes from "./routes/stats.routes.js";
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
 import gamesRoutes from "./routes/games.js";
+import notificationRoutes from './routes/notification.js';
+
+
+import testRouter from "./routes/test.js";
 
 mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
@@ -38,6 +42,7 @@ app.use("/api/games", worldleRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/countries", countriesRoutes);
 app.use("/api/stats", statsRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use("/api/friends", async (req, res, next) => {
     try {

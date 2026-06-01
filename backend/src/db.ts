@@ -1,5 +1,5 @@
 import { MongoClient, Db } from "mongodb";
-import { User } from "./models/user.js";
+import { AppNotification, User } from "./models/user.js";
 
 let client: MongoClient | null = null;
 
@@ -23,3 +23,8 @@ export const getUsersCollection = async () => {
     const db = await getDb();
     return db.collection<User>("Users");
 };
+
+export async function getNotificationsCollection() {
+    const db = await getDb(); 
+    return db.collection<AppNotification>('notifications');
+}

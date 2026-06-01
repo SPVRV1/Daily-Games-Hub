@@ -43,3 +43,16 @@ export interface User {
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
 }
+
+export type NotificationType = 'friend_request' | 'game_played' | 'new_record';
+
+export type AppNotification = {
+    _id: number;
+    user_id: number;
+    type: NotificationType;
+    message: string;
+    actor?: string;
+    action_url?: string;
+    read: boolean;
+    created_at: Date;
+};
