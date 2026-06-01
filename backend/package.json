@@ -9,10 +9,11 @@
         "start": "node dist/index.js",
         "test": "vitest run",
         "test:watch": "vitest",
-        "seed:all": "npm run seed:wordle && npm run seed:flagle && npm run seed:moreless",
+        "seed:all": "npm run seed:wordle && npm run seed:flagle && npm run seed:moreless && npm run seed:songless",
         "seed:wordle": "tsx src/seeds/wordle.seed.ts",
         "seed:flagle": "tsx src/seeds/flagle.seed.ts",
-        "seed:moreless": "tsx src/seeds/moreless.seed.ts"
+        "seed:moreless": "tsx src/seeds/moreless.seed.ts",
+        "seed:songless": "tsx src/seeds/songless.seed.ts"
     },
     "keywords": [],
     "author": "",

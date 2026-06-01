@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Done after ER model
 export interface IGameResultDocument extends Document {
   user_id: mongoose.Types.ObjectId;
-  challenge_id: mongoose.Types.ObjectId;
+  gameType: string;
+  challenge_id: string;
   difficulty?: 'easy' | 'medium' | 'hard';
   completed: boolean;
   attempts_used?: number;
@@ -14,8 +14,9 @@ export interface IGameResultDocument extends Document {
 }
 
 const GameResultsSchema = new Schema({
-  user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  challenge_id: { type: Schema.Types.ObjectId, ref: 'DailyChallenge', required: true },
+  user_id: { type: Schema.Types.Mixed },            // Mixed until JWT is enforced
+  gameType: { type: String, required: true },
+  challenge_id: { type: String, required: true },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'] },
   completed: { type: Boolean, default: false },
   attempts_used: { type: Number },
@@ -25,6 +26,7 @@ const GameResultsSchema = new Schema({
   played_at: { type: Date, default: Date.now },
 });
 
-GameResultsSchema.index({ user_id: 1, challenge_id: 1 }, { unique: true });
+// Unique per user + game type + challenge (one play per day per game)
+GameResultsSchema.index({ user_id: 1, gameType: 1, challenge_id: 1 }, { unique: true });
 
 export default mongoose.model<IGameResultDocument>('GameResult', GameResultsSchema);

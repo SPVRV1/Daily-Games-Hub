@@ -66,6 +66,32 @@ router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
     }
 });
 
+router.get("/data/today", verifyToken, async (_req: AuthRequest, res) => {
+    try {
+        const _id = _req.userId;
+        if (!_id) return res.status(401).json({ ok: false, error: "Unauthorized" });
+
+        const collection = await getUsersCollection();
+        const user = await collection.findOne({ _id }, { projection: { games: 1 } });
+        if (!user) return res.status(404).json({ ok: false, error: "User not found" });
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayGames = (user.games || []).filter((g: { datePlayed: Date | string }) => {
+            const d = new Date(g.datePlayed);
+            return d >= today && d < tomorrow;
+        });
+
+        res.json({ ok: true, games: todayGames });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        res.status(500).json({ ok: false, error: message });
+    }
+});
+
 router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
     try {
         const _id = _req.userId;
@@ -733,6 +759,18 @@ router.post("/data/game", verifyToken, async (req: AuthRequest, res) => {
         }
         if (typeof timeTaken !== "number" || timeTaken < 0) {
             return res.status(400).json({ ok: false, error: "Invalid timeTaken" });
+        }
+
+        // Dedup: if user already has this game title saved today, skip silently
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const collection2 = await getUsersCollection();
+        const existingUser = await collection2.findOne(
+            { _id: userId, "games.title": title, "games.datePlayed": { $gte: todayStart } },
+            { projection: { _id: 1 } }
+        );
+        if (existingUser) {
+            return res.status(200).json({ ok: true, skipped: true });
         }
         if (typeof completed !== "boolean") {
             return res.status(400).json({ ok: false, error: "Invalid completed" });

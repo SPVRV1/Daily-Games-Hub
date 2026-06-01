@@ -92,24 +92,6 @@ export const getChallengeByDate = async (req: Request, res: Response) => {
     }
 };
 
-// GET /api/games/:gameType/date/:date
-export const getChallengeByDate = async (req: Request, res: Response) => {
-    try {
-        const { gameType, date } = req.params as { gameType: GameType; date: string };
-
-        const game = await Game.findOne({ name: gameType });
-        if (!game) return res.status(404).json({ message: 'Game not found' });
-
-        const challenge = game.challenges.find(c => c.date === date);
-        if (!challenge) return res.status(404).json({ message: 'No challenge for that date' });
-
-        res.json({ gameType, date, challengeData: challenge.challengeData });
-    } catch (error) {
-        console.error('Error fetching challenge by date:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-
 // GET /api/games/:gameType/played-today
 // it checks if user has already finished the game for certian type, if he has finished then it returns the reuslts
 export const getPlayedToday = async (req: AuthRequest, res: Response) => {
@@ -132,7 +114,7 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
         }
 
         const result = await GameResult.findOne({
-            user_id: req.user?._id,
+            user_id: req.user?._id ?? null,
             gameType,
             challenge_id: challengeId,
         });
@@ -172,27 +154,16 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         }
 
         const resolvedDifficulty = difficulty ?? undefined;
-        const submittedChallengeId =
-            typeof challenge_id === "string" && challenge_id.trim() !== ""
-                ? challenge_id.trim()
-                : today;
+        // Always use today's plain date as the challenge_id so played-today
+        // lookups are consistent regardless of what prefix individual games add.
+        // MathSprint needs a difficulty-scoped ID to allow one play per difficulty.
         const resolvedChallengeId =
             gameType === "mathsprint"
                 ? generateMathSprintChallengeId(
                       today,
                       resolvedDifficulty as "easy" | "medium" | "hard",
                   )
-                : submittedChallengeId;
-
-        if (
-            gameType === "mathsprint" &&
-            challenge_id &&
-            challenge_id !== resolvedChallengeId
-        ) {
-            return res
-                .status(400)
-                .json({ message: "Challenge id does not match difficulty" });
-        }
+                : today;
 
         const existing = await GameResult.findOne({
             user_id: req.user?._id,
@@ -222,7 +193,7 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         }
 
         const result = await GameResult.create({
-            user_id: req.user?._id,
+            user_id: req.user?._id ?? null,
             gameType,
             challenge_id: resolvedChallengeId,
             difficulty: resolvedDifficulty,
