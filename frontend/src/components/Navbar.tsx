@@ -43,7 +43,7 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                             {user?.avatarUrl ? (
                                 <img className="avatar" src={user.avatarUrl} alt={initial} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
                             ) : (
-                                <div className="avatar">{initial}</div>
+                                <div className="avatar"></div>
                             )}
                         </Link>
                         <Link to="/login" className="icon-btn" aria-label="Logout">

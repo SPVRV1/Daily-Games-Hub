@@ -1,12 +1,12 @@
-import Navbar from "../../components/Navbar";
-import { useUser } from "../../context/UserContext";
-import ProfileHero from "../../components/profile/ProfileHero";
-import OverviewSection from "../../components/profile/OverviewSection";
-import WeeklyActivity from "../../components/profile/WeeklyActivity";
-import GameStatistics from "../../components/profile/GameStatistics";
-import AchievementsPanel from "../../components/profile/AchievementsPanel";
-import ProfileEditForm from "../../components/profile/ProfileEditForm";
-import { useTheme } from "../../context/ThemeContext";
+import Navbar from "../components/Navbar";
+import { useUser } from "../context/UserContext";
+import ProfileHero from "../components/profile/ProfileHero";
+import OverviewSection from "../components/profile/OverviewSection";
+import WeeklyActivity from "../components/profile/WeeklyActivity";
+import GameStatistics from "../components/profile/GameStatistics";
+import AchievementsPanel from "../components/profile/AchievementsPanel";
+import ProfileEditForm from "../components/profile/ProfileEditForm";
+import { useTheme } from "../context/ThemeContext";
 import { useEffect, useMemo, useState } from "react";
 
 type Achievement = {
@@ -169,6 +169,7 @@ const ProfilePage = () => {
         return () => controller.abort();
     }, [apiBaseUrl]);
 
+    const displayName = isLoading ? "Loading..." : user?.username ?? "user";
     const memberSince = user ? formatMonthYear(user.created_at) : "";
     const initial = user?.username?.charAt(0).toUpperCase() ?? "?";
 
@@ -339,69 +340,75 @@ const ProfilePage = () => {
 
     return (
         <div className={`min-h-screen transition-colors ${isDark ? "bg-slate-950" : "bg-slate-100"} flex flex-col`}>
-            <Navbar activeLink="none" />
-
             <div className="relative flex-1">
-                <main className="mx-auto w-full max-w-350 px-4 py-6 sm:px-6 lg:px-8">
-                    <div className="space-y-5">
-                        <ProfileHero
-                            name={user?.username ?? (isLoading ? "Loading..." : "Unknown user")}
-                            memberSince={memberSince || "-"}
-                            initial={initial}
-                            avatarUrl={avatarUrl}
-                            onEditProfile={handleToggleEdit}
-                            editLabel={isEditing ? "Cancel" : "Edit Profile"}
-                            editDisabled={isLoading || isSaving}
-                        />
+                {!isLoading && (
+                    <>
+                        <Navbar activeLink="none" />
 
-                        {isEditing && (
-                            <ProfileEditForm
-                                values={editForm}
-                                onChange={setEditForm}
-                                onAvatarFileChange={(file) => setEditForm((prev) => ({ ...prev, avatarFile: file }))}
-                                onSave={() => void handleSaveProfile()}
-                                onCancel={handleToggleEdit}
-                                isSaving={isSaving}
-                                error={saveError}
-                                success={saveSuccess}
-                            />
-                        )}
-
-                        {error && (
-                            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
-                                <p>Could not load profile: {error}</p>
-                            </div>
-                        )}
-
-                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-                            <div className="space-y-4 min-w-0">
-                                <OverviewSection
-                                    currentStreak={user?.current_streak ?? null}
-                                    gamesPlayed={user?.games_played ?? null}
-                                    achievementsCount={user?.num_achievements ?? null}
-                                    globalRank={user?.global_rank ?? null}
+                        <main className="mx-auto w-full max-w-350 px-4 py-6 sm:px-6 lg:px-8">
+                            <div className="space-y-5">
+                                <ProfileHero
+                                    name={displayName}
+                                    memberSince={memberSince || "-"}
+                                    initial={initial}
+                                    avatarUrl={avatarUrl}
+                                    onEditProfile={handleToggleEdit}
+                                    editLabel={isEditing ? "Cancel" : "Edit Profile"}
+                                    editDisabled={isLoading || isSaving}
                                 />
-                                <WeeklyActivity week={statistics?.week} />
-                                <GameStatistics games={statistics?.games} />
-                            </div>
-                            <div className="min-w-0">
-                                <AchievementsPanel achievements={statistics?.achievements ?? user?.achievements ?? []} />
-                            </div>
-                        </div>
-                    </div>
-                </main>
 
-                {isLoading && (
-                    <div
-                        className={`absolute inset-0 z-10 flex items-center justify-center px-4 backdrop-blur-sm ${isDark ? "bg-slate-950/40" : "bg-white/50"}`}
-                        aria-live="polite"
-                        aria-busy="true"
-                    >
-                        <div className={`rounded-2xl border px-5 py-3 text-sm font-semibold shadow-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-100" : "border-slate-200 bg-white text-slate-900"}`}>
-                            Loading profile...
+                                {isEditing && (
+                                    <ProfileEditForm
+                                        values={editForm}
+                                        onChange={setEditForm}
+                                        onAvatarFileChange={(file) => setEditForm((prev) => ({ ...prev, avatarFile: file }))}
+                                        onSave={() => void handleSaveProfile()}
+                                        onCancel={handleToggleEdit}
+                                        isSaving={isSaving}
+                                        error={saveError}
+                                        success={saveSuccess}
+                                    />
+                                )}
+
+                                {error && (
+                                    <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
+                                        <p>Could not load profile: {error}</p>
+                                    </div>
+                                )}
+
+                                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+                                    <div className="space-y-4 min-w-0">
+                                        <OverviewSection
+                                            currentStreak={user?.current_streak ?? null}
+                                            gamesPlayed={user?.games_played ?? null}
+                                            achievementsCount={user?.num_achievements ?? null}
+                                            globalRank={user?.global_rank ?? null}
+                                        />
+                                        <WeeklyActivity week={statistics?.week} />
+                                        <GameStatistics games={statistics?.games} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <AchievementsPanel achievements={statistics?.achievements ?? user?.achievements ?? []} />
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </>
+                )}
+
+                <div
+                    className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300 ${isDark ? "bg-slate-950/40" : "bg-white/50"}`}
+                    style={{ opacity: isLoading ? 1 : 0, pointerEvents: isLoading ? "auto" : "none" }}
+                    aria-live="polite"
+                    aria-busy={isLoading}
+                >
+                    <div className={`rounded-2xl border px-5 py-4 text-sm font-semibold shadow-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-100" : "border-slate-200 bg-white text-slate-900"}`}>
+                        <div className="flex items-center gap-3">
+                            <div className={`h-4 w-4 animate-spin rounded-full border-2 border-transparent ${isDark ? "border-t-slate-200" : "border-t-slate-900"}`} />
+                            <span>Loading profile...</span>
                         </div>
                     </div>
-                )}
+                </div>
             </div>
         </div>
     );
