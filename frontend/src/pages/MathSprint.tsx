@@ -12,14 +12,14 @@ const difficultyOptions: Array<{
   title: string;
   description: string;
 }> = [
-  { value: "easy", title: "Easy", description: "Addition only" },
-  { value: "medium", title: "Medium", description: "Addition and subtraction" },
-  {
-    value: "hard",
-    title: "Hard",
-    description: "Addition, subtraction, and multiplication",
-  },
-];
+    { value: "easy", title: "Easy", description: "Addition only" },
+    { value: "medium", title: "Medium", description: "Addition and subtraction" },
+    {
+      value: "hard",
+      title: "Hard",
+      description: "Addition, subtraction, and multiplication",
+    },
+  ];
 
 interface MathSprintQuestion {
   id: number;
@@ -127,7 +127,6 @@ function MathSprintGame({
     clearTimer();
     clearFeedbackTimer();
 
-    const token = localStorage.getItem("token");
     const attemptsUsed = correct + wrong;
     const timeTaken = Math.max(0, timeLimit - timeLeft);
 
@@ -149,21 +148,6 @@ function MathSprintGame({
       completed: correct > 0,
     });
 
-    void fetch(`${API}/api/user/data/game`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        title: "mathsprint",
-        attempts: attemptsUsed,
-        timeTaken,
-        completed: correct > 0,
-      }),
-    }).catch((error) => {
-      console.error("Failed to save MathSprint game to user profile:", error);
-    });
   }
 
   useEffect(() => {

@@ -10,11 +10,9 @@ const router = Router();
 // GET /api/notifications
 router.get('/', verifyToken, async (_req: AuthRequest, res) => {
     try {
-        //const { id } = _req.user?.userId;
-        const userId = _req.user?.userId;
-
-        if (!userId || isNaN(userId)) {
-            return res.status(400).json({ ok: false, error: 'Invalid user ID : ' + _req.user?.userId });
+        const userId = _req.userId;
+        if (userId == null) {
+            return res.status(401).json({ ok: false, error: 'Unauthorized' });
         }
 
         const collection = await getNotificationsCollection();
@@ -34,8 +32,12 @@ router.get('/', verifyToken, async (_req: AuthRequest, res) => {
 // PATCH /api/notifications/:id/read
 router.patch('/:id/read', verifyToken, async (req: AuthRequest, res) => {
     try {
-        const userId = Number(req.user?.userId);
+        const userId = req.userId;
         const notifId = Number(req.params.id);
+
+        if (userId == null || Number.isNaN(notifId)) {
+            return res.status(400).json({ ok: false, error: 'Invalid request' });
+        }
 
         const collection = await getNotificationsCollection();
         const filter: Filter<AppNotification> = { _id: notifId, user_id: userId };
@@ -54,7 +56,11 @@ router.patch('/:id/read', verifyToken, async (req: AuthRequest, res) => {
 // PATCH /api/notifications/read-all
 router.patch('/read-all', verifyToken, async (req: AuthRequest, res) => {
     try {
-        const userId = Number(req.user?.userId);
+        const userId = req.userId;
+
+        if (userId == null) {
+            return res.status(401).json({ ok: false, error: 'Unauthorized' });
+        }
 
         const collection = await getNotificationsCollection();
         await collection.updateMany(
@@ -72,8 +78,12 @@ router.patch('/read-all', verifyToken, async (req: AuthRequest, res) => {
 // DELETE /api/notifications/:id
 router.delete('/:id', verifyToken, async (_req: AuthRequest, res) => {
     try {
-        const userId = Number(_req.user?.userId);
+        const userId = _req.userId;
         const notifId = Number(_req.params.id);
+
+        if (userId == null || Number.isNaN(notifId)) {
+            return res.status(400).json({ ok: false, error: 'Invalid request' });
+        }
 
         const collection = await getNotificationsCollection();
         const filter: Filter<AppNotification> = { _id: notifId, user_id: userId };
@@ -89,7 +99,11 @@ router.delete('/:id', verifyToken, async (_req: AuthRequest, res) => {
 // DELETE /api/notifications  (clear all)
 router.delete('/', verifyToken, async (req: AuthRequest, res) => {
     try {
-        const userId = Number(req.user?.userId);
+        const userId = req.userId;
+
+        if (userId == null) {
+            return res.status(401).json({ ok: false, error: 'Unauthorized' });
+        }
 
         const collection = await getNotificationsCollection();
         await collection.deleteMany({ user_id: userId });

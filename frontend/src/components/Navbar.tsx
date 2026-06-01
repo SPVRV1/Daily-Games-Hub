@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useUser } from "../context/UserContext";
 
 type NavbarProps = {
-    activeLink?: "home" | "friends" | "statistics" | "none";
+    activeLink?: "home" | "friends" | "leaderboard" | "statistics" | "none";
     variant?: "default" | "auth";
 };
 
@@ -18,7 +18,7 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
     const isAuth = variant === "auth";
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-    const { user } = useUser();
+    const { user, setUser } = useUser();
     const initial = user?.username?.charAt(0).toUpperCase() ?? "Z";
     return (
         <nav className={`navbar${isAuth ? " navbar--auth" : ""} w-full`}>
@@ -61,7 +61,15 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                                 <div className="avatar"></div>
                             )}
                         </Link>
-                        <Link to="/login" className="icon-btn" aria-label="Logout">
+                        <Link
+                            to="/login"
+                            className="icon-btn"
+                            aria-label="Logout"
+                            onClick={() => {
+                                localStorage.clear();
+                                setUser(null);
+                            }}
+                        >
                             <LogOut size={22} strokeWidth={2} />
                         </Link>
                     </>

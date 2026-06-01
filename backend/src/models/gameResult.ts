@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IGameResultDocument extends Document {
-  user_id: mongoose.Types.ObjectId;
+  user_id: number;
   gameType: string;
   challenge_id: string;
   difficulty?: 'easy' | 'medium' | 'hard';
@@ -14,7 +14,7 @@ export interface IGameResultDocument extends Document {
 }
 
 const GameResultsSchema = new Schema({
-  user_id: { type: Schema.Types.Mixed },            // Mixed until JWT is enforced
+  user_id: { type: Number, required: true },
   gameType: { type: String, required: true },
   challenge_id: { type: String, required: true },
   difficulty: { type: String, enum: ['easy', 'medium', 'hard'] },

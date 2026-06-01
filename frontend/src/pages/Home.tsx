@@ -13,6 +13,7 @@ type Game = {
     icon: string;
     route: string;
     completed: boolean;
+    attempted: boolean;
     result?: string;
 };
 
@@ -156,21 +157,28 @@ export default function Home() {
             return {
                 ...def,
                 completed: apiGame.completed,
+                attempted: true,
                 result: formatGameResult(apiGame),
             };
         }
 
         // MoreLess fallback: localStorage
         if (def.name === "More or Less" && moreLessLocal) {
-            return { ...def, completed: moreLessLocal.completed, result: moreLessLocal.result };
+            return {
+                ...def,
+                completed: moreLessLocal.completed,
+                attempted: true,
+                result: moreLessLocal.result,
+            };
         }
 
-        return { ...def, completed: false };
+        return { ...def, completed: false, attempted: false };
     });
 
     const completedCount = games.filter((g) => g.completed).length;
+    const attemptedCount = games.filter((g) => g.attempted).length;
     const totalGames = games.length;
-    const completionPct = Math.round((completedCount / totalGames) * 100);
+    const completionPct = Math.round((attemptedCount / totalGames) * 100);
 
     const streak = userStats?.current_streak ?? 0;
     const totalPlayed = userStats?.games_played ?? 0;
@@ -187,7 +195,7 @@ export default function Home() {
             icon: "fi-rr-gamepad",
             iconColor: "#3377f2",
             label: "Today's Progress",
-            value: `${completedCount}/${totalGames}`,
+            value: `${attemptedCount}/${totalGames}`,
             streakCard: false,
         },
         {
@@ -254,13 +262,19 @@ export default function Home() {
                                         Completed
                                     </span>
                                 )}
+                                {!game.completed && game.attempted && (
+                                    <span className="completed-badge completed-badge--failed">
+                                        <i className="fi fi-rr-cross" />
+                                        Attempted
+                                    </span>
+                                )}
                             </div>
                             <div className={`game-info ${game.completed ? "" : "game-info--pending"}`}>
                                 <h3 className="game-name">{game.name}</h3>
                                 <p className="game-desc">{game.description}</p>
-                                {game.completed ? (
-                                    <span className="game-result">
-                                        <i className="fi fi-rr-check" />
+                                {game.completed || game.attempted ? (
+                                    <span className={`game-result${game.completed ? "" : " game-result--failed"}`}>
+                                        <i className={game.completed ? "fi fi-rr-check" : "fi fi-rr-cross"} />
                                         {game.result}
                                     </span>
                                 ) : (

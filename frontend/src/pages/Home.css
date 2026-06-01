@@ -1,38 +1,38 @@
 /* ── Spec palette (5 official colors + supporting tints) ─── */
 :root {
-    --primary:    #3377f2;
-    --dark-base:  #2d2f3f;
-    --white:      #ffffff;
-    --green:      #1db756;
-    --orange:     #f38e10;
+    --primary: #3377f2;
+    --dark-base: #2d2f3f;
+    --white: #ffffff;
+    --green: #1db756;
+    --orange: #f38e10;
 
-    --bg:         #eaecef;
-    --border:     #eaecef;
-    --text:       #5a5d72;
-    --text-dark:  #2d2f3f;
+    --bg: #eaecef;
+    --border: #eaecef;
+    --text: #5a5d72;
+    --text-dark: #2d2f3f;
 
-    --card-bg:    #ffffff;
-    --navbar-bg:  #ffffff;
-    --green-bg:   #edfaf3;
+    --card-bg: #ffffff;
+    --navbar-bg: #ffffff;
+    --green-bg: #edfaf3;
     --primary-bg: #eef4ff;
-    --streak-bg:  #fff8f0;
+    --streak-bg: #fff8f0;
 
     --font-heading: 'Poppins', system-ui, sans-serif;
-    --font-body:    'Inter', system-ui, sans-serif;
-    --font-mono:    'Roboto Mono', monospace;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
 }
 
 /* ── Dark mode ───────────────────────────────────────────── */
 .dark {
-    --bg:         #181a26;
-    --card-bg:    #2d2f3f;
-    --navbar-bg:  #23253a;
-    --text:       #9093a8;
-    --text-dark:  #ffffff;
-    --border:     #3a3d54;
-    --green-bg:   #0d2419;
+    --bg: #181a26;
+    --card-bg: #2d2f3f;
+    --navbar-bg: #23253a;
+    --text: #9093a8;
+    --text-dark: #ffffff;
+    --border: #3a3d54;
+    --green-bg: #0d2419;
     --primary-bg: #1a2240;
-    --streak-bg:  #2a1f0e;
+    --streak-bg: #2a1f0e;
 }
 
 /* ── Layout ──────────────────────────────────────────────── */
@@ -46,7 +46,7 @@
 
 .home * {
     transition: background 0.25s ease, color 0.25s ease,
-                border-color 0.25s ease, box-shadow 0.25s ease;
+        border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 /* ── Navbar ──────────────────────────────────────────────── */
@@ -305,7 +305,7 @@
     width: 80px;
     height: 80px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15));
 }
 
 .completed-badge {
@@ -328,6 +328,16 @@
 .completed-badge i {
     font-size: 12px;
     color: var(--green);
+    line-height: 1;
+}
+
+.completed-badge--failed {
+    color: #b42318;
+}
+
+.completed-badge--failed i {
+    color: #b42318;
+    transform: translateY(1px);
 }
 
 .dark .completed-badge {
@@ -368,6 +378,10 @@
     gap: 5px;
 }
 
+.game-result--failed {
+    color: #b42318;
+}
+
 .game-result i {
     font-size: 13px;
 }
@@ -394,23 +408,32 @@
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {
-    .stats-grid  { grid-template-columns: repeat(2, 1fr); }
-    .games-grid  { grid-template-columns: repeat(2, 1fr); }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 600px) {
     .content {
         padding: 24px 16px 40px;
     }
+
     .navbar {
         padding: 0 16px;
     }
+
     .navbar-links {
         display: none;
     }
+
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
     .games-grid {
         grid-template-columns: 1fr;
     }

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { GameType, GameChallenge, GameResult } from "../../types/game.types";
 import { useGame } from "../../hooks/useGame";
 import GameResultScreen from "./GameResult";
@@ -7,27 +7,27 @@ import AlreadyPlayed from "./AlreadyPlayed";
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const GAME_TITLES: Record<string, string> = {
-    flagle: "Flagle",
-    wordle: "Wordle",
-    worldle: "Worldle",
-    moreless: "More or Less",
-    mathsprint: "Math Sprint",
-    songless: "Songless",
+  flagle: "Flagle",
+  wordle: "Wordle",
+  worldle: "Worldle",
+  moreless: "More or Less",
+  mathsprint: "Math Sprint",
+  songless: "Songless",
 };
 
 function saveGameToProfile(gameType: string, result: GameResult) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    fetch(`${API}/api/user/data/game`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-            title: GAME_TITLES[gameType] ?? gameType,
-            attempts: result.attempts_used ?? 0,
-            timeTaken: result.time_seconds ?? 0,
-            completed: result.completed,
-        }),
-    }).catch(() => {});
+  const token = localStorage.getItem("token");
+  if (!token) return;
+  fetch(`${API}/api/user/data/game`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      title: GAME_TITLES[gameType] ?? gameType,
+      attempts: result.attempts_used ?? 0,
+      timeTaken: result.time_seconds ?? 0,
+      completed: result.completed,
+    }),
+  }).catch(() => { });
 }
 
 interface GamePageProps {
@@ -45,16 +45,28 @@ const GamePage = ({
   renderGame,
 }: GamePageProps) => {
   const { state, submitResult } = useGame(gameType, challengeQueryParams);
+  const hasSubmittedRef = useRef(false);
+
+  useEffect(() => {
+    if (state.status === "playing") {
+      hasSubmittedRef.current = false;
+    }
+  }, [state.status]);
 
   // Backfill: if the game was already played today (before saveGameToProfile existed),
   // save it now. The backend dedup check prevents double entries.
   useEffect(() => {
-    if (state.status === "already_played" && state.result) {
+    if (state.status === "already_played" && state.result && !hasSubmittedRef.current) {
+      hasSubmittedRef.current = true;
       saveGameToProfile(gameType, state.result);
     }
-  }, [state.status]);
+  }, [state.status, gameType]);
 
   const handleFinish = (result: GameResult) => {
+    if (hasSubmittedRef.current) {
+      return;
+    }
+    hasSubmittedRef.current = true;
     saveGameToProfile(gameType, result);
     submitResult(result);
   };

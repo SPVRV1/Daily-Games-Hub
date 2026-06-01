@@ -72,7 +72,7 @@ export default function Friends() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [searchMode, setSearchMode] = useState(false);
 
-  const userId = useMemo(() => {
+  const fallbackUserId = useMemo(() => {
     const fromQuery = Number(searchParams.get("id"));
 
     if (!Number.isNaN(fromQuery) && fromQuery > 0) {
@@ -85,11 +85,59 @@ export default function Friends() {
       return fromStorage;
     }
 
-    return 1;
+    return Number.isNaN(fromStorage) ? null : fromStorage;
   }, [searchParams]);
+
+  const [userId, setUserId] = useState<number | null>(fallbackUserId);
+
+  useEffect(() => {
+    if (fallbackUserId) {
+      setUserId(fallbackUserId);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUserId(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    (async () => {
+      try {
+        const response = await fetch(`${API}/api/user/data`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload?.ok) {
+          setUserId(null);
+          return;
+        }
+
+        const resolvedId = Number(payload.user?._id);
+        setUserId(Number.isNaN(resolvedId) ? null : resolvedId);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setUserId(null);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [fallbackUserId]);
 
   const loadFriendsData = async () => {
     setLoading(true);
+
+    if (!userId) {
+      setFriends([]);
+      setRequests([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const [friendsRes, requestsRes] = await Promise.all([
@@ -189,7 +237,7 @@ export default function Friends() {
   const handleSearch = async () => {
     const query = search.trim();
 
-    if (!query) {
+    if (!query || !userId) {
       setSearchMode(false);
       setSearchResults([]);
       return;
@@ -218,6 +266,9 @@ export default function Friends() {
   };
 
   const handleSendRequest = async (receiverId: number) => {
+    if (!userId) {
+      return;
+    }
     try {
       setActionLoadingId(String(receiverId));
 

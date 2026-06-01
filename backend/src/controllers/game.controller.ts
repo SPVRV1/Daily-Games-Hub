@@ -96,6 +96,11 @@ export const getChallengeByDate = async (req: Request, res: Response) => {
 // it checks if user has already finished the game for certian type, if he has finished then it returns the reuslts
 export const getPlayedToday = async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
 
@@ -114,7 +119,7 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
         }
 
         const result = await GameResult.findOne({
-            user_id: req.user?._id ?? null,
+            user_id: userId,
             gameType,
             challenge_id: challengeId,
         });
@@ -133,6 +138,11 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
 // saves game reuslts
 export const submitResult = async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
         const {
@@ -160,13 +170,13 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         const resolvedChallengeId =
             gameType === "mathsprint"
                 ? generateMathSprintChallengeId(
-                      today,
-                      resolvedDifficulty as "easy" | "medium" | "hard",
-                  )
+                    today,
+                    resolvedDifficulty as "easy" | "medium" | "hard",
+                )
                 : today;
 
         const existing = await GameResult.findOne({
-            user_id: req.user?._id,
+            user_id: userId,
             gameType,
             challenge_id: resolvedChallengeId,
         });
@@ -193,7 +203,7 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         }
 
         const result = await GameResult.create({
-            user_id: req.user?._id ?? null,
+            user_id: userId,
             gameType,
             challenge_id: resolvedChallengeId,
             difficulty: resolvedDifficulty,
@@ -206,6 +216,12 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
 
         res.status(201).json(result);
     } catch (error) {
+        if (error && typeof error === "object" && "code" in error) {
+            const mongoError = error as { code?: number };
+            if (mongoError.code === 11000) {
+                return res.status(409).json({ message: "Already submitted today" });
+            }
+        }
         console.error("Error submitting game result:", error);
         res.status(500).json({
             message: "Internal server error",

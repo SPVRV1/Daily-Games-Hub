@@ -6,7 +6,7 @@ const router = Router();
 
 router.get('/:gameType/today', getTodayChallenge);
 router.get('/:gameType/date/:date', getChallengeByDate);
-router.get('/:gameType/played-today', /* verifyToken, */ getPlayedToday); // TODO: re-enable when JWT is ready
-router.post('/:gameType/result', /* verifyToken, */ submitResult); // TODO: re-enable when JWT is ready
+router.get('/:gameType/played-today', verifyToken, getPlayedToday);
+router.post('/:gameType/result', verifyToken, submitResult);
 
 export default router;

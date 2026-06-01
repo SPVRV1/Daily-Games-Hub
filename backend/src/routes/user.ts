@@ -147,10 +147,6 @@ router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
         nextMonday.setDate(nextMonday.getDate() + 7);
 
         games.forEach(game => {
-
-            if (!game.completed)
-                return;
-
             const played = new Date(game.datePlayed);
 
             if (
@@ -172,6 +168,26 @@ router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
         // STATISTIKA POSAMEZNIH IGER
         // -----------------------------------------
 
+        const normalizeGameTitle = (title: string) => {
+            const normalized = title.trim().toLowerCase().replace(/\s+/g, "");
+            switch (normalized) {
+                case "wordle":
+                    return "Wordle";
+                case "flagle":
+                    return "Flagle";
+                case "worldle":
+                    return "Worldle";
+                case "moreorless":
+                    return "More or Less";
+                case "mathsprint":
+                    return "Math Sprint";
+                case "songless":
+                    return "Songless";
+                default:
+                    return title.trim();
+            }
+        };
+
         const statsMap: Record<string, {
             totalAttempts: number;
             totalTime: number;
@@ -179,18 +195,19 @@ router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
         }> = {};
 
         games.forEach(game => {
+            const title = normalizeGameTitle(game.title);
 
-            if (!statsMap[game.title]) {
-                statsMap[game.title] = {
+            if (!statsMap[title]) {
+                statsMap[title] = {
                     totalAttempts: 0,
                     totalTime: 0,
                     gamesPlayed: 0
                 };
             }
 
-            statsMap[game.title].totalAttempts += game.attempts;
-            statsMap[game.title].totalTime += game.timeTaken;
-            statsMap[game.title].gamesPlayed++;
+            statsMap[title].totalAttempts += game.attempts;
+            statsMap[title].totalTime += game.timeTaken;
+            statsMap[title].gamesPlayed++;
         });
 
         const gameStats = Object.entries(statsMap)
@@ -722,9 +739,9 @@ export async function addGame(userId: number, title: string, attempts: number, t
 
     const result = await collection.updateOne(
         { _id: userId },
-        { 
-            $push: { games: game }, 
-            $inc: { games_played: 1 } 
+        {
+            $push: { games: game },
+            $inc: { games_played: 1 }
         }
     );
 
