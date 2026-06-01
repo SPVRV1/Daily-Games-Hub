@@ -2,9 +2,9 @@ import { Router } from "express";
 import GameResult from "../models/gameResult.js";
 import { getTodayDate } from "../utils/gameHelpers.js";
 import { generateWorldleChallenge } from "../utils/worldle.js";
+import { verifyToken, type AuthRequest } from "../middleware/auth.js";
 
 const router = Router();
-const gameResults = GameResult.collection;
 
 router.get("/worldle/today", (_req, res) => {
     res.json(generateWorldleChallenge(getTodayDate()));
@@ -14,10 +14,11 @@ router.get("/worldle/date/:date", (req, res) => {
     res.json(generateWorldleChallenge(req.params.date));
 });
 
-router.get("/worldle/played-today", async (req, res) => {
+router.get("/worldle/played-today", verifyToken, async (req: AuthRequest, res) => {
     const today = getTodayDate();
-    const result = await gameResults.findOne({
-        user_id: req.user?._id,
+
+    const result = await GameResult.findOne({
+        user_id: req.userId,
         gameType: "worldle",
         challenge_id: today,
     });
@@ -25,7 +26,11 @@ router.get("/worldle/played-today", async (req, res) => {
     res.json({ played: !!result, result: result ?? null });
 });
 
-router.post("/worldle/result", async (req, res) => {
+router.post("/worldle/result", verifyToken, async (req: AuthRequest, res) => {
+    if (!req.userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const today = getTodayDate();
     const {
         challenge_id,
@@ -41,8 +46,8 @@ router.post("/worldle/result", async (req, res) => {
             ? challenge_id.trim()
             : today;
 
-    const existing = await gameResults.findOne({
-        user_id: req.user?._id,
+    const existing = await GameResult.findOne({
+        user_id: req.userId,
         gameType: "worldle",
         challenge_id: resolvedChallengeId,
     });
@@ -51,8 +56,8 @@ router.post("/worldle/result", async (req, res) => {
         return res.status(409).json({ message: "Already submitted today" });
     }
 
-    const inserted = await gameResults.insertOne({
-        user_id: req.user?._id,
+    const result = await GameResult.create({
+        user_id: req.userId,
         gameType: "worldle",
         challenge_id: resolvedChallengeId,
         completed,
@@ -62,17 +67,7 @@ router.post("/worldle/result", async (req, res) => {
         score: typeof score === "number" ? score : 0,
     });
 
-    return res.status(201).json({
-        _id: inserted.insertedId,
-        user_id: req.user?._id,
-        gameType: "worldle",
-        challenge_id: resolvedChallengeId,
-        completed,
-        attempts_used,
-        correct_answers,
-        time_seconds,
-        score: typeof score === "number" ? score : 0,
-    });
+    return res.status(201).json(result);
 });
 
 export default router;
