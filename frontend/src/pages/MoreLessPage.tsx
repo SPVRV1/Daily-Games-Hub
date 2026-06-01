@@ -1,16 +1,16 @@
 import Navbar from "../components/Navbar";
 import GamePage from "../components/game/GamePage";
-import Wordle from "../components/game/Wordle";
+import MoreLess from "../components/game/MoreLess";
 
-export default function WordlePage() {
+export default function MoreLessPage() {
     return (
         <>
-            <Navbar />
+            <Navbar activeLink="home" />
 
             <GamePage
-                gameType="wordle"
+                gameType="moreless"
                 renderGame={(challenge, onFinish) => (
-                    <Wordle data={challenge} onFinish={onFinish} />
+                    <MoreLess data={challenge} onFinish={onFinish} />
                 )}
             />
         </>

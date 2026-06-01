@@ -1,39 +1,96 @@
-import { Request, Response } from 'express';
-import GameResult from '../models/gameResult.js';
-import { generateMathSprintChallenge, generateMathSprintChallengeId, getTodayDate, normalizeMathSprintDifficulty } from '../utils/gameHelpers.js';
-import { GameType } from '../types/game.types.js';
-import { AuthRequest } from '../middleware/auth.js';
-import { GameModel as Game } from '../models/game.js';
+import { Request, Response } from "express";
+import GameResult from "../models/gameResult.js";
+import {
+    generateMathSprintChallenge,
+    generateMathSprintChallengeId,
+    getTodayDate,
+    normalizeMathSprintDifficulty,
+} from "../utils/gameHelpers.js";
+import { GameType } from "../types/game.types.js";
+import { AuthRequest } from "../middleware/auth.js";
+import { GameModel as Game } from "../models/game.js";
 
 // GET /api/games/:gameType/today
 // it returns the todays chalange for specific game (there needs to be a challange in database with todays date)
 export const getTodayChallenge = async (req: Request, res: Response) => {
     try {
-        const { gameType } = req.params as { gameType: GameType }
-        const today = getTodayDate()
+        const { gameType } = req.params as { gameType: GameType };
+        const today = getTodayDate();
 
-        if (gameType === 'mathsprint') {
-            const difficulty = normalizeMathSprintDifficulty(req.query.difficulty as string | undefined);
+        if (gameType === "mathsprint") {
+            const difficulty = normalizeMathSprintDifficulty(
+                req.query.difficulty as string | undefined,
+            );
 
             if (!difficulty) {
-                return res.status(400).json({ message: 'Invalid difficulty' });
+                return res.status(400).json({ message: "Invalid difficulty" });
             }
 
             return res.json(generateMathSprintChallenge(today, difficulty));
         }
 
-        const game = await Game.findOne({ name: gameType })
-        if (!game) return res.status(404).json({ message: 'Game not found' });
+        const game = await Game.findOne({ name: gameType });
+        if (!game) {
+            return res.status(404).json({ message: "Game not found" });
+        }
 
-        const todayChallenge = game.challenges.find(c => c.date === today)
-        if (!todayChallenge) return res.status(404).json({ message: 'No challenge for today' });
+        const todayChallenge = game.challenges.find((c) => c.date === today);
+        if (!todayChallenge) {
+            return res.status(404).json({ message: "No challenge for today" });
+        }
 
-        res.json({ gameType, date: today, challengeData: todayChallenge.challengeData });
+        res.json({
+            gameType,
+            date: today,
+            challengeData: todayChallenge.challengeData,
+        });
     } catch (error) {
-        console.error('Error fetching today challenge:', error);
-        res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+        console.error("Error fetching today challenge:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
     }
-}
+};
+
+// GET /api/games/:gameType/date/:date
+export const getChallengeByDate = async (req: Request, res: Response) => {
+    try {
+        const { gameType, date } = req.params as {
+            gameType: GameType;
+            date: string;
+        };
+
+        if (gameType === "mathsprint") {
+            const difficulty = normalizeMathSprintDifficulty(
+                req.query.difficulty as string | undefined,
+            );
+
+            if (!difficulty) {
+                return res.status(400).json({ message: "Invalid difficulty" });
+            }
+
+            return res.json(generateMathSprintChallenge(date, difficulty));
+        }
+
+        const game = await Game.findOne({ name: gameType });
+        if (!game) {
+            return res.status(404).json({ message: "Game not found" });
+        }
+
+        const challenge = game.challenges.find((c) => c.date === date);
+        if (!challenge) {
+            return res
+                .status(404)
+                .json({ message: "No challenge for that date" });
+        }
+
+        res.json({ gameType, date, challengeData: challenge.challengeData });
+    } catch (error) {
+        console.error("Error fetching challenge by date:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 // GET /api/games/:gameType/date/:date
 export const getChallengeByDate = async (req: Request, res: Response) => {
@@ -60,25 +117,33 @@ export const getPlayedToday = async (req: AuthRequest, res: Response) => {
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
 
-        let result;
+        let challengeId = today;
 
-        if (gameType === 'mathsprint') {
-            const difficulty = normalizeMathSprintDifficulty(req.query.difficulty as string | undefined);
+        if (gameType === "mathsprint") {
+            const difficulty = normalizeMathSprintDifficulty(
+                req.query.difficulty as string | undefined,
+            );
 
             if (!difficulty) {
-                return res.status(400).json({ message: 'Invalid difficulty' });
+                return res.status(400).json({ message: "Invalid difficulty" });
             }
 
-            const challengeId = generateMathSprintChallengeId(today, difficulty);
-            result = await GameResult.findOne({ user_id: req.user?._id, challenge_id: challengeId });
-        } else {
-            result = await GameResult.findOne({ userId: req.user?._id, gameType, date: today } as any);
+            challengeId = generateMathSprintChallengeId(today, difficulty);
         }
+
+        const result = await GameResult.findOne({
+            user_id: req.user?._id,
+            gameType,
+            challenge_id: challengeId,
+        });
 
         res.json({ played: !!result, result: result ?? null });
     } catch (error) {
-        console.error('Error fetching played today status:', error);
-        res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+        console.error("Error fetching played today status:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
     }
 };
 
@@ -88,40 +153,69 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
     try {
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
-        const { challenge_id, completed, attempts_used, correct_answers, time_seconds, score, difficulty: rawDifficulty } = req.body;
-        const difficulty = gameType === 'mathsprint'
-            ? normalizeMathSprintDifficulty(rawDifficulty)
-            : undefined;
+        const {
+            challenge_id,
+            completed,
+            attempts_used,
+            correct_answers,
+            time_seconds,
+            score,
+            difficulty: rawDifficulty,
+        } = req.body;
+        const difficulty =
+            gameType === "mathsprint"
+                ? normalizeMathSprintDifficulty(rawDifficulty)
+                : undefined;
 
-        if (gameType === 'mathsprint' && !difficulty) {
-            return res.status(400).json({ message: 'Invalid difficulty' });
+        if (gameType === "mathsprint" && !difficulty) {
+            return res.status(400).json({ message: "Invalid difficulty" });
         }
 
         const resolvedDifficulty = difficulty ?? undefined;
-        const resolvedChallengeId = gameType === 'mathsprint'
-            ? generateMathSprintChallengeId(today, resolvedDifficulty as 'easy' | 'medium' | 'hard')
-            : challenge_id;
+        const submittedChallengeId =
+            typeof challenge_id === "string" && challenge_id.trim() !== ""
+                ? challenge_id.trim()
+                : today;
+        const resolvedChallengeId =
+            gameType === "mathsprint"
+                ? generateMathSprintChallengeId(
+                      today,
+                      resolvedDifficulty as "easy" | "medium" | "hard",
+                  )
+                : submittedChallengeId;
 
-        if (gameType === 'mathsprint' && challenge_id && challenge_id !== resolvedChallengeId) {
-            return res.status(400).json({ message: 'Challenge id does not match difficulty' });
+        if (
+            gameType === "mathsprint" &&
+            challenge_id &&
+            challenge_id !== resolvedChallengeId
+        ) {
+            return res
+                .status(400)
+                .json({ message: "Challenge id does not match difficulty" });
         }
 
-        const existing = gameType === 'mathsprint'
-            ? await GameResult.findOne({ user_id: req.user?._id, challenge_id: resolvedChallengeId })
-            : await GameResult.findOne({ user_id: req.user?._id, challenge_id });
+        const existing = await GameResult.findOne({
+            user_id: req.user?._id,
+            gameType,
+            challenge_id: resolvedChallengeId,
+        });
 
-        if (existing) return res.status(409).json({ message: 'Already submitted today' });
+        if (existing)
+            return res.status(409).json({ message: "Already submitted today" });
 
         // Compute authoritative score for mathsprint: primary factor = correct answers, secondary = time bonus
-        let finalScore = typeof score === 'number' ? score : 0;
-        if (gameType === 'mathsprint') {
+        let finalScore = typeof score === "number" ? score : 0;
+        if (gameType === "mathsprint") {
             const challenge = generateMathSprintChallenge(today);
             const timeLimit = challenge.challengeData.time_limit_seconds ?? 60;
             const correct = Number(correct_answers ?? 0);
             const timeUsed = Number(time_seconds ?? timeLimit);
 
             const base = correct * 100; // 100 points per correct answer
-            const timeFactor = Math.max(0, (timeLimit - Math.min(timeUsed, timeLimit)) / timeLimit);
+            const timeFactor = Math.max(
+                0,
+                (timeLimit - Math.min(timeUsed, timeLimit)) / timeLimit,
+            );
             const timeBonus = Math.round(timeFactor * 50); // up to 50 bonus points for speed
 
             finalScore = base + timeBonus;
@@ -129,6 +223,7 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
 
         const result = await GameResult.create({
             user_id: req.user?._id,
+            gameType,
             challenge_id: resolvedChallengeId,
             difficulty: resolvedDifficulty,
             completed,
@@ -140,7 +235,10 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
 
         res.status(201).json(result);
     } catch (error) {
-        console.error('Error submitting game result:', error);
-        res.status(500).json({ message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' });
+        console.error("Error submitting game result:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
     }
 };

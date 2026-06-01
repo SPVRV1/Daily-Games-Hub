@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { verifyToken, AuthRequest } from "../../middleware/auth.ts";
+import { verifyToken, AuthRequest } from "../../middleware/auth.js";
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
@@ -79,7 +79,7 @@ describe("Auth Middleware (verifyToken)", () => {
         verifyToken(mockReq as AuthRequest, mockRes as Response, mockNext);
 
         expect(mockNext).toHaveBeenCalled();
-        expect(mockReq.user).toEqual(decodedUser);
+        expect(mockReq.userId).toBe(123);
         expect(mockRes.status).not.toHaveBeenCalled();
     });
 });

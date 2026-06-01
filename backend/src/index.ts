@@ -6,8 +6,10 @@ import express from "express";
 import path from "path";
 import { MongoClient } from "mongodb";
 import mongoose from "mongoose";
-import gameRoutes from './routes/game.routes.js';
-import countriesRoutes from './routes/countries.routes.js';
+import worldleRoutes from "./routes/worldle.routes.js";
+import gameRoutes from "./routes/game.routes.js";
+import countriesRoutes from "./routes/countries.routes.js";
+import statsRoutes from "./routes/stats.routes.js";
 
 import friendsRoutes from "./routes/friends.js";
 import userRoutes from "./routes/user.js";
@@ -16,8 +18,6 @@ import notificationRoutes from './routes/notification.js';
 
 
 import testRouter from "./routes/test.js";
-
-mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
 mongoose.connect(process.env.MONGO_URI!).catch(console.error);
 
@@ -38,11 +38,11 @@ app.use(
 // Serve local audio files placed in backend/public/audio at /audio/*
 app.use("/audio", express.static(path.join(process.cwd(), "public", "audio")));
 app.use("/api/user", userRoutes);
-app.use('/api/games', gameRoutes);
-app.use('/api/countries', countriesRoutes);
+app.use("/api/games", worldleRoutes);
+app.use("/api/games", gameRoutes);
+app.use("/api/countries", countriesRoutes);
+app.use("/api/stats", statsRoutes);
 app.use('/api/notifications', notificationRoutes);
-
-//app.use('/api', testRouter);      //FOR TESTING
 
 app.use("/api/friends", async (req, res, next) => {
     try {

@@ -1,3 +1,21 @@
+# LeaderboardPage .leaderboard-row.gold {
+    background: linear-gradient(90deg, #fffbe6 80%, #ffe066 100%);
+}
+# LeaderboardPage .leaderboard-row.silver {
+    background: linear-gradient(90deg, #f8fafc 80%, #d1d5db 100%);
+}
+# LeaderboardPage .leaderboard-row.bronze {
+    background: linear-gradient(90deg, #fff7ed 80%, #eab308 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.gold {
+    background: linear-gradient(90deg, #2a2100 80%, #ffe066 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.silver {
+    background: linear-gradient(90deg, #23272f 80%, #d1d5db 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.bronze {
+    background: linear-gradient(90deg, #2a1f0e 80%, #eab308 100%);
+}
 @import "tailwindcss";
 
 /* ── Palette variables ───────────────────────────────────── */
@@ -16,18 +34,22 @@
     --primary-bg: #eff6ff;
 
     --blue: #3377f2;
+    --light-blue: #f0f9ff;
     --sky: #1ca0e2;
 
     --green: #1db756;
+    --light-green: #f0fdf4;
     --green-lt: #22c55e;
     --green-key: #6ca965;
     --green-bg: #f0fdf4;
+    --blue-bg: #f0f9ff;
 
     --yellow: #c8b653;
     --orange: #f38e10;
     --pink: #ed4675;
     --purple: #8752f4;
     --magenta: #c54fce;
+    --dark-blue: #1e3a5f;
 
     --card-bg: #ffffff;
     --navbar-bg: #ffffff;
@@ -45,6 +67,7 @@
     --border: #2e3044;
     --primary-bg: #1e2240;
     --green-bg: #0d2419;
+    --blue-bg: #1e2240;
     --streak-bg: #2a1f0e;
 }
 

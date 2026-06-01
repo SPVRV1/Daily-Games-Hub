@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getTodayDate } from "../../utils/gameHelpers.ts";
+import { getTodayDate } from "../../utils/gameHelpers.js";
 
 describe("Game Helpers", () => {
     describe("getTodayDate", () => {
