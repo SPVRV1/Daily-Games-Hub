@@ -1,84 +1,77 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useUser } from "../context/UserContext";
 import "./Home.css";
 
-const STATS = [
-    {
-        icon: "fi-rr-flame",
-        iconColor: "#f38e10",
-        label: "Current Streak",
-        value: "7 days",
-    },
-    {
-        icon: "fi-rr-gamepad",
-        iconColor: "#3377f2",
-        label: "Today's Progress",
-        value: "3/6",
-    },
-    {
-        icon: "fi-rr-clock",
-        iconColor: "#3377f2",
-        label: "Total Games Played",
-        value: "42",
-    },
-];
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 type Game = {
     name: string;
     description: string;
     gradient: string;
     icon: string;
+    route: string;
     completed: boolean;
     result?: string;
 };
 
-const BASE_GAMES: Game[] = [
+const GAME_DEFINITIONS = [
     {
         name: "Wordle",
         description: "Guess the 5-letter word in 6 attempts",
         gradient: "linear-gradient(135deg, #1db756, #158a40)",
         icon: "/icons/Wordle1.png",
-        completed: true,
-        result: "completed in 3rd attempt",
+        route: "/wordle",
     },
     {
         name: "Flagle",
         description: "Identify the country from its flag",
         gradient: "linear-gradient(135deg, #3377f2, #1a5ccf)",
         icon: "/icons/Flagle1.png",
-        completed: true,
-        result: "Completed in 4th attempt",
+        route: "/flagle",
     },
     {
         name: "More or Less",
         description: "Compare values and guess which is higher",
         gradient: "linear-gradient(135deg, #f38e10, #d4700a)",
         icon: "/icons/MoreOrLess1.png",
-        completed: false,
+        route: "/moreless",
     },
     {
         name: "Worldle",
         description: "Identify the country from its silhouette",
         gradient: "linear-gradient(135deg, #14b8a6, #0d9488)",
         icon: "/icons/Worldle1.png",
-        completed: false,
+        route: "/worldle",
     },
     {
         name: "Math Sprint",
         description: "Solve math problems as fast as you can",
         gradient: "linear-gradient(135deg, #f5da0f, #f38e10)",
         icon: "/icons/MathSprint1.png",
-        completed: true,
-        result: "Completed in 1:23",
+        route: "/math-sprint",
     },
     {
         name: "Songless",
         description: "Guess the song from a short audio clip",
         gradient: "linear-gradient(135deg, #a855f7, #7c3aed)",
         icon: "/icons/Songless1.png",
-        completed: false,
+        route: "/songless",
     },
 ];
+
+type TodayGame = {
+    title: string;
+    completed: boolean;
+    attempts: number;
+    timeTaken: number;
+};
+
+type UserStats = {
+    current_streak: number;
+    games_played: number;
+};
 
 function formatDate(d: Date): string {
     const day = String(d.getUTCDate()).padStart(2, "0");
@@ -87,56 +80,141 @@ function formatDate(d: Date): string {
     return `${day}-${month}-${year}`;
 }
 
-function getMoreLessResult() {
+function getMoreLessLocalResult(): { completed: boolean; result: string } | null {
     const today = formatDate(new Date());
     const storageKey = `moreless-moreless-${today}`;
     const finished = localStorage.getItem(`${storageKey}-finished`) === "true";
-
     if (!finished) return null;
 
     try {
         const savedResult = localStorage.getItem(`${storageKey}-result`);
-        const result = savedResult ? JSON.parse(savedResult) : null;
-
-        if (typeof result?.score === "number") {
-            return `Score: ${result.score}`;
+        const parsed = savedResult ? JSON.parse(savedResult) : null;
+        if (typeof parsed?.score === "number") {
+            return { completed: true, result: `Score: ${parsed.score}` };
         }
-    } catch {
-        // Ignore broken local storage and fall back to the stored score below.
-    }
+    } catch { /* ignore */ }
 
     const score = Number(JSON.parse(localStorage.getItem(`${storageKey}-score`) ?? "0"));
-    return `Score: ${score * 10}`;
+    return { completed: true, result: `Score: ${score * 10}` };
+}
+
+function formatGameResult(game: TodayGame): string {
+    if (!game.completed) return "Attempted";
+    if (game.timeTaken > 0) {
+        const mins = Math.floor(game.timeTaken / 60);
+        const secs = game.timeTaken % 60;
+        if (mins > 0) return `Completed in ${mins}:${String(secs).padStart(2, "0")}`;
+        return `Completed in ${game.timeTaken}s`;
+    }
+    if (game.attempts > 0) return `Completed in ${game.attempts} attempt${game.attempts !== 1 ? "s" : ""}`;
+    return "Completed";
 }
 
 export default function Home() {
+    const { user } = useUser();
     const navigate = useNavigate();
-    const moreLessResult = getMoreLessResult();
-    const games = BASE_GAMES.map((game) =>
-        game.name === "More or Less" && moreLessResult
-            ? { ...game, completed: true, result: moreLessResult }
-            : game
-    );
 
+    const [userStats, setUserStats] = useState<UserStats | null>(null);
+    const [todayGames, setTodayGames] = useState<TodayGame[]>([]);
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setLoaded(true);
+            return;
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        Promise.all([
+            fetch(`${API}/api/user/data`, { headers }).then((r) => r.json()).catch(() => null),
+            fetch(`${API}/api/user/data/today`, { headers }).then((r) => r.json()).catch(() => null),
+        ]).then(([userData, todayData]) => {
+            if (userData?.ok) {
+                setUserStats({
+                    current_streak: userData.user.current_streak ?? 0,
+                    games_played: userData.user.games_played ?? 0,
+                });
+            }
+            if (todayData?.ok) {
+                setTodayGames(todayData.games ?? []);
+            }
+            setLoaded(true);
+        });
+    }, []);
+
+    // Merge API today-games with localStorage MoreLess result
+    const moreLessLocal = getMoreLessLocalResult();
+
+    const games: Game[] = GAME_DEFINITIONS.map((def) => {
+        // Check API data first
+        const apiGame = todayGames.find(
+            (g) => g.title.toLowerCase() === def.name.toLowerCase()
+        );
+
+        if (apiGame) {
+            return {
+                ...def,
+                completed: apiGame.completed,
+                result: formatGameResult(apiGame),
+            };
+        }
+
+        // MoreLess fallback: localStorage
+        if (def.name === "More or Less" && moreLessLocal) {
+            return { ...def, completed: moreLessLocal.completed, result: moreLessLocal.result };
+        }
+
+        return { ...def, completed: false };
+    });
+
+    const completedCount = games.filter((g) => g.completed).length;
+    const totalGames = games.length;
+    const completionPct = Math.round((completedCount / totalGames) * 100);
+
+    const streak = userStats?.current_streak ?? 0;
+    const totalPlayed = userStats?.games_played ?? 0;
+
+    const STATS = [
+        {
+            icon: "fi-rr-flame",
+            iconColor: "#f38e10",
+            label: "Current Streak",
+            value: streak > 0 ? `${streak} day${streak !== 1 ? "s" : ""}` : loaded ? "0 days" : "—",
+            streakCard: true,
+        },
+        {
+            icon: "fi-rr-gamepad",
+            iconColor: "#3377f2",
+            label: "Today's Progress",
+            value: `${completedCount}/${totalGames}`,
+            streakCard: false,
+        },
+        {
+            icon: "fi-rr-clock",
+            iconColor: "#3377f2",
+            label: "Total Games Played",
+            value: loaded ? String(totalPlayed) : "—",
+            streakCard: false,
+        },
+    ];
+
+    const displayName = user?.username ?? "Player";
 
     return (
-        <div className={"home"}>
-            {/* Navbar */}
+        <div className="home">
             <Navbar activeLink="home" />
 
-            {/* Content */}
             <main className="content">
-                {/* Welcome */}
                 <div className="welcome">
-                    <h1>Welcome back, Gospod Zlahtic!</h1>
+                    <h1>Welcome back, {displayName}!</h1>
                     <p>Complete today's challenges and maintain your streak!</p>
                 </div>
 
-                {/* Stats */}
                 <div className="stats-grid">
                     {STATS.map((s) => (
                         <div
-                            className={`stat-card${s.label === "Current Streak" ? " stat-card--streak" : ""}`}
+                            className={`stat-card${s.streakCard ? " stat-card--streak" : ""}`}
                             key={s.label}
                         >
                             <div className="stat-header">
@@ -153,34 +231,20 @@ export default function Home() {
                         <div className="stat-header">
                             <span className="stat-label">Daily Completion</span>
                         </div>
-                        <div className="stat-value">50%</div>
+                        <div className="stat-value">{completionPct}%</div>
                         <div className="progress-bar">
-                            <div className="progress-fill" style={{ width: "50%" }} />
+                            <div className="progress-fill" style={{ width: `${completionPct}%` }} />
                         </div>
                     </div>
                 </div>
 
-                {/* Games */}
                 <h2 className="section-title">Today's Games</h2>
                 <div className="games-grid">
                     {games.map((game) => (
                         <div
                             className={`game-card${game.completed ? " game-card--completed" : ""}`}
                             key={game.name}
-                            onClick={() => {
-                                if (game.name === "Wordle")
-                                    navigate("/wordle");
-                                if (game.name === "Flagle")
-                                    navigate("/flagle");
-                                if (game.name === "Math Sprint")
-                                    navigate("/math-sprint");
-                                if (game.name === "More or Less")
-                                    navigate("/moreless");
-                                if (game.name === "Worldle")
-                                    navigate("/worldle");
-                                if (game.name === "Songless")
-                                    navigate("/songless");
-                            }}
+                            onClick={() => navigate(game.route)}
                         >
                             <div className="game-banner" style={{ background: game.gradient }}>
                                 <img src={game.icon} alt={game.name} className="game-icon-img" />
