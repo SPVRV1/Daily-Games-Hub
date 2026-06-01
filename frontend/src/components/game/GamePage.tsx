@@ -1,8 +1,34 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { GameType, GameChallenge, GameResult } from "../../types/game.types";
 import { useGame } from "../../hooks/useGame";
 import GameResultScreen from "./GameResult";
 import AlreadyPlayed from "./AlreadyPlayed";
+
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+
+const GAME_TITLES: Record<string, string> = {
+    flagle: "Flagle",
+    wordle: "Wordle",
+    worldle: "Worldle",
+    moreless: "More or Less",
+    mathsprint: "Math Sprint",
+    songless: "Songless",
+};
+
+function saveGameToProfile(gameType: string, result: GameResult) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch(`${API}/api/user/data/game`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+            title: GAME_TITLES[gameType] ?? gameType,
+            attempts: result.attempts_used ?? 0,
+            timeTaken: result.time_seconds ?? 0,
+            completed: result.completed,
+        }),
+    }).catch(() => {});
+}
 
 interface GamePageProps {
   gameType: GameType;
@@ -20,17 +46,32 @@ const GamePage = ({
 }: GamePageProps) => {
   const { state, submitResult } = useGame(gameType, challengeQueryParams);
 
+  // Backfill: if the game was already played today (before saveGameToProfile existed),
+  // save it now. The backend dedup check prevents double entries.
+  useEffect(() => {
+    if (state.status === "already_played" && state.result) {
+      saveGameToProfile(gameType, state.result);
+    }
+  }, [state.status]);
+
+  const handleFinish = (result: GameResult) => {
+    saveGameToProfile(gameType, result);
+    submitResult(result);
+  };
+
   if (state.status === "loading") return <div>Loading...</div>;
+
+  // Full-page end screens — game is not rendered, preventing replays
+  if (state.status === "already_played") {
+    return <AlreadyPlayed result={state.result!} />;
+  }
+  if (state.status === "finished") {
+    return <GameResultScreen result={state.result!} />;
+  }
 
   return (
     <>
-      {state.challenge ? renderGame(state.challenge, submitResult) : null}
-      {state.status === "already_played" ? (
-        <AlreadyPlayed result={state.result!} />
-      ) : null}
-      {state.status === "finished" ? (
-        <GameResultScreen result={state.result!} />
-      ) : null}
+      {state.challenge ? renderGame(state.challenge, handleFinish) : null}
     </>
   );
 };

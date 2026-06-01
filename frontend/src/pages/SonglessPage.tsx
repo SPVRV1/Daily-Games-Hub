@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import { GameChallenge, GameResult } from "../types/game.types";
+import GameEndScreen from "../components/game/GameEndScreen";
 import "./SonglessPage.css";
 
 const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
@@ -347,6 +348,33 @@ function Songless({ data, onFinish, hideNavbar = false }: SonglessProps) {
     );
 }
 
+function saveGameToProfile(result: GameResult) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    fetch(`${API}/api/user/data/game`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+            title: "Songless",
+            attempts: result.attempts_used ?? 0,
+            timeTaken: result.time_seconds ?? 0,
+            completed: result.completed,
+        }),
+    }).catch(() => {});
+}
+
+function submitGameResult(result: GameResult) {
+    const token = localStorage.getItem("token");
+    fetch(`${API}/api/games/songless/result`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(result),
+    }).catch(() => {});
+}
+
 export default function SonglessPage() {
     const [challenge, setChallenge] = useState<GameChallenge | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -360,6 +388,14 @@ export default function SonglessPage() {
             .then((data) => setChallenge(data))
             .catch((err) => setError(err.message));
     }, []);
+
+    const [finishedResult, setFinishedResult] = useState<GameResult | null>(null);
+
+    const handleFinish = (result: GameResult) => {
+        saveGameToProfile(result);
+        submitGameResult(result);
+        setFinishedResult(result);
+    };
 
     if (error) {
         return (
@@ -385,11 +421,15 @@ export default function SonglessPage() {
         );
     }
 
+    if (finishedResult) {
+        return <GameEndScreen result={finishedResult} />;
+    }
+
     return (
         <div className="songless-page">
             <Songless
                 data={challenge}
-                onFinish={() => {}}
+                onFinish={handleFinish}
                 hideNavbar={false}
             />
         </div>

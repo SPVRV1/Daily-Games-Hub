@@ -760,6 +760,18 @@ router.post("/data/game", verifyToken, async (req: AuthRequest, res) => {
         if (typeof timeTaken !== "number" || timeTaken < 0) {
             return res.status(400).json({ ok: false, error: "Invalid timeTaken" });
         }
+
+        // Dedup: if user already has this game title saved today, skip silently
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const collection2 = await getUsersCollection();
+        const existingUser = await collection2.findOne(
+            { _id: userId, "games.title": title, "games.datePlayed": { $gte: todayStart } },
+            { projection: { _id: 1 } }
+        );
+        if (existingUser) {
+            return res.status(200).json({ ok: true, skipped: true });
+        }
         if (typeof completed !== "boolean") {
             return res.status(400).json({ ok: false, error: "Invalid completed" });
         }

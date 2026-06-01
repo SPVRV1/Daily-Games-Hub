@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import "./MoreLess.css";
-import GameResultScreen from "./GameResult";
 import { GameResult } from "../../types/game.types";
 
 const mockData = {
@@ -164,18 +163,7 @@ export default function MoreLess({ data, onFinish }: MoreLessProps) {
     }, 1500);
   };
 
-  if (wasFinishedOnLoad) {
-    const recoveredResult: GameResult = savedResult ?? {
-      challenge_id: challengeData?.challengeId,
-      completed: score > 0,
-      score: score * 10,
-      attempts_used: Math.min(roundIndex + 1, MAX_ATTEMPTS),
-      correct_answers: score,
-      time_seconds: 0,
-    };
-
-    return <GameResultScreen result={recoveredResult} />;
-  }
+  // If already finished on load, GamePage's already_played state handles the screen.
 
   return (
     <div className="more-less-page">
