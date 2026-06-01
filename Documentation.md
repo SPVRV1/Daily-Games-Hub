@@ -222,3 +222,96 @@ V 2. sprintu je bila vzpostavljena osnovna infrastruktura za testiranje:
 | Uporabniški profil 2        | V razvoju | Avatarji, statistike, zavihki      |
 | Pisanje avtomatskih testov  | Končano   |                                    |
 | Dokumentacija               | V razvoju |                                    |
+
+---
+
+## Sprint 3
+
+### Nove funkcionalnosti
+
+#### Igre
+- **Worldle** – implementacija igre ugibanja držav; logika za preverjanje vnešenih držav, filtriranje in validacija podatkovnih struktur; pravilno pretvarjanje GeoJSON podatkov v SVG prikaz siluet; podpora za različne velikostne razreze
+- **Songless** – implementacija igre ugibanja pesmi; JSON baza s seznamom pesmi in funkcija za pridobitev dnevne pesmi; popravljen indeks datuma (zero-based value)
+- **More/Less** – implementacija igre in logike za shranjevanje napredka ter dnevne igre
+
+#### Uporabniški profil (3. del)
+- **Frontend** – sistem dosežkov in medalj, streak-i, implementacija skupin in skupnih dosežkov; JWT token za posodabljanje slike profila; stran za globalno statistiko
+- **Backend** – posodabljanje avatarjev, sprejem JWT tokena, endpoint za shranjevanje odigranih iger, leaderboard podatki za vse igre na dnevni ravni
+
+#### Statistika
+- **Frontend** – stran s podrobno statistiko: graf rezultatov skozi čas (po igri), win streak, najboljši rezultati, primerjava s povprečjem vseh uporabnikov; filtriranje po igri in časovnem obdobju
+- **Backend** – endpointi za statistike, izračun streakov in povprečij; popravljeni backend za Math Sprint (Score, Time, Število vprašanj)
+
+#### Obvestila
+- **Frontend** – sistem obvestil v aplikaciji: dropdown z zadnjimi obvestili (nova prošnja prijatelja, prijatelj odigral igro, nov rekord); NotificationProvider za delovanje gumbov v dropdownu
+- **Backend** – tabela `notifications` v bazi; logika za ustvarjanje obvestil ob relevantnih dogodkih; endpointi za pridobitev in dodajanje obvestil; povezava frontend–backend za obvestila
+
+---
+
+### Posodobljeni API endpointi
+
+#### Worldle
+- `GET /api/games/worldle/today` – pridobi današnjo državo
+- `GET /api/games/worldle/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/worldle/result` – pošlje rezultat
+
+#### Songless
+- `GET /api/games/songless/today` – pridobi današnjo pesem
+- `GET /api/games/songless/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/songless/result` – pošlje rezultat
+
+#### More/Less
+- `GET /api/games/moreless/today` – pridobi današnji izziv
+- `GET /api/games/moreless/played-today` – preveri, ali je uporabnik igro danes že igral
+- `POST /api/games/moreless/result` – pošlje rezultat
+
+#### Statistika
+- `GET /api/stats/:userId` – pridobi statistiko uporabnika
+- `GET /api/stats/:userId/:gameType` – pridobi statistiko za določeno igro
+- `GET /api/stats/leaderboard` – pridobi lestvico vseh uporabnikov
+
+#### Obvestila
+- `GET /api/notifications/:userId` – pridobi obvestila uporabnika
+- `POST /api/notifications` – ustvari novo obvestilo
+- `PATCH /api/notifications/:notificationId` – označi obvestilo kot prebrano
+
+#### Dosežki in skupine
+- `GET /api/achievements/:userId` – pridobi dosežke in medalje uporabnika
+- `GET /api/groups/:userId` – pridobi skupine uporabnika
+- `POST /api/groups` – ustvari novo skupino
+- `GET /api/groups/:groupId/achievements` – pridobi skupne dosežke skupine
+
+---
+
+### Posodobljena struktura projekta
+
+#### Backend (dopolnitev)
+- `backend/src/data/countries.geojson` – GeoJSON podatki za Worldle
+- `backend/src/data/songs.json` – seznam pesmi za Songless
+- `backend/src/models/Notification.ts` – model obvestil
+- `backend/src/models/Achievement.ts` – model dosežkov
+- `backend/src/models/Group.ts` – model skupin
+- `backend/src/routes/stats.ts` – poti za statistike
+- `backend/src/routes/notifications.ts` – poti za obvestila
+- `backend/src/routes/achievements.ts` – poti za dosežke
+
+#### Frontend (dopolnitev)
+- `frontend/src/pages/WorldlePage.tsx` – stran igre Worldle
+- `frontend/src/pages/SonglessPage.tsx` – stran igre Songless
+- `frontend/src/pages/MoreLessPage.tsx` – stran igre More/Less
+- `frontend/src/pages/StatsPage.tsx` – stran s statistikami
+- `frontend/src/context/NotificationProvider.tsx` – kontekst za obvestila
+- `frontend/src/components/NotificationDropdown.tsx` – dropdown za obvestila
+
+---
+
+### Stanje ob koncu sprinta
+
+| Funkcionalnost | Status | Opomba |
+|---|---|---|
+| Worldle (frontend + backend) | Končano | |
+| Songless (frontend + backend) | Končano | Popravljen indeks datuma |
+| More/Less (frontend + backend) | Končano | |
+| Uporabniški profil 3 | Končano | Dosežki, streak-i, skupine |
+| Statistika (frontend + backend) | Končano | |
+| Obvestila (frontend + backend) | Končano | |
