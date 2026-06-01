@@ -10,6 +10,7 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import FlaglePage from "./pages/FlaglePage";
 import MathSprint from "./pages/MathSprint";
 import WordlePage from "./pages/WordlePage";
+import MoreLessPage from "./pages/MoreLessPage";
 import WorldlePage from "./pages/WorldlePage";
 import { UserContext } from "./context/UserContext";
 
@@ -93,11 +94,13 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/flagle" element={<FlaglePage />} />
           <Route path="/math-sprint" element={<MathSprint />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/wordle" element={<WordlePage />} />
+          <Route path="/moreless" element={<MoreLessPage />} />
           <Route path="/worldle" element={<WorldlePage />} />
+          <Route path="/leaderboard" element={<LeaderboardPage />} />
         </Routes>
       </BrowserRouter>
     </UserContext.Provider>
