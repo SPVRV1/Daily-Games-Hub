@@ -8,6 +8,7 @@ export const getTodayDate = (): string => {
 
 type MathOperator = '+' | '-' | '*';
 export type MathSprintDifficulty = 'easy' | 'medium' | 'hard';
+const MATH_SPRINT_QUESTIONS_PER_ROUND = 15;
 
 const mathSprintDifficultyOperators: Record<MathSprintDifficulty, MathOperator[]> = {
     easy: ['+'],
@@ -131,7 +132,7 @@ const buildQuestion = (id: number, random: () => number, difficulty: MathSprintD
 
 export const generateMathSprintChallenge = (date: string, difficulty: MathSprintDifficulty = 'easy'): MathSprintChallenge => {
     const random = createSeededRandom(`mathsprint:${date}:${difficulty}`);
-    const questions = Array.from({ length: 5 }, (_, index) => buildQuestion(index + 1, random, difficulty));
+    const questions = Array.from({ length: MATH_SPRINT_QUESTIONS_PER_ROUND }, (_, index) => buildQuestion(index + 1, random, difficulty));
 
     return {
         challenge_id: generateMathSprintChallengeId(date, difficulty),
@@ -141,7 +142,7 @@ export const generateMathSprintChallenge = (date: string, difficulty: MathSprint
         challengeData: {
             title: 'Math Sprint',
             difficulty,
-            total_questions: 5,
+            total_questions: MATH_SPRINT_QUESTIONS_PER_ROUND,
             time_limit_seconds: 60,
             questions,
         },
