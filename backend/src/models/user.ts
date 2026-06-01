@@ -8,7 +8,7 @@ export type Friend ={
     _id: number;
 };
 
-export type Game = {
+export type U_Game = {
     _id: number;
     title: string;
     attempts: number;
@@ -23,6 +23,7 @@ export interface User {
     email: string;
     password_hash: string;
     avatar_url?: string;
+    avatar_file_id?: string;
     current_streak: number;
     longest_streak: number;
     games_played: number;
@@ -34,7 +35,7 @@ export interface User {
     achievements: Achievement[];
     friends: Friend[];
 
-    games: Game[];
+    games: U_Game[];
     
     createdAt: Date;
     updatedAt?: Date;

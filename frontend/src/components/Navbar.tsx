@@ -2,6 +2,7 @@ import "../pages/Home.css";
 import { Link } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
+import { useUser } from "../context/UserContext";
 
 type NavbarProps = {
     activeLink?: "home" | "friends" | "statistics" | "none";
@@ -12,6 +13,8 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
     const { isDark, toggleTheme } = useTheme();
     const isAuth = variant === "auth";
 
+    const { user } = useUser();
+    const initial = user?.username?.charAt(0).toUpperCase() ?? "Z";
     return (
         <nav className={`navbar${isAuth ? " navbar--auth" : ""} w-full`}>
             <Link to="/">
@@ -23,7 +26,7 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                 <div className="navbar-links">
                     <Link to="/" className={`nav-link${activeLink === "home" ? " active" : ""}`}>Home</Link>
                     <Link to="/friends" className={`nav-link${activeLink === "friends" ? " active" : ""}`}>Friends</Link>
-                    <Link to="/statistics" className={`nav-link${activeLink === "statistics" ? " active" : ""}`}>Statistics</Link>
+                    <Link to="/leaderboard" className={`nav-link${activeLink === "leaderboard" ? " active" : ""}`}>Leaderboard</Link>
                 </div>
             )}
             <div className="navbar-right">
@@ -37,7 +40,11 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                             <span className="notif-dot" />
                         </button>
                         <Link to="/profile" className="icon-btn" aria-label="Profile">
-                            <div className="avatar">Z</div>
+                            {user?.avatarUrl ? (
+                                <img className="avatar" src={user.avatarUrl} alt={initial} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+                            ) : (
+                                <div className="avatar"></div>
+                            )}
                         </Link>
                         <Link to="/login" className="icon-btn" aria-label="Logout">
                             <LogOut size={22} strokeWidth={2} />

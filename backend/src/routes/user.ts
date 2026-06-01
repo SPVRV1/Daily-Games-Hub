@@ -9,22 +9,25 @@ import { createUser } from "../models/userFactory.js"
 import { registerSchema } from "../utils/validator.js";
 import { addToBlacklist } from "../utils/auth.js";
 import { Console, log } from "console";
+import multer from "multer";
+import { GridFSBucket, ObjectId } from "mongodb";
+import { getDb } from "../db.js"; // prilagodi glede na tvoj db export
+import { U_Game } from "../models/user.js";
 
 const router = Router();
 
-// router.get("/data", async (_req, res) => {
 router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
     try {
-        const { id } = _req.query;
-        const _id = Number(id);
+        const _id = _req.userId;
 
-        if (!_id || typeof _id !== "number" || isNaN(_id)) {
-            res.status(400).json({
+        if (!_id) {
+            return res.status(401).json({
                 ok: false,
-                error: "Valid ID query parameter is required",
+                error: "Unauthorized",
             });
-            return;
         }
+
+        await recalculateStreak(_id);
 
         const collection = await getUsersCollection();
         const user = await collection.findOne({ _id }, {
@@ -64,18 +67,14 @@ router.get("/data", verifyToken, async (_req: AuthRequest, res) => {
 });
 
 router.get("/data/statistics", verifyToken, async (_req: AuthRequest, res) => {
-    // router.get("/data/statistics", async (_req, res) => {
-
     try {
-        const { id } = _req.query;
-        const _id = Number(id);
+        const _id = _req.userId;
 
-        if (!_id || isNaN(_id)) {
-            res.status(400).json({
+        if (!_id) {
+            return res.status(401).json({
                 ok: false,
-                error: "Valid ID query parameter is required",
+                error: "Unauthorized",
             });
-            return;
         }
 
         const collection = await getUsersCollection();
@@ -225,13 +224,21 @@ router.post("/data/edit", verifyToken, async (req: AuthRequest, res) => {
         }
 
         const {
-            id,
             username,
             email,
             avatar_url
         } = req.body;
 
-        const userId = Number(id);
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({
+                ok: false,
+                error: "Unauthorized",
+            });
+        }
+
+        const userId = Number(_id);
         if (isNaN(userId)) {
             return res.status(400).json({
                 ok: false,
@@ -490,6 +497,356 @@ router.post("/logout", verifyToken, (req: AuthRequest, res) => {
     addToBlacklist(token);
 
     return res.json({ ok: true, message: "Logged out successfully" });
+});
+
+
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (_req, file, cb) => {
+        const allowed = ["image/jpeg", "image/png", "image/webp"];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error("Only JPEG, PNG and WebP images are allowed"));
+        }
+    }
+});
+
+router.post("/avatar/upload", verifyToken, upload.single("avatar"), async (req: AuthRequest, res) => {
+    try {
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ ok: false, error: "No file provided" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        const userId = Number(_id);
+
+        // Izbriši star avatar če obstaja
+        const collection = await getUsersCollection();
+        const user = await collection.findOne({ _id: userId });
+
+        if (user?.avatar_file_id) {
+            try {
+                await bucket.delete(new ObjectId(user.avatar_file_id));
+            } catch {
+                // ignoriramo če datoteka ne obstaja
+            }
+        }
+
+        // Shrani novo sliko
+        const filename = `avatar_${userId}_${Date.now()}`;
+        const uploadStream = bucket.openUploadStream(filename, {
+            metadata: {
+                userId,
+                mimetype: req.file.mimetype
+            }
+        });
+
+        await new Promise<void>((resolve, reject) => {
+            uploadStream.on("finish", resolve);
+            uploadStream.on("error", reject);
+            uploadStream.end(req.file!.buffer);
+        });
+
+        const fileId = uploadStream.id.toString();
+
+        // Shrani fileId v user dokument
+        await collection.updateOne(
+            { _id: userId },
+            {
+                $set: {
+                    avatar_file_id: fileId,
+                    avatar_url: `/user/avatar/${fileId}`, // opcijsko
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        return res.status(201).json({
+            ok: true,
+            avatar_url: `/user/avatar/${fileId}`
+        });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
+router.get("/avatar", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        const userId = Number(_id);
+        if (isNaN(userId)) {
+            return res.status(400).json({ ok: false, error: "Invalid ID" });
+        }
+
+        // Poišči avatar_file_id v user dokumentu
+        const collection = await getUsersCollection();
+        const user = await collection.findOne(
+            { _id: userId },
+            { projection: { avatar_file_id: 1 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({ ok: false, error: "User not found" });
+        }
+
+        if (!user.avatar_file_id) {
+            return res.status(404).json({ ok: false, error: "No avatar uploaded" });
+        }
+
+        const fileId = user.avatar_file_id;
+
+        if (!ObjectId.isValid(fileId)) {
+            return res.status(400).json({ ok: false, error: "Invalid file ID" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        const files = await bucket.find({ _id: new ObjectId(fileId) }).toArray();
+
+        if (!files.length) {
+            return res.status(404).json({ ok: false, error: "Avatar not found" });
+        }
+
+        const mimetype = files[0].metadata?.mimetype ?? "image/jpeg";
+
+        res.setHeader("Content-Type", mimetype);
+        res.setHeader("Cache-Control", "public, max-age=86400");
+
+        const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+
+        downloadStream.on("error", () => {
+            res.status(404).json({ ok: false, error: "File not found" });
+        });
+
+        downloadStream.pipe(res);
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
+router.get("/avatar/:fileId", async (req, res) => {
+    try {
+        const { fileId } = req.params;
+
+        if (!ObjectId.isValid(fileId)) {
+            return res.status(400).json({ ok: false, error: "Invalid file ID" });
+        }
+
+        const db = await getDb();
+        const bucket = new GridFSBucket(db, { bucketName: "avatars" });
+
+        // Poišči metadata za Content-Type
+        const files = await bucket.find({ _id: new ObjectId(fileId) }).toArray();
+
+        if (!files.length) {
+            return res.status(404).json({ ok: false, error: "Avatar not found" });
+        }
+
+        const file = files[0];
+        const mimetype = file.metadata?.mimetype ?? "image/jpeg";
+
+        res.setHeader("Content-Type", mimetype);
+        res.setHeader("Cache-Control", "public, max-age=86400"); // 1 dan cache
+
+        const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
+
+        downloadStream.on("error", () => {
+            res.status(404).json({ ok: false, error: "File not found" });
+        });
+
+        downloadStream.pipe(res);
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
+export async function addGame(userId: number, title: string, attempts: number, timeTaken: number, completed: boolean): Promise<U_Game> {
+    const game: U_Game = {
+        _id: Date.now(),
+        title,
+        attempts,
+        timeTaken,
+        completed,
+        datePlayed: new Date()
+    };
+
+    const collection = await getUsersCollection();
+
+    const result = await collection.updateOne(
+        { _id: userId },
+        { 
+            $push: { games: game }, 
+            $inc: { games_played: 1 } 
+        }
+    );
+
+    if (result.matchedCount === 0) {
+        throw new Error("User not found");
+    }
+
+    return game;
+}
+
+// Endpoint pokliče funkcijo
+router.post("/data/game", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const _id = req.userId;
+
+        if (!_id) {
+            return res.status(401).json({ ok: false, error: "Unauthorized" });
+        }
+
+        const userId = Number(_id);
+        if (isNaN(userId)) {
+            return res.status(400).json({ ok: false, error: "Invalid ID" });
+        }
+
+        const { title, attempts, timeTaken, completed } = req.body;
+
+        if (!title || typeof title !== "string") {
+            return res.status(400).json({ ok: false, error: "Invalid title" });
+        }
+        if (typeof attempts !== "number" || attempts < 0) {
+            return res.status(400).json({ ok: false, error: "Invalid attempts" });
+        }
+        if (typeof timeTaken !== "number" || timeTaken < 0) {
+            return res.status(400).json({ ok: false, error: "Invalid timeTaken" });
+        }
+        if (typeof completed !== "boolean") {
+            return res.status(400).json({ ok: false, error: "Invalid completed" });
+        }
+
+        const game = await addGame(userId, title, attempts, timeTaken, completed);
+
+        return res.status(201).json({ ok: true, game });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
+async function recalculateStreak(userId: number): Promise<{ current_streak: number, longest_streak: number }> {
+    const collection = await getUsersCollection();
+
+    const user = await collection.findOne(
+        { _id: userId },
+        { projection: { games: 1, longest_streak: 1 } }
+    );
+
+    if (!user) throw new Error("User not found");
+
+    const games: U_Game[] = user.games || [];
+
+    // Zberi unikatne dni ko je bila odigrana vsaj ena igra
+    const playedDays = new Set(
+        games.map(g => {
+            const d = new Date(g.datePlayed);
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        })
+    );
+
+    const sortedDays = Array.from(playedDays).sort((a, b) => a - b);
+
+    // Izračunaj trenutni streak (šteje nazaj od danes)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    let current_streak = 0;
+
+    // Streak se šteje če je igral danes ali včeraj (da ne izgubi streak čez noč)
+    const lastDay = sortedDays[sortedDays.length - 1];
+    if (lastDay === today.getTime() || lastDay === yesterday.getTime()) {
+        current_streak = 1;
+
+        let check = new Date(lastDay);
+        for (let i = sortedDays.length - 2; i >= 0; i--) {
+            check.setDate(check.getDate() - 1);
+            if (sortedDays[i] === check.getTime()) {
+                current_streak++;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Izračunaj longest streak
+    let longest_streak = current_streak;
+    let tempStreak = 1;
+
+    for (let i = 1; i < sortedDays.length; i++) {
+        const diff = sortedDays[i] - sortedDays[i - 1];
+        const oneDay = 24 * 60 * 60 * 1000;
+
+        if (diff === oneDay) {
+            tempStreak++;
+            longest_streak = Math.max(longest_streak, tempStreak);
+        } else {
+            tempStreak = 1;
+        }
+    }
+
+    // Posodobi v DB samo če se je spremenilo
+    await collection.updateOne(
+        { _id: userId },
+        {
+            $set: {
+                current_streak,
+                longest_streak: Math.max(longest_streak, user.longest_streak ?? 0)
+            }
+        }
+    );
+
+    return { current_streak, longest_streak };
+}
+
+router.get("/leaderboard", async (_req, res) => {
+    try {
+        const collection = await getUsersCollection();
+
+        const users = await collection.find({}, {
+            projection: {
+                _id: 0,
+                username: 1,
+                current_streak: 1,
+                longest_streak: 1,
+                games_played: 1,
+                avatar_file_id: 1
+            }
+        }).toArray();
+
+        return res.json({ ok: true, users });
+
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
 });
 
 export default router;

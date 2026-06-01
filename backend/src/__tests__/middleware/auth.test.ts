@@ -79,7 +79,7 @@ describe("Auth Middleware (verifyToken)", () => {
         verifyToken(mockReq as AuthRequest, mockRes as Response, mockNext);
 
         expect(mockNext).toHaveBeenCalled();
-        expect(mockReq.user).toEqual(decodedUser);
+        expect(mockReq.userId).toBe(123);
         expect(mockRes.status).not.toHaveBeenCalled();
     });
 });

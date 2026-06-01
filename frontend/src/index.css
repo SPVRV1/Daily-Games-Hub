@@ -1,3 +1,21 @@
+# LeaderboardPage .leaderboard-row.gold {
+    background: linear-gradient(90deg, #fffbe6 80%, #ffe066 100%);
+}
+# LeaderboardPage .leaderboard-row.silver {
+    background: linear-gradient(90deg, #f8fafc 80%, #d1d5db 100%);
+}
+# LeaderboardPage .leaderboard-row.bronze {
+    background: linear-gradient(90deg, #fff7ed 80%, #eab308 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.gold {
+    background: linear-gradient(90deg, #2a2100 80%, #ffe066 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.silver {
+    background: linear-gradient(90deg, #23272f 80%, #d1d5db 100%);
+}
+.dark #LeaderboardPage .leaderboard-row.bronze {
+    background: linear-gradient(90deg, #2a1f0e 80%, #eab308 100%);
+}
 @import "tailwindcss";
 
 /* ── Palette variables ───────────────────────────────────── */
