@@ -5,6 +5,7 @@ import "./GameEndScreen.css";
 interface Props {
     result: GameResult;
     alreadyPlayed?: boolean;
+    onPlayAgain?: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -14,7 +15,7 @@ function formatTime(seconds: number): string {
     return `${s}s`;
 }
 
-export default function GameEndScreen({ result, alreadyPlayed = false }: Props) {
+export default function GameEndScreen({ result, alreadyPlayed = false, onPlayAgain }: Props) {
     const won = result.completed;
 
     const stats: { icon: string; label: string; value: string; green?: boolean }[] = [];
@@ -74,7 +75,13 @@ export default function GameEndScreen({ result, alreadyPlayed = false }: Props) 
 
                 {/* Actions */}
                 <div className="game-end-actions">
-                    <Link to="/" className="game-end-btn-primary">
+                    {onPlayAgain && (
+                        <button className="game-end-btn-primary" onClick={onPlayAgain}>
+                            <i className="fi fi-rr-redo" />
+                            Play Again
+                        </button>
+                    )}
+                    <Link to="/" className="game-end-btn-primary game-end-btn-secondary">
                         <i className="fi fi-rr-home" />
                         Back to Home
                     </Link>

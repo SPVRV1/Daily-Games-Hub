@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import GamePage from "../components/game/GamePage";
 import Flagle from "../components/game/Flagle";
+import GameEndScreen from "../components/game/GameEndScreen";
 import { GameChallenge, GameResult } from "../types/game.types";
 import "./FlaglePage.css";
 
@@ -103,13 +104,10 @@ export default function FlaglePage() {
                 />
             )}
             {archiveFinished && archiveResult && (
-                <div className="archive-result">
-                    <h2>{archiveResult.completed ? "You got it!" : "Better luck next time"}</h2>
-                    <p>Attempts used: {archiveResult.attempts_used} / 6</p>
-                    <button className="play-again-btn" onClick={() => fetchArchive(daysBack)}>
-                        Play again
-                    </button>
-                </div>
+                <GameEndScreen
+                    result={archiveResult}
+                    onPlayAgain={() => fetchArchive(daysBack)}
+                />
             )}
         </>
     );

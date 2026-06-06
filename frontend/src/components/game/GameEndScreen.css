@@ -132,6 +132,18 @@
     opacity: 0.88;
 }
 
+.game-end-btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-dark);
+    border: 1px solid var(--border);
+}
+
+.game-end-btn-secondary:hover {
+    opacity: 1;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
 .game-end-already-badge {
     font-family: var(--font-body, system-ui);
     font-size: 12px;

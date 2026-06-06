@@ -100,7 +100,7 @@ function getMoreLessLocalResult(): { completed: boolean; result: string } | null
 }
 
 function formatGameResult(game: TodayGame): string {
-    if (!game.completed) return "Attempted";
+    if (!game.completed) return "Failed";
     if (game.timeTaken > 0) {
         const mins = Math.floor(game.timeTaken / 60);
         const secs = game.timeTaken % 60;
@@ -265,7 +265,7 @@ export default function Home() {
                                 {!game.completed && game.attempted && (
                                     <span className="completed-badge completed-badge--failed">
                                         <i className="fi fi-rr-cross" />
-                                        Attempted
+                                        Failed
                                     </span>
                                 )}
                             </div>
