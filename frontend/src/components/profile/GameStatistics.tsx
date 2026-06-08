@@ -8,10 +8,10 @@ type GameStat = {
 };
 
 const DEFAULT_GAME_STATS: GameStat[] = [
-	{ title: "Wordle", averageAttempts: 4.2, averageTime: 120, gamesPlayed: 42 },
-	{ title: "Flagle", averageAttempts: 3.1, averageTime: 115, gamesPlayed: 38 },
-	{ title: "Math Sprint", averageAttempts: 2.7, averageTime: 52, gamesPlayed: 45 },
-	{ title: "Worldle", averageAttempts: 4.5, averageTime: 140, gamesPlayed: 35 },
+	{ title: "Wordle", averageAttempts: 0.0, averageTime: 0.0, gamesPlayed: 0.0 },
+	{ title: "Flagle", averageAttempts: 0.0, averageTime: 0.0, gamesPlayed: 0.0 },
+	{ title: "Math Sprint", averageAttempts: 0.0, averageTime: 0.0, gamesPlayed: 0.0 },
+	{ title: "Worldle", averageAttempts: 0.0, averageTime: 0.0, gamesPlayed: 0.0 },
 ];
 
 type GameStatisticsProps = {

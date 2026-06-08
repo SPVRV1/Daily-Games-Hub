@@ -37,7 +37,7 @@ export default function ProfileHero({ name, memberSince, initial, avatarUrl, onE
 
                 <button
                     type="button"
-                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
                     onClick={onEditProfile}
                     disabled={editDisabled}
                 >

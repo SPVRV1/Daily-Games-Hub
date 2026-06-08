@@ -92,6 +92,7 @@ export default function ProfileEditForm({
                             onAvatarFileChange(file);
                         }}
                         disabled={Boolean(isSaving)}
+                        className="cursor-pointer disabled:cursor-not-allowed"
                     />
                     {values.avatarFile && (
                         <img
