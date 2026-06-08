@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import Home from "./pages/Home";
 import Friends from "./pages/Friends";
@@ -70,7 +70,7 @@ function App() {
   }, [refreshUser]);
   return (
     <UserContext.Provider value={{ user, setUser, refreshUser }}>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/friends" element={<Friends />} />
@@ -86,7 +86,7 @@ function App() {
           <Route path="/worldle" element={<WorldlePage />} />
           <Route path="/songless" element={<SonglessPage />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </UserContext.Provider>
   );
 }

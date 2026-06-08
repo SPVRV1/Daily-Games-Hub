@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../Navbar";
 import "./Flagle.css";
 import { GameChallenge, GameResult } from "../../types/game.types";
@@ -35,10 +35,26 @@ interface FlagleProps {
 
 export default function Flagle({ data, onFinish, hideNavbar = false }: FlagleProps) {
     const challenge = data.challengeData as unknown as ChallengeData;
+    const storageKey = useMemo(
+        () => `flagle-${challenge.challengeId ?? data.date ?? "fallback"}`,
+        [challenge.challengeId, data.date],
+    );
 
-    const [guess, setGuess] = useState("");
-    const [attempts, setAttempts] = useState<Attempt[]>([]);
-    const [finished, setFinished] = useState(false);
+    const safeParse = <T,>(value: string | null, fallback: T): T => {
+        try {
+            return value ? JSON.parse(value) as T : fallback;
+        } catch {
+            return fallback;
+        }
+    };
+
+    const [guess, setGuess] = useState(() => localStorage.getItem(`${storageKey}-guess`) ?? "");
+    const [attempts, setAttempts] = useState<Attempt[]>(() =>
+        safeParse(localStorage.getItem(`${storageKey}-attempts`), []),
+    );
+    const [finished, setFinished] = useState(() =>
+        safeParse(localStorage.getItem(`${storageKey}-finished`), false),
+    );
     const [revealOrder] = useState<number[]>(() => {
         // Seed the shuffle with the challengeId so all players get the same order each day
         let seed = 0;
@@ -59,8 +75,26 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
         }
         return order;
     });
-    const [revealCount, setRevealCount] = useState(0);
+    const [revealCount, setRevealCount] = useState(() =>
+        safeParse(localStorage.getItem(`${storageKey}-reveal-count`), 0),
+    );
     const [countries, setCountries] = useState<Country[]>([]);
+
+    useEffect(() => {
+        localStorage.setItem(`${storageKey}-guess`, guess);
+    }, [guess, storageKey]);
+
+    useEffect(() => {
+        localStorage.setItem(`${storageKey}-attempts`, JSON.stringify(attempts));
+    }, [attempts, storageKey]);
+
+    useEffect(() => {
+        localStorage.setItem(`${storageKey}-finished`, JSON.stringify(finished));
+    }, [finished, storageKey]);
+
+    useEffect(() => {
+        localStorage.setItem(`${storageKey}-reveal-count`, JSON.stringify(revealCount));
+    }, [revealCount, storageKey]);
 
 
     useEffect(() => {
