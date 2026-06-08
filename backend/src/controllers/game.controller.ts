@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { createRequire } from "module";
 import GameResult from "../models/gameResult.js";
 import {
     generateMathSprintChallenge,
@@ -13,6 +14,30 @@ import { sendNotification } from '../utils/notification.js';
 import { getDb } from "../db.js";
 import { User } from "../models/user.js";
 import type { Friendship } from "../routes/friends.js";
+
+const require = createRequire(import.meta.url);
+const countries: { name: string; cca2: string; region?: string; subregion?: string }[] =
+    require("../data/countries.json");
+
+const validCountries = countries
+    .filter((country) => country.cca2 && country.cca2.length === 2)
+    .map((country) => ({
+        name: country.name,
+        code: country.cca2.toLowerCase(),
+        region: country.region,
+        subregion: country.subregion,
+    }));
+
+const withFlagleValidCountries = (gameType: GameType, challengeData: unknown) => {
+    if (gameType !== "flagle" || !challengeData || typeof challengeData !== "object") {
+        return challengeData;
+    }
+
+    return {
+        ...(challengeData as Record<string, unknown>),
+        validCountries,
+    };
+};
 
 // GET /api/games/:gameType/today
 // it returns the todays chalange for specific game (there needs to be a challange in database with todays date)
@@ -46,7 +71,7 @@ export const getTodayChallenge = async (req: Request, res: Response) => {
         res.json({
             gameType,
             date: today,
-            challengeData: todayChallenge.challengeData,
+            challengeData: withFlagleValidCountries(gameType, todayChallenge.challengeData),
         });
     } catch (error) {
         console.error("Error fetching today challenge:", error);
@@ -89,7 +114,11 @@ export const getChallengeByDate = async (req: Request, res: Response) => {
                 .json({ message: "No challenge for that date" });
         }
 
-        res.json({ gameType, date, challengeData: challenge.challengeData });
+        res.json({
+            gameType,
+            date,
+            challengeData: withFlagleValidCountries(gameType, challenge.challengeData),
+        });
     } catch (error) {
         console.error("Error fetching challenge by date:", error);
         res.status(500).json({ message: "Internal server error" });
