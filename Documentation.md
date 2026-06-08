@@ -1,365 +1,439 @@
-# KONČNA DOKUMENTACIJA
+#DOKUMENTACIJA
 
-# Daily Games Hub
+**Daily Games Hub**
 
-**Skupina 1**\
-Maribor, 8. 6. 2026\
-**Mentor:** Grega Žlahtič
+Skupina 1
+Maribor, 8. 6. 2026
+Mentor: Grega Žlahtič
 
-------------------------------------------------------------------------
+---
 
-# Kazalo
+## Kazalo
 
-1.  Opis projekta
-2.  Opis arhitekture
-3.  Podatkovni model
-4.  API dokumentacija
-5.  Navodila za namestitev
-6.  Navodila za uporabo
-7.  Zaključek
+1. [Opis projekta](#1-opis-projekta)
+   - 1.1 Namen projekta
+   - 1.2 Cilji sistema
+   - 1.3 Ključne funkcionalnosti
+2. [Opis arhitekture](#2-opis-arhitekture)
+   - 2.1 Arhitekturni pregled
+3. [Podatkovni model](#3-podatkovni-model)
+   - 3.1 Entiteta users
+   - 3.2 Entiteta users.achievements
+   - 3.3 Entiteta users.friends
+   - 3.4 Entiteta users.games
+   - 3.5 Entiteta Game
+   - 3.6 Entiteta DailyChallenge
+   - 3.7 Entiteta GameResult
+   - 3.8 Entiteta Notification
+4. [API dokumentacija](#4-api-dokumentacija)
+   - 4.1 Countries API
+   - 4.2 User API
+   - 4.3 Friends API
+   - 4.4 Games API
+   - 4.5 Leaderboard API
+   - 4.7 Daily Challenge API
+   - 4.8 Statistics API
+   - 4.9 Authentication API
+5. [Navodila za namestitev](#5-navodila-za-namestitev)
+6. [Navodila za uporabo](#6-navodila-za-uporabo)
+7. [Zaključek](#7-zaključek)
 
-------------------------------------------------------------------------
+---
 
-# 1. Opis projekta
+## 1. Opis projekta
 
-## 1.1 Namen projekta
+### 1.1 Namen projekta
 
-Daily Games Hub je spletna platforma za igranje in primerjanje dnevnih
-logičnih, geografskih, matematičnih in zabavnih iger.
+Daily Games Hub je spletna platforma za igranje in primerjanje dnevnih logičnih, geografskih, matematičnih in zabavnih iger. Namen sistema je uporabnikom omogočiti dostop do več dnevnih iger na enem mestu ter ustvariti socialno okolje, kjer lahko spremljajo svoje rezultate, primerjajo uspešnost s prijatelji in tekmujejo na globalnih lestvicah.
 
-Projekt rešuje problem razpršenosti dnevnih iger po različnih spletnih
-straneh.
+Projekt rešuje problem razpršenosti dnevnih iger po različnih spletnih straneh. Namesto obiskovanja več različnih portalov uporabnik dostopa do vseh iger preko enotnega uporabniškega vmesnika.
 
-## 1.2 Cilji sistema
+### 1.2 Cilji sistema
 
--   Centralizacija dnevnih iger.
--   Registracija uporabnikov.
--   Sistem prijateljev.
--   Statistika in dosežki.
--   Samodejno generiranje dnevnih izzivov.
+Glavni cilji projekta so:
 
-## 1.3 Ključne funkcionalnosti
+- Centralizacija dnevnih iger v enotnem sistemu.
+- Omogočanje registracije in upravljanja uporabniških profilov.
+- Vzpostavitev sistema prijateljev in primerjave rezultatov.
+- Vodenje statistik, dosežkov in serij igranja (streaks).
+- Samodejno generiranje dnevnih izzivov.
 
-### Upravljanje uporabnikov
+### 1.3 Ključne funkcionalnosti
 
--   Registracija.
--   Prijava.
--   JWT avtentikacija.
--   Upravljanje profila.
--   Nastavitve uporabnika.
+**Upravljanje uporabnikov**
 
-### Dnevne igre
+- Registracija novih uporabnikov.
+- Prijava uporabnikov.
+- Avtentikacija z JWT žetoni.
+- Upravljanje uporabniškega profila.
+- Spreminjanje uporabniških nastavitev.
+
+**Dnevne igre**
 
--   Wordle
--   Flagle
--   More/Less
--   Songless
--   Worldle
--   Math Sprint
+Sistem vsebuje naslednje igre:
+
+- Wordle
+- Flagle
+- More/Less
+- Songless
+- Worldle
+- Math Sprint
 
-### Socialne funkcionalnosti
+Za vsako igro se dnevni izziv generira enkrat dnevno in je enak za vse uporabnike.
+
+**Socialne funkcionalnosti**
 
--   Dodajanje prijateljev.
--   Sprejemanje prošenj.
--   Primerjava rezultatov.
-
-### Statistika in dosežki
-
--   Globalne lestvice.
--   Dnevne, tedenske in mesečne lestvice.
--   Medalje.
--   Streaki.
--   Zgodovina igranja.
-
-# 2. Opis arhitekture
-
-## 2.1 Arhitekturni pregled
-
-### Frontend
-
-Tehnologije:
-
--   React
--   Vite
--   TypeScript
--   CSS
-
-Odgovornosti:
-
--   uporabniški vmesnik
--   API komunikacija
--   validacija
--   upravljanje seje
-
-### Backend
-
-Tehnologije:
-
--   Express
--   TypeScript
--   JWT
-
-Odgovornosti:
-
--   poslovna logika
--   avtentikacija
--   upravljanje uporabnikov
--   dnevni izzivi
--   statistika
-
-### Podatkovni sloj
-
-Tehnologija:
-
--   MongoDB
-
-Odgovornosti:
-
--   shranjevanje podatkov
--   relacije
--   rezultati
--   statistike
-
-
-# 3. Podatkovni model
-
-## 3.1 Entiteta users
-
-  Field                  Type     Required   Description
-  ---------------------- -------- ---------- ------------------------
-  \_id                   Number   Yes        Unique user identifier
-  username               String   Yes        Display name
-  email                  String   Yes        Email address
-  password_hash          String   Yes        Password hash
-  avatar_url             String   No         Avatar URL
-  avatar_file_id         String   No         Uploaded avatar ID
-  current_streak         Number   Yes        Current streak
-  longest_streak         Number   Yes        Longest streak
-  games_played           Number   Yes        Games played
-  num_achievements       Number   Yes        Achievements
-  global_rank            Number   Yes        Global rank
-  created_at             Date     Yes        Created timestamp
-  updated_at             Date     Yes        Updated timestamp
-  resetPasswordToken     String   No         Reset token
-  resetPasswordExpires   Date     No         Token expiry
-
-## 3.2 users.achievements
-
-  Field         Type     Required   Description
-  ------------- -------- ---------- -------------------
-  title         String   Yes        Achievement title
-  description   String   No         Description
-  unlockedAt    Date     No         Unlock date
-
-## 3.3 users.friends
-
-  Field   Type     Required
-  ------- -------- ----------
-  \_id    Number   Yes
-
-## 3.4 users.games
-
-  Field        Type      Required   Description
-  ------------ --------- ---------- -------------
-  \_id         Number    Yes        Primary key
-  title        String    Yes        Game
-  attempts     Number    Yes        Attempts
-  timeTaken    Number    Yes        Seconds
-  completed    Boolean   Yes        Completed
-  datePlayed   Date      Yes        Date
-
-## 3.5 Entiteta Game
-
-  Field                Type      Required   Description
-  -------------------- --------- ---------- --------------
-  game_id              Number    Yes        Primary key
-  name                 String    Yes        Game name
-  description          String    No         Description
-  max_attempts         Number    No         Max attempts
-  time_limit_seconds   Number    No         Time limit
-  is_active            Boolean   Yes        Enabled
-
-## 3.6 DailyChallenge
-
-  Field           Type     Required   Description
-  --------------- -------- ---------- -------------
-  gameType        String   No         Type
-  date            String   No         YYYY-MM-DD
-  challengeData   Mixed    No         Payload
-
-## 3.7 GameResult
-
-  Field             Type       Required   Description
-  ----------------- ---------- ---------- -------------
-  \_id              ObjectId   Yes        Primary key
-  user_id           Number     Yes        User
-  gameType          String     Yes        Game
-  challenge_id      String     Yes        Challenge
-  difficulty        String     No         Difficulty
-  completed         Boolean    Yes        Finished
-  attempts_used     Number     No         Attempts
-  correct_answers   Number     No         Correct
-  time_seconds      Number     No         Time
-  score             Number     Yes        Score
-  played_at         Date       Yes        Timestamp
-
-## 3.8 Notification
-
-  Field        Type      Required   Description
-  ------------ --------- ---------- -------------------
-  \_id         Number    Yes        Primary key
-  user_id      Number    Yes        Recipient
-  type         String    Yes        Notification type
-  message      String    Yes        Message
-  actor        String    No         Username
-  action_url   String    No         Link
-  read         Boolean   Yes        Read
-  created_at   Date      Yes        Timestamp
-
-# 4. API dokumentacija
-
-## Countries API
-
-`GET /api/countries`
-
-## User API
-
--   GET /api/user/data
--   PUT /api/user/data/edit
--   GET /api/user/data/today
--   POST /api/user/data/game
--   GET /api/user/data/statistics
--   GET /api/user/leaderboard
--   POST /api/user/avatar/upload
--   GET /api/user/avatar
--   GET /api/user/avatar/:fileId
-
-## Friends API
-
--   GET /api/friends/search/users
--   POST /api/friends/request
--   POST /api/friends/:friendshipId/status
--   GET /api/friends/1
--   GET /api/friends1/requests
--   GET /api/friends/1/requests/sent
--   DELETE /api/friends/{id}/request
--   DELETE /api/friends/{id}
-
-## Games API
-
--   GET /api/games/active
--   GET /api/games/:id
-
-## Leaderboard API
-
--   GET /api/leaderboard/daily
--   GET /api/leaderboard/weekly
--   GET /api/leaderboard/monthly
-
-## Daily Challenge API
-
--   GET /api/game/:gameType/today
--   GET /api/game/:gameType/date/:date
--   GET /api/game/:gameType/played-today
--   POST /api/game/:gameType/result
-
-## Statistics API
-
--   GET /api/stats/me
--   GET /api/stats/Leaderboard
-
-## Authentication API
-
--   POST /api/user/register
--   POST /api/user/login
--   POST /api/user/logout
--   POST /api/user/forgot-password
--   POST /api/user/reset-password
-
-### Protected endpointi
-
-Authorization header:
-
-    Authorization: Bearer <jwt_token>
-
-# 5. Navodila za namestitev
-
-Aplikacija:
-
+- Dodajanje prijateljev.
+- Sprejemanje in zavračanje prošenj za prijateljstvo.
+- Primerjava rezultatov s prijatelji.
+- Pregled uspešnosti posameznega prijatelja.
+
+**Statistika in dosežki**
+
+- Globalne lestvice.
+- Dnevne, tedenske in mesečne uvrstitve.
+- Medalje in dosežki.
+- Evidenca streakov.
+- Zgodovina igranja.
+
+---
+
+## 2. Opis arhitekture
+
+### 2.1 Arhitekturni pregled
+
+Sistem temelji na trislojni arhitekturi:
+
+**Frontend**
+
+Odgovoren za:
+- prikaz uporabniškega vmesnika,
+- komunikacijo z API strežnikom,
+- validacijo uporabniških vnosov,
+- upravljanje uporabniške seje.
+
+Uporabljena tehnologija:
+- React
+- Vite
+- TypeScript
+- CSS
+
+**Backend**
+
+Odgovoren za:
+- Glavno logiko aplikacije,
+- avtentikacijo in avtorizacijo,
+- upravljanje uporabnikov,
+- generiranje dnevnih izzivov in iger,
+- izračun statistik.
+
+Uporabljena tehnologija:
+- Express
+- TypeScript
+- JWT
+
+**Podatkovni sloj**
+
+Odgovoren za:
+- trajno shranjevanje podatkov,
+- relacije med uporabniki,
+- rezultate iger,
+- statistike.
+
+Predlagana tehnologija:
+- MongoDB
+
+---
+
+## 3. Podatkovni model
+
+### 3.1 Entiteta users
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Unique user identifier (primary key) |
+| username | String | Yes | Display name |
+| email | String | Yes | Email address |
+| password_hash | String | Yes | Password hash |
+| avatar_url | String | No | URL to profile avatar image |
+| avatar_file_id | String | No | File ID for uploaded avatar |
+| current_streak | Number | Yes | Current daily play streak |
+| longest_streak | Number | Yes | All-time longest streak |
+| games_played | Number | Yes | Total games played count |
+| num_achievements | Number | Yes | Total achievements unlocked |
+| global_rank | Number | Yes | Global leaderboard rank |
+| created_at | Date | Yes | Account creation timestamp |
+| updated_at | Date | Yes | Last profile update timestamp |
+| resetPasswordToken | String | No | Token for password reset flow |
+| resetPasswordExpires | Date | No | Expiry for the reset token |
+
+### 3.2 Entiteta users.achievements
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| title | String | Yes | Achievement title |
+| description | String | No | What the achievement is for |
+| unlockedAt | Date | No | When it was unlocked |
+
+### 3.3 Entiteta users.friends
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | User ID of the friend |
+
+### 3.4 Entiteta users.games
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Primary key |
+| title | String | Yes | Game name/type |
+| attempts | Number | Yes | Number of attempts used |
+| timeTaken | Number | Yes | Time taken in seconds |
+| completed | Boolean | Yes | Whether the game was completed |
+| datePlayed | Date | Yes | Date the game was played |
+
+### 3.5 Entiteta Game
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| game_id | Number | Yes | Primary key |
+| name | String | Yes | Game name — one of: wordle, flagle, worldle, moreless, songless, mathsprint |
+| description | String | No | Human-readable description |
+| max_attempts | Number | No | Max allowed attempts (null = unlimited) |
+| time_limit_seconds | Number | No | Time limit in seconds (null = untimed) |
+| is_active | Boolean | Yes | Whether the game is currently enabled |
+
+### 3.6 Entiteta DailyChallenge
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| gameType | String | No | Type of challenge |
+| date | String | No | Date string for this challenge (YYYY-MM-DD) |
+| challengeData | Mixed | No | Flexible payload — structure varies by game type |
+
+### 3.7 Entiteta GameResult
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | ObjectId | Yes | Primary key |
+| user_id | Number | Yes | References users._id |
+| gameType | String | Yes | Name of the game played |
+| challenge_id | String | Yes | ID of the challenge played (links to games.challenges) |
+| difficulty | String | No | Difficulty level — one of: easy, medium, hard |
+| completed | Boolean | Yes | Whether the user finished the challenge (default: false) |
+| attempts_used | Number | No | How many attempts were made |
+| correct_answers | Number | No | Number of correct answers (where applicable) |
+| time_seconds | Number | No | Time taken to complete in seconds |
+| score | Number | Yes | Final score (default: 0) |
+| played_at | Date | Yes | Timestamp of play (default: now) |
+
+### 3.8 Entiteta Notification
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Primary key |
+| user_id | Number | Yes | References users._id — recipient of the notification |
+| type | String | Yes | Notification type — one of: friend_request, game_played, new_record |
+| message | String | Yes | Notification message text |
+| actor | String | No | Username who triggered the notification |
+| action_url | String | No | Optional deep-link URL for the notification |
+| read | Boolean | Yes | Whether the user has read it (default: false) |
+| created_at | Date | Yes | When the notification was created |
+
+---
+
+## 4. API dokumentacija
+
+### 4.1 Countries API
+
+```
+GET /api/countries
+```
+
+### 4.2 User API
+
+```
+GET    /api/user/data                  # Profil uporabnika
+PUT    /api/user/data/edit             # Posodobitev profila
+GET    /api/user/data/today            # Igre odigrane danes
+POST   /api/user/data/game             # Shrani odigrano igro
+GET    /api/user/data/statistics       # Podrobna statistika uporabnika
+GET    /api/user/leaderboard           # Globalni leaderboard
+POST   /api/user/avatar/upload         # Upload avatarja
+GET    /api/user/avatar                # Avatar trenutnega uporabnika
+GET    /api/user/avatar/:fileId        # Javni dostop do avatarja
+```
+
+### 4.3 Friends API
+
+```
+GET    /api/friends/search/users               # Iskanje uporabnikov
+POST   /api/friends/request                    # Pošiljanje prošnje
+POST   /api/friends/:friendshipId/status       # Sprejem/zavrnitev prošnje
+GET    /api/friends/1                          # Seznam prijateljev
+GET    /api/friends1/requests                  # Seznam prejetih prošenj
+GET    /api/friends/1/requests/sent            # Seznam poslanih prošenj
+DELETE /api/friends/{id}/request               # Zavrni prošnjo
+DELETE /api/friends/{id}                       # Odstrani prijatelja
+```
+
+### 4.4 Games API
+
+```
+GET    /api/games/active       # Seznam vseh iger / seznam vseh aktivnih iger
+GET    /api/games/:id          # Vrne podatke o posamezni igri
+```
+
+### 4.5 Leaderboard API
+
+```
+GET    /api/leaderboard/daily      # Dnevna lestvica
+GET    /api/leaderboard/weekly     # Tedenska lestvica
+GET    /api/leaderboard/monthly    # Mesečna lestvica
+```
+
+### 4.7 Daily Challenge API
+
+```
+GET    /api/game/:gameType/today               # Pridobitev današnjega izziva
+GET    /api/game/:gameType/date/:date          # Pridobitev izziva za določen datum
+GET    /api/game/:gameType/played-today        # Preveri ali je uporabnik danes že igral
+POST   /api/game/:gameType/result              # Shrani rezultat igre
+```
+
+### 4.8 Statistics API
+
+```
+GET    /api/stats/me             # Vrne statistiko prijavljenega uporabnika
+GET    /api/stats/Leaderboard    # Vrne globalni leaderboard
+```
+
+### 4.9 Authentication API
+
+```
+POST   /api/user/register
+POST   /api/user/login
+POST   /api/user/logout
+POST   /api/user/forgot-password
+POST   /api/user/reset-password
+```
+
+**Protected endpointi**
+
+```
+GET    /api/game/:gameType/played-today
+POST   /api/game/:gametype/result
+GET    /api/stats/me
+```
+
+Header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+---
+
+## 5. Navodila za namestitev
+
+Aplikacija je dostopna na strežniku brez dodatnih namestitev:
 https://frontend-4ckggfmn5-workspace5.vercel.app/
 
-## Predpogoji
+### 5.1 Predpogoji
 
--   Node.js 18+
--   npm 9+
+Za delovanje sistema so potrebni:
 
-## Backend
+- Node.js 18+
+- Npm 9+
 
-``` bash
+### 5.3 Namestitev zalednega dela
+
+V paketu namestite potrebne odvisnosti:
+
+```bash
 cd backend && npm install
+```
+
+Zagon backenda (port 3000):
+
+```bash
+cd backend
 npm run dev
 ```
 
-http://localhost:3000
+Backend dev server: http://localhost:3000
 
-## Frontend
+### 5.4 Namestitev uporabniškega vmesnika
 
-``` bash
+V paketu namestite potrebne odvisnosti:
+
+```bash
 cd frontend && npm install
+```
+
+Zagon frontenda (port 5173):
+
+```bash
+cd frontend
 npm run dev
 ```
 
-http://localhost:5173
+Frontend dev server: http://localhost:5173
 
-# 6. Navodila za uporabo
+---
 
-## Registracija
+## 6. Navodila za uporabo
 
-1.  Odpri registracijo.
-2.  Vnesi podatke.
-3.  Sistem preveri uporabnika.
-4.  Račun se ustvari.
+### 6.1 Registracija
 
-## Prijava
+1. Uporabnik odpre registracijsko stran.
+2. Vnese uporabniško ime in geslo.
+3. Sistem preveri unikatnost uporabniškega imena.
+4. Ustvari se uporabniški račun.
 
-1.  Vnos podatkov.
-2.  Preverjanje.
-3.  JWT žeton.
-4.  Začetna stran.
+### 6.2 Prijava
 
-## Igranje
+1. Uporabnik vnese uporabniško ime in geslo.
+2. Sistem preveri podatke.
+3. Uporabnik prejme JWT žeton.
+4. Odpre se začetna stran.
 
-1.  Izberi igro.
-2.  Dnevni izziv.
-3.  Reševanje.
-4.  Shranjevanje.
-5.  Lestvice.
+### 6.3 Igranje dnevnih iger
 
-## Dodajanje prijateljev
+1. Uporabnik izbere želeno igro.
+2. Naloži se dnevni izziv.
+3. Uporabnik rešuje nalogo.
+4. Rezultat se shrani v sistem.
+5. Rezultat se prikaže na lestvicah.
 
-1.  Poišči uporabnika.
-2.  Pošlji prošnjo.
-3.  Potrditev.
-4.  Ustvarjanje povezave.
+### 6.4 Dodajanje prijateljev
 
-## Spremljanje statistik
+1. Uporabnik poišče drugega uporabnika.
+2. Pošlje prošnjo za prijateljstvo.
+3. Prejemnik prošnjo potrdi.
+4. Ustvari se povezava med uporabnikoma.
 
--   zgodovina rezultatov
--   streaki
--   dosežki
--   primerjava
--   lestvice
+### 6.5 Spremljanje statistik
 
-## Obvestila
+Uporabnik lahko:
 
--   novi izzivi
--   novi prijatelji
--   medalje
--   streaki
--   spremembe lestvic
+- spremlja svojo zgodovino rezultatov,
+- pregleduje streake,
+- spremlja dosežke,
+- primerja rezultate s prijatelji,
+- spremlja globalne lestvice.
 
-# 7. Zaključek
+### 6.6 Obvestila
 
-Daily Games Hub predstavlja sodobno spletno platformo za igranje dnevnih
-iger s poudarkom na socialnih funkcionalnostih, statistični analizi in
-tekmovalnosti.
+Sistem uporabnika samodejno obvešča o:
+
+- novih dnevnih izzivih,
+- novih prijateljih,
+- pridobljenih medaljah,
+- doseženih streakih,
+- spremembah na lestvicah.
+
+---
+
+## 7. Zaključek
+
+Daily Games Hub predstavlja sodobno spletno platformo za igranje dnevnih iger z močnim poudarkom na socialnih funkcionalnostih, statistični analizi in tekmovalnosti. Sistem je zasnovan modularno, kar omogoča enostavno dodajanje novih iger, funkcionalnosti in integracij z zunanjimi podatkovnimi viri. Arhitektura zagotavlja visoko razširljivost, varnost in vzdrževanje sistema tudi ob večjem številu uporabnikov.
