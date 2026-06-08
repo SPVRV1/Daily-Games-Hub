@@ -18,9 +18,10 @@ export interface GameResult {
 }
 
 export interface GameState {
-  status: 'loading' | 'playing' | 'finished' | 'already_played';
+  status: 'loading' | 'playing' | 'finished' | 'already_played' | 'error';
   challenge: GameChallenge | null;
   result: GameResult | null;
+  error?: string;
 }
 
 

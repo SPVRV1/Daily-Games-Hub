@@ -19,7 +19,11 @@ import notificationRoutes from './routes/notification.js';
 
 import testRouter from "./routes/test.js";
 
-mongoose.connect(process.env.MONGO_URI!).catch(console.error);
+mongoose.set("bufferTimeoutMS", 2000);
+mongoose
+    .connect(process.env.MONGO_URI!, { serverSelectionTimeoutMS: 2000 })
+    .then(() => console.log("MongoDB connected"))
+    .catch((error) => console.error("MongoDB connection failed:", error));
 
 export const app = express();
 const port = Number(process.env.PORT) || 3000;
