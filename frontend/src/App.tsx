@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Home from "./pages/Home";
 import Friends from "./pages/Friends";
 import Login from "./pages/Login";
@@ -19,68 +19,57 @@ function App() {
   const [user, setUser] = useState<{ username: string; avatarUrl?: string } | null>(null);
   const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUser(null);
+      return;
+    }
 
-    const loadUser = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/user/data`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload?.ok) {
         setUser(null);
         return;
       }
 
-      try {
-        const response = await fetch(`${apiBaseUrl}/api/user/data`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: controller.signal,
-        });
-        const payload = await response.json().catch(() => null);
-        if (!response.ok || !payload?.ok) {
-          setUser(null);
-          return;
+      const userData = payload.user as { username?: string; avatar_url?: string; avatar_file_id?: string };
+      let avatarUrl: string | undefined = undefined;
+      if (userData?.avatar_file_id) {
+        avatarUrl = `${apiBaseUrl}/api/user/avatar/${userData.avatar_file_id}`;
+      } else if (userData?.avatar_url) {
+        const fileIdMatch = userData.avatar_url.match(/\/user\/avatar\/([a-f\d]{24})$/);
+        if (fileIdMatch) {
+          avatarUrl = `${apiBaseUrl}/api/user/avatar/${fileIdMatch[1]}`;
+        } else if (/^https?:\/\//.test(userData.avatar_url)) {
+          avatarUrl = userData.avatar_url;
+        } else if (userData.avatar_url.startsWith("/user/avatar/")) {
+          avatarUrl = `${apiBaseUrl}/api${userData.avatar_url}`;
+        } else if (userData.avatar_url.startsWith("/api/")) {
+          avatarUrl = `${apiBaseUrl}${userData.avatar_url}`;
         }
+      }
 
-        const userData = payload.user as { username?: string; avatar_url?: string; avatar_file_id?: string };
-        let avatarUrl: string | undefined = undefined;
-        if (userData?.avatar_file_id) {
-          avatarUrl = `${apiBaseUrl}/api/user/avatar/${userData.avatar_file_id}`;
-        } else if (userData?.avatar_url) {
-          const fileIdMatch = userData.avatar_url.match(/\/user\/avatar\/([a-f\d]{24})$/);
-          if (fileIdMatch) {
-            avatarUrl = `${apiBaseUrl}/api/user/avatar/${fileIdMatch[1]}`;
-          } else if (/^https?:\/\//.test(userData.avatar_url)) {
-            avatarUrl = userData.avatar_url;
-          } else if (userData.avatar_url.startsWith("/user/avatar/")) {
-            avatarUrl = `${apiBaseUrl}/api${userData.avatar_url}`;
-          } else if (userData.avatar_url.startsWith("/api/")) {
-            avatarUrl = `${apiBaseUrl}${userData.avatar_url}`;
-          }
-        }
-
-        if (userData?.username) {
-          setUser({
-            username: userData.username,
-            avatarUrl,
-          });
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
+      if (userData?.username) {
+        setUser({ username: userData.username, avatarUrl });
+      } else {
         setUser(null);
       }
-    };
-
-    loadUser();
-
-    return () => controller.abort();
+    } catch {
+      setUser(null);
+    }
   }, [apiBaseUrl]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    refreshUser();
+    return () => controller.abort();
+  }, [refreshUser]);
   return (
-    <UserContext.Provider value={{ user, setUser }}>
+    <UserContext.Provider value={{ user, setUser, refreshUser }}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />

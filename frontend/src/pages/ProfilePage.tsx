@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import LoadingOverlay from "../components/LoadingOverlay";
 import { useUser } from "../context/UserContext";
 import ProfileHero from "../components/profile/ProfileHero";
 import OverviewSection from "../components/profile/OverviewSection";
@@ -67,7 +68,7 @@ const ProfilePage = () => {
     const { setUser: setUserContext } = useUser();
     const [statistics, setStatistics] = useState<StatisticsData | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
@@ -93,6 +94,8 @@ const ProfilePage = () => {
 
     useEffect(() => {
         const controller = new AbortController();
+        const loadStartedAt = Date.now();
+        const MIN_BLUR_MS = 500;
 
         const loadUser = async () => {
             try {
@@ -154,7 +157,14 @@ const ProfilePage = () => {
                 setUser(null);
                 setStatistics(null);
             } finally {
-                setIsLoading(false);
+                const elapsed = Date.now() - loadStartedAt;
+                const remaining = Math.max(0, MIN_BLUR_MS - elapsed);
+                if (remaining > 0) {
+                    await new Promise((resolve) => setTimeout(resolve, remaining));
+                }
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
 
@@ -334,76 +344,58 @@ const ProfilePage = () => {
 
     return (
         <div className={`min-h-screen transition-colors ${isDark ? "bg-slate-950" : "bg-slate-100"} flex flex-col`}>
-            <div className="relative flex-1">
-                {!isLoading && (
-                    <>
-                        <Navbar activeLink="none" />
+            <Navbar activeLink="none" />
 
-                        <main className="mx-auto w-full max-w-350 px-4 py-6 sm:px-6 lg:px-8">
-                            <div className="space-y-5">
-                                <ProfileHero
-                                    name={displayName}
-                                    memberSince={memberSince || "-"}
-                                    initial={initial}
-                                    avatarUrl={avatarUrl}
-                                    onEditProfile={handleToggleEdit}
-                                    editLabel={isEditing ? "Cancel" : "Edit Profile"}
-                                    editDisabled={isLoading || isSaving}
+            <LoadingOverlay isLoading={isLoading}>
+                    <main className="mx-auto w-full max-w-350 px-4 py-6 sm:px-6 lg:px-8">
+                        <div className="space-y-5">
+                            <ProfileHero
+                                name={displayName}
+                                memberSince={memberSince || "-"}
+                                initial={initial}
+                                avatarUrl={avatarUrl}
+                                onEditProfile={handleToggleEdit}
+                                editLabel={isEditing ? "Cancel" : "Edit Profile"}
+                                editDisabled={isLoading || isSaving}
+                            />
+
+                            {isEditing && (
+                                <ProfileEditForm
+                                    values={editForm}
+                                    onChange={(values) => setEditForm({ ...values, avatarFile: values.avatarFile ?? null })}
+                                    onAvatarFileChange={(file) => setEditForm((prev) => ({ ...prev, avatarFile: file }))}
+                                    onSave={() => void handleSaveProfile()}
+                                    onCancel={handleToggleEdit}
+                                    isSaving={isSaving}
+                                    error={saveError}
+                                    success={saveSuccess}
                                 />
+                            )}
 
-                                {isEditing && (
-                                    <ProfileEditForm
-                                        values={editForm}
-                                        onChange={setEditForm}
-                                        onAvatarFileChange={(file) => setEditForm((prev) => ({ ...prev, avatarFile: file }))}
-                                        onSave={() => void handleSaveProfile()}
-                                        onCancel={handleToggleEdit}
-                                        isSaving={isSaving}
-                                        error={saveError}
-                                        success={saveSuccess}
+                            {error && (
+                                <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
+                                    <p>Could not load profile: {error}</p>
+                                </div>
+                            )}
+
+                            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+                                <div className="space-y-4 min-w-0">
+                                    <OverviewSection
+                                        currentStreak={user?.current_streak ?? null}
+                                        gamesPlayed={user?.games_played ?? null}
+                                        achievementsCount={user?.num_achievements ?? null}
+                                        globalRank={user?.global_rank ?? null}
                                     />
-                                )}
-
-                                {error && (
-                                    <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-200" : "border-slate-200 bg-white text-slate-700"}`}>
-                                        <p>Could not load profile: {error}</p>
-                                    </div>
-                                )}
-
-                                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
-                                    <div className="space-y-4 min-w-0">
-                                        <OverviewSection
-                                            currentStreak={user?.current_streak ?? null}
-                                            gamesPlayed={user?.games_played ?? null}
-                                            achievementsCount={user?.num_achievements ?? null}
-                                            globalRank={user?.global_rank ?? null}
-                                        />
-                                        <WeeklyActivity week={statistics?.week} />
-                                        <GameStatistics games={statistics?.games} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <AchievementsPanel achievements={statistics?.achievements ?? user?.achievements ?? []} />
-                                    </div>
+                                    <WeeklyActivity week={statistics?.week} />
+                                    <GameStatistics games={statistics?.games} />
+                                </div>
+                                <div className="min-w-0">
+                                    <AchievementsPanel achievements={statistics?.achievements ?? user?.achievements ?? []} />
                                 </div>
                             </div>
-                        </main>
-                    </>
-                )}
-
-                <div
-                    className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-opacity duration-300 ${isDark ? "bg-slate-950/40" : "bg-white/50"}`}
-                    style={{ opacity: isLoading ? 1 : 0, pointerEvents: isLoading ? "auto" : "none" }}
-                    aria-live="polite"
-                    aria-busy={isLoading}
-                >
-                    <div className={`rounded-2xl border px-5 py-4 text-sm font-semibold shadow-sm ${isDark ? "border-slate-800 bg-slate-900 text-slate-100" : "border-slate-200 bg-white text-slate-900"}`}>
-                        <div className="flex items-center gap-3">
-                            <div className={`h-4 w-4 animate-spin rounded-full border-2 border-transparent ${isDark ? "border-t-slate-200" : "border-t-slate-900"}`} />
-                            <span>Loading profile...</span>
                         </div>
-                    </div>
-                </div>
-            </div>
+                    </main>
+            </LoadingOverlay>
         </div>
     );
 };

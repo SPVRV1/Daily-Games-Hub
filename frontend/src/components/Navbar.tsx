@@ -4,7 +4,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { Bell, LogOut, Moon, Sun } from "lucide-react";
 import NotificationDropdown from "./NotificationDropdown";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 
 type NavbarProps = {
@@ -19,7 +19,9 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
     const { user, setUser } = useUser();
-    const initial = user?.username?.charAt(0).toUpperCase() ?? "Z";
+    const initial = user?.username?.charAt(0).toUpperCase() ?? "?";
+    const [avatarError, setAvatarError] = useState(false);
+    useEffect(() => { setAvatarError(false); }, [user?.avatarUrl]);
     return (
         <nav className={`navbar${isAuth ? " navbar--auth" : ""} w-full`}>
             <Link to="/">
@@ -55,10 +57,16 @@ export default function Navbar({ activeLink = "none", variant = "default" }: Nav
                             />
                         </div>
                         <Link to="/profile" className="icon-btn" aria-label="Profile">
-                            {user?.avatarUrl ? (
-                                <img className="avatar" src={user.avatarUrl} alt={initial} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+                            {user?.avatarUrl && !avatarError ? (
+                                <img
+                                    className="avatar"
+                                    src={user.avatarUrl}
+                                    alt={initial}
+                                    style={{ objectFit: "cover" }}
+                                    onError={() => setAvatarError(true)}
+                                />
                             ) : (
-                                <div className="avatar"></div>
+                                <div className="avatar">{initial}</div>
                             )}
                         </Link>
                         <Link

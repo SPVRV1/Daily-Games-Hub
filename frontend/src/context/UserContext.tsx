@@ -6,6 +6,7 @@ export type UserContextType = {
     avatarUrl?: string;
   } | null;
   setUser: (user: { username: string; avatarUrl?: string } | null) => void;
+  refreshUser: () => Promise<void>;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

@@ -1,6 +1,7 @@
 import { useState, ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useUser } from "../context/UserContext";
 
 import "./RegisterLoginPassword.css";
 
@@ -11,6 +12,7 @@ type LoginFormData = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { refreshUser } = useUser();
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -88,6 +90,7 @@ export default function Login() {
         }
 
         localStorage.setItem("token", payload.token);
+        await refreshUser();
         navigate("/");
       } catch (err) {
         setAuthError(err instanceof Error ? err.message : "Login failed");

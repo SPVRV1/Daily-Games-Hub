@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import LoadingOverlay from "../components/LoadingOverlay";
 import { useUser } from "../context/UserContext";
 import "./Home.css";
 
@@ -213,6 +214,7 @@ export default function Home() {
         <div className="home">
             <Navbar activeLink="home" />
 
+            <LoadingOverlay isLoading={!loaded}>
             <main className="content">
                 <div className="welcome">
                     <h1>Welcome back, {displayName}!</h1>
@@ -285,6 +287,7 @@ export default function Home() {
                     ))}
                 </div>
             </main>
+            </LoadingOverlay>
         </div>
     );
 }
