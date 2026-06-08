@@ -38,7 +38,7 @@ export default function Worldle({ data, onFinish }: any) {
     useEffect(() => {
         const loadCountries = async () => {
             try {
-                const response = await fetch("/api/countries");
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
                 const list: Country[] = await response.json();
                 setCountries(
                     list.filter((country) =>

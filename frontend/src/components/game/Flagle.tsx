@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "../Navbar";
 import "./Flagle.css";
 import { GameChallenge, GameResult } from "../../types/game.types";
@@ -60,10 +60,15 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
         return order;
     });
     const [revealCount, setRevealCount] = useState(0);
-    const countries = useMemo(
-        () => (challenge.validCountries ?? []).filter((c) => c.code in countryCoords),
-        [challenge.validCountries],
-    );
+    const [countries, setCountries] = useState<Country[]>([]);
+
+
+    useEffect(() => {
+        fetch(`${import.meta.env.VITE_API_URL}/api/countries`)
+            .then((r) => r.json())
+            .then((list: Country[]) => setCountries(list))
+            .catch(() => { });
+    }, []);
 
     const guessed = new Set(attempts.map((a) => a.guess.toLowerCase()));
 
@@ -71,10 +76,10 @@ export default function Flagle({ data, onFinish, hideNavbar = false }: FlaglePro
         guess.trim().length === 0
             ? []
             : countries.filter(
-                  (c) =>
-                      c.name.toLowerCase().includes(guess.toLowerCase()) &&
-                      !guessed.has(c.name.toLowerCase())
-              );
+                (c) =>
+                    c.name.toLowerCase().includes(guess.toLowerCase()) &&
+                    !guessed.has(c.name.toLowerCase())
+            );
 
     const handleGuess = (value: string) => {
         const trimmed = value.trim();
