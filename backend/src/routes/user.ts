@@ -904,4 +904,41 @@ router.get("/leaderboard", async (_req, res) => {
     }
 });
 
+router.get("/:id", verifyToken, async (req: AuthRequest, res) => {
+    try {
+        const targetId = Number(req.params.id);
+
+        if (Number.isNaN(targetId) || targetId <= 0) {
+            return res.status(400).json({ ok: false, error: "Invalid user id" });
+        }
+
+        const collection = await getUsersCollection();
+        const user = await collection.findOne({ _id: targetId }, {
+            projection: {
+                _id: 1,
+                username: 1,
+                avatar_url: 1,
+                avatar_file_id: 1,
+                current_streak: 1,
+                longest_streak: 1,
+                games_played: 1,
+                num_achievements: 1,
+                global_rank: 1,
+                created_at: 1,
+                achievements: 1,
+                // nikoli ne vrni: password_hash, email, resetPasswordToken, resetPasswordExpires
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ ok: false, error: "User not found" });
+        }
+
+        return res.json({ ok: true, user });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return res.status(500).json({ ok: false, error: message });
+    }
+});
+
 export default router;

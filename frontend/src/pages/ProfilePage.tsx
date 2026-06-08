@@ -8,6 +8,7 @@ import AchievementsPanel from "../components/profile/AchievementsPanel";
 import ProfileEditForm from "../components/profile/ProfileEditForm";
 import { useTheme } from "../context/ThemeContext";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 type Achievement = {
     title: string;
@@ -63,6 +64,7 @@ const formatMonthYear = (value?: string | Date | { $date?: string } | null) => {
 
 const ProfilePage = () => {
     const { isDark } = useTheme();
+    const [searchParams] = useSearchParams();
     const [user, setUser] = useState<UserProfile | null>(null);
     const { setUser: setUserContext } = useUser();
     const [statistics, setStatistics] = useState<StatisticsData | null>(null);
@@ -78,7 +80,10 @@ const ProfilePage = () => {
         avatarFile: null as File | null,
     });
     const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
-    const userId = 1 as const;
+
+    const targetId = searchParams.get("id") ? Number(searchParams.get("id")) : null;
+    const loggedInUserId = Number(localStorage.getItem("userId")) || null;
+    const isOwnProfile = !targetId || targetId === loggedInUserId;
 
     useEffect(() => {
         if (!user || isEditing) {
@@ -108,43 +113,59 @@ const ProfilePage = () => {
                     Authorization: `Bearer ${token}`,
                 };
 
-                const response = await fetch(`${apiBaseUrl}/api/user/data`, {
-                    headers: {
-                        ...authHeaders,
-                    },
-                    signal: controller.signal,
-                });
+                if (isOwnProfile) {
+                    const response = await fetch(`${apiBaseUrl}/api/user/data`, {
+                        headers: authHeaders,
+                        signal: controller.signal,
+                    });
 
-                const payload = await response.json();
+                    const payload = await response.json();
 
-                if (!response.ok || !payload?.ok) {
-                    throw new Error(payload?.error || "Failed to load profile");
+                    if (!response.ok || !payload?.ok) {
+                        throw new Error(payload?.error || "Failed to load profile");
+                    }
+
+                    setUser(payload.user as UserProfile);
+
+                    const statisticsResponse = await fetch(`${apiBaseUrl}/api/user/data/statistics`, {
+                        headers: authHeaders,
+                        signal: controller.signal,
+                    });
+                    const statisticsPayload = await statisticsResponse.json();
+
+                    if (
+                        !statisticsResponse.ok ||
+                        !statisticsPayload?.ok ||
+                        !statisticsPayload?.data
+                    ) {
+                        throw new Error(statisticsPayload?.error || "Failed to load statistics");
+                    }
+
+                    const statsData = statisticsPayload.data as Partial<StatisticsData>;
+                    setStatistics({
+                        week: Array.isArray(statsData.week) ? statsData.week : [],
+                        games: Array.isArray(statsData.games) ? statsData.games as StatisticsGame[] : [],
+                        achievements: Array.isArray(statsData.achievements) ? statsData.achievements as Achievement[] : [],
+                    });
+                } else {
+                    // Loading a friend's public profile
+                    const response = await fetch(`${apiBaseUrl}/api/user/${targetId}`, {
+                        headers: authHeaders,
+                        signal: controller.signal,
+                    });
+
+                    const payload = await response.json().catch(() => null);
+
+                    if (!response.ok || !payload?.ok) {
+                        throw new Error(
+                            payload?.error ??
+                            (response.status === 404 ? "User not found" : `Server error (${response.status}) — is GET /api/user/:id implemented?`)
+                        );
+                    }
+
+                    setUser(payload.user as UserProfile);
+                    setStatistics(null);
                 }
-
-                setUser(payload.user as UserProfile);
-
-                const statisticsResponse = await fetch(`${apiBaseUrl}/api/user/data/statistics`, {
-                    headers: {
-                        ...authHeaders,
-                    },
-                    signal: controller.signal,
-                });
-                const statisticsPayload = await statisticsResponse.json();
-
-                if (
-                    !statisticsResponse.ok ||
-                    !statisticsPayload?.ok ||
-                    !statisticsPayload?.data
-                ) {
-                    throw new Error(statisticsPayload?.error || "Failed to load statistics");
-                }
-
-                const statsData = statisticsPayload.data as Partial<StatisticsData>;
-                setStatistics({
-                    week: Array.isArray(statsData.week) ? statsData.week : [],
-                    games: Array.isArray(statsData.games) ? statsData.games as StatisticsGame[] : [],
-                    achievements: Array.isArray(statsData.achievements) ? statsData.achievements as Achievement[] : [],
-                });
             } catch (loadError) {
                 if (loadError instanceof DOMException && loadError.name === "AbortError") {
                     return;
@@ -161,7 +182,7 @@ const ProfilePage = () => {
         loadUser();
 
         return () => controller.abort();
-    }, [apiBaseUrl]);
+    }, [apiBaseUrl, targetId, isOwnProfile]);
 
     const displayName = isLoading ? "Loading..." : user?.username ?? "user";
     const memberSince = user ? formatMonthYear(user.created_at) : "";
@@ -254,7 +275,7 @@ const ProfilePage = () => {
                 }
             }
 
-            const payload: Record<string, unknown> = { id: userId };
+            const payload: Record<string, unknown> = { id: user._id };
 
 
             const usernameChanged = editForm.username !== user.username;
@@ -323,6 +344,7 @@ const ProfilePage = () => {
     };
 
     useEffect(() => {
+        if (!isOwnProfile) return;
         setUserContext(user
             ? {
                 username: user.username,
@@ -330,7 +352,7 @@ const ProfilePage = () => {
             }
             : null
         );
-    }, [user, avatarUrl]);
+    }, [user, avatarUrl, isOwnProfile]);
 
     return (
         <div className={`min-h-screen transition-colors ${isDark ? "bg-slate-950" : "bg-slate-100"} flex flex-col`}>
@@ -346,9 +368,9 @@ const ProfilePage = () => {
                                     memberSince={memberSince || "-"}
                                     initial={initial}
                                     avatarUrl={avatarUrl}
-                                    onEditProfile={handleToggleEdit}
+                                    onEditProfile={isOwnProfile ? handleToggleEdit : undefined}
                                     editLabel={isEditing ? "Cancel" : "Edit Profile"}
-                                    editDisabled={isLoading || isSaving}
+                                    editDisabled={!isOwnProfile || isLoading || isSaving}
                                 />
 
                                 {isEditing && (
