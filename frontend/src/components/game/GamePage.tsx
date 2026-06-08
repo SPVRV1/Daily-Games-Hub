@@ -71,12 +71,12 @@ const GamePage = ({
     submitResult(result);
   };
 
-  if (state.status === "loading") {
-    return <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", gap: "12px" }}>
-      <div style={{ width: 36, height: 36, border: "3px solid #e5e7eb", borderTopColor: "#6b7280", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-      <span style={{ fontSize: 14, color: "#6b7280" }}>Loading...</span>
-    </div>;
-  }
+  if (state.status === "loading") return (
+    <div className="flex flex-col items-center justify-center p-8 gap-3">
+      <div className="w-9 h-9 border-3 border-gray-200 border-t-gray-500 rounded-full animate-spin" />
+      <span className="text-sm text-gray-500">Loading...</span>
+    </div>
+  );
   if (state.status === "error") return <div>{state.error ?? "Could not load game."}</div>;
 
   // Full-page end screens — game is not rendered, preventing replays
