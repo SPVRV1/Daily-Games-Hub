@@ -4,7 +4,7 @@ import { GameChallenge, GameResult } from "../types/game.types";
 import GameEndScreen from "../components/game/GameEndScreen";
 import "./SonglessPage.css";
 
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API = import.meta.env.VITE_API_URL ?? "";
 
 const SNIPPET_DURATIONS = [1, 2, 4, 7, 11, 16];
 const TOTAL_DURATION = SNIPPET_DURATIONS.reduce((a, b) => a + b, 0); // 41

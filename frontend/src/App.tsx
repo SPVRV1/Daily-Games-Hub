@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Friends from "./pages/Friends";
 import Login from "./pages/Login";
@@ -17,13 +17,7 @@ import { UserContext } from "./context/UserContext";
 
 function App() {
   const [user, setUser] = useState<{ username: string; avatarUrl?: string } | null>(null);
-  const apiBaseUrl = useMemo(() => {
-    const envPort = import.meta.env.VITE_API_PORT;
-    if (envPort) {
-      return `http://localhost:${envPort}`;
-    }
-    return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
-  }, []);
+  const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
 
   useEffect(() => {
     const controller = new AbortController();

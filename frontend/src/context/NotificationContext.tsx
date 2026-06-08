@@ -45,7 +45,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
 ];
 
-const API_BASE = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3000'}/api`;
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ""}/api`;
 
 function getToken(): string | null {
     return localStorage.getItem('token'); // adjust if you store it differently

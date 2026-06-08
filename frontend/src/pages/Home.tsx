@@ -4,7 +4,7 @@ import Navbar from "../components/Navbar";
 import { useUser } from "../context/UserContext";
 import "./Home.css";
 
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API = import.meta.env.VITE_API_URL ?? "";
 
 type Game = {
     name: string;

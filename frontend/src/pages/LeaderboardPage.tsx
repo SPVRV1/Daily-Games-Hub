@@ -36,11 +36,7 @@ export default function LeaderboardPage() {
   const [search, setSearch] = useState("");
   const [animatedRows, setAnimatedRows] = useState(false);
 
-  const apiBaseUrl = useMemo(() => {
-    const envPort = import.meta.env.VITE_API_PORT;
-    if (envPort) return `http://localhost:${envPort}`;
-    return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
-  }, []);
+  const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
 
   useEffect(() => {
     async function fetchLeaderboard() {

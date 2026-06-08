@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useMemo } from "react";
+import { useState, ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
@@ -16,14 +16,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  const apiBaseUrl = useMemo(() => {
-    const envPort = import.meta.env.VITE_API_PORT;
-
-    if (envPort)
-      return `http://localhost:${envPort}`;
-
-    return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
-  }, []);
+  const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
 
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",

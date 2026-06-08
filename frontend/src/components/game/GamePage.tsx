@@ -4,7 +4,7 @@ import { useGame } from "../../hooks/useGame";
 import GameResultScreen from "./GameResult";
 import AlreadyPlayed from "./AlreadyPlayed";
 
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API = import.meta.env.VITE_API_URL ?? "";
 
 const GAME_TITLES: Record<string, string> = {
   flagle: "Flagle",

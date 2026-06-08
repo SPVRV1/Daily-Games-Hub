@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GameType, GameChallenge, GameResult, GameState } from '../types/game.types';
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+const API = import.meta.env.VITE_API_URL ?? "";
 
 type GameQueryParams = Record<string, string>;
 

@@ -6,7 +6,7 @@ import GameEndScreen from "../components/game/GameEndScreen";
 import { GameChallenge, GameResult } from "../types/game.types";
 import "./FlaglePage.css";
 
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+const API = import.meta.env.VITE_API_URL ?? "";
 const MAX_DAYS_BACK = 3;
 
 function formatDate(d: Date): string {

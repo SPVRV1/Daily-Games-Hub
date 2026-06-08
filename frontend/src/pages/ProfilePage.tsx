@@ -7,7 +7,7 @@ import GameStatistics from "../components/profile/GameStatistics";
 import AchievementsPanel from "../components/profile/AchievementsPanel";
 import ProfileEditForm from "../components/profile/ProfileEditForm";
 import { useTheme } from "../context/ThemeContext";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Achievement = {
     title: string;
@@ -77,13 +77,7 @@ const ProfilePage = () => {
         email: "",
         avatarFile: null as File | null,
     });
-    const apiBaseUrl = useMemo(() => {
-        const envPort = import.meta.env.VITE_API_PORT;
-        if (envPort) {
-            return `http://localhost:${envPort}`;
-        }
-        return import.meta.env.VITE_API_URL ?? "http://localhost:3000";
-    }, []);
+    const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
     const userId = 1 as const;
 
     useEffect(() => {
