@@ -9,6 +9,10 @@ import {
 import { GameType } from "../types/game.types.js";
 import { AuthRequest } from "../middleware/auth.js";
 import { GameModel as Game } from "../models/game.js";
+import { sendNotification } from '../utils/notification.js';
+import { getDb } from "../db.js";
+import { User } from "../models/user.js";
+import type { Friendship } from "../routes/friends.js";
 
 // GET /api/games/:gameType/today
 // it returns the todays chalange for specific game (there needs to be a challange in database with todays date)
@@ -142,6 +146,10 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
         if (!userId) {
             return res.status(401).json({ message: "Unauthorized" });
         }
+        const db = await getDb();
+        const currentUser = await db.collection<User>("Users")
+            .findOne({ _id: userId }, { projection: { username: 1 } });
+        const username = currentUser?.username ?? "Someone";
 
         const { gameType } = req.params as { gameType: GameType };
         const today = getTodayDate();
@@ -213,6 +221,44 @@ export const submitResult = async (req: AuthRequest, res: Response) => {
             time_seconds,
             score: finalScore,
         });
+
+        const previousBest = await GameResult.findOne({
+            user_id: userId,
+            gameType,
+            score: { $gt: finalScore },
+        });
+
+        if (!previousBest) {
+            sendNotification({
+                userId,
+                type: "new_record",
+                message: `You set a new record in ${gameType}!`,
+            }).catch((err) => console.error("new_record notification failed:", err));
+        }
+
+        // --- Notify friends that this user played (fire and forget) ---
+        const friendshipsCollection = await db.collection<Friendship>("friendships");
+        const friendships = await friendshipsCollection
+            .find({
+                status: "accepted",
+                $or: [{ requester_id: userId }, { receiver_id: userId }],
+            })
+            .toArray();
+
+        const friendIds = friendships.map((f: { requester_id: number; receiver_id: any; }) =>
+            f.requester_id === userId ? f.receiver_id : f.requester_id,
+        );
+
+        Promise.all(
+            friendIds.map((friendId: any) =>
+                sendNotification({
+                    userId: friendId,
+                    type: "game_played",
+                    message: `${username} completed ${gameType}`,
+                    actor: username,
+                }),
+            ),
+        ).catch((err) => console.error("game_played notifications failed:", err));
 
         res.status(201).json(result);
     } catch (error) {

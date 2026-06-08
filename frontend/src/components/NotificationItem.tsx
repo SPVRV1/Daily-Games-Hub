@@ -1,5 +1,6 @@
 import { Notification } from '../types/notification.types';
 import { UserPlus, Gamepad2, Trophy, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -12,10 +13,17 @@ export default function NotificationItem({
   onRead,
   onDelete,
 }: NotificationItemProps) {
+    const navigate = useNavigate();
   const handleClick = () => {
     if (!notification.read) {
       onRead(notification.id);
-    }
+      }
+      console.log('Notification clicked:', notification.actionUrl);
+      
+      
+      if (notification.actionUrl) {
+          navigate(notification.actionUrl);
+      }
   };
 
   const getIcon = () => {

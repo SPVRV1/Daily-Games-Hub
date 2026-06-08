@@ -1,317 +1,439 @@
-# Dokumentacija
+# DOKUMENTACIJA
 
-## Ideja
+**Daily Games Hub**
 
-Daily Games Hub je spletna stran, ki na enem mestu zbira več kratkih dnevnih iger. Namesto da bi vsak dan šel na 5 različnih spletnih strani, imaš vse igre na enem mestu, skupaj s prijatelji, s katerimi vsak dan primerjaš rezultate. Cilj je rešiti čim več dnevnih izzivov z čim manj poskusi in biti najboljši na lestvici med prijatelji.
-
-Vsaka igra se ponovi enkrat na dan in je za vse igralce enaka. Ko se igra reši, se tvoj rezultat (število poskusov, čas) shrani in primerja z rezultati prijateljev.
+Skupina 1
+Maribor, 8. 6. 2026
+Mentor: Grega Žlahtič
 
 ---
 
-## Tehnologije
+## Kazalo
 
-### Frontend
+1. [Opis projekta](#1-opis-projekta)
+   - 1.1 Namen projekta
+   - 1.2 Cilji sistema
+   - 1.3 Ključne funkcionalnosti
+2. [Opis arhitekture](#2-opis-arhitekture)
+   - 2.1 Arhitekturni pregled
+3. [Podatkovni model](#3-podatkovni-model)
+   - 3.1 Entiteta users
+   - 3.2 Entiteta users.achievements
+   - 3.3 Entiteta users.friends
+   - 3.4 Entiteta users.games
+   - 3.5 Entiteta Game
+   - 3.6 Entiteta DailyChallenge
+   - 3.7 Entiteta GameResult
+   - 3.8 Entiteta Notification
+4. [API dokumentacija](#4-api-dokumentacija)
+   - 4.1 Countries API
+   - 4.2 User API
+   - 4.3 Friends API
+   - 4.4 Games API
+   - 4.5 Leaderboard API
+   - 4.7 Daily Challenge API
+   - 4.8 Statistics API
+   - 4.9 Authentication API
+5. [Navodila za namestitev](#5-navodila-za-namestitev)
+6. [Navodila za uporabo](#6-navodila-za-uporabo)
+7. [Zaključek](#7-zaključek)
 
+---
+
+## 1. Opis projekta
+
+### 1.1 Namen projekta
+
+Daily Games Hub je spletna platforma za igranje in primerjanje dnevnih logičnih, geografskih, matematičnih in zabavnih iger. Namen sistema je uporabnikom omogočiti dostop do več dnevnih iger na enem mestu ter ustvariti socialno okolje, kjer lahko spremljajo svoje rezultate, primerjajo uspešnost s prijatelji in tekmujejo na globalnih lestvicah.
+
+Projekt rešuje problem razpršenosti dnevnih iger po različnih spletnih straneh. Namesto obiskovanja več različnih portalov uporabnik dostopa do vseh iger preko enotnega uporabniškega vmesnika.
+
+### 1.2 Cilji sistema
+
+Glavni cilji projekta so:
+
+- Centralizacija dnevnih iger v enotnem sistemu.
+- Omogočanje registracije in upravljanja uporabniških profilov.
+- Vzpostavitev sistema prijateljev in primerjave rezultatov.
+- Vodenje statistik, dosežkov in serij igranja (streaks).
+- Samodejno generiranje dnevnih izzivov.
+
+### 1.3 Ključne funkcionalnosti
+
+**Upravljanje uporabnikov**
+
+- Registracija novih uporabnikov.
+- Prijava uporabnikov.
+- Avtentikacija z JWT žetoni.
+- Upravljanje uporabniškega profila.
+- Spreminjanje uporabniških nastavitev.
+
+**Dnevne igre**
+
+Sistem vsebuje naslednje igre:
+
+- Wordle
+- Flagle
+- More/Less
+- Songless
+- Worldle
+- Math Sprint
+
+Za vsako igro se dnevni izziv generira enkrat dnevno in je enak za vse uporabnike.
+
+**Socialne funkcionalnosti**
+
+- Dodajanje prijateljev.
+- Sprejemanje in zavračanje prošenj za prijateljstvo.
+- Primerjava rezultatov s prijatelji.
+- Pregled uspešnosti posameznega prijatelja.
+
+**Statistika in dosežki**
+
+- Globalne lestvice.
+- Dnevne, tedenske in mesečne uvrstitve.
+- Medalje in dosežki.
+- Evidenca streakov.
+- Zgodovina igranja.
+
+---
+
+## 2. Opis arhitekture
+
+### 2.1 Arhitekturni pregled
+
+Sistem temelji na trislojni arhitekturi:
+
+**Frontend**
+
+Odgovoren za:
+- prikaz uporabniškega vmesnika,
+- komunikacijo z API strežnikom,
+- validacijo uporabniških vnosov,
+- upravljanje uporabniške seje.
+
+Uporabljena tehnologija:
 - React
 - Vite
 - TypeScript
-- HTML / CSS
+- CSS
 
-### Backend
+**Backend**
 
-- Node.js
+Odgovoren za:
+- Glavno logiko aplikacije,
+- avtentikacijo in avtorizacijo,
+- upravljanje uporabnikov,
+- generiranje dnevnih izzivov in iger,
+- izračun statistik.
+
+Uporabljena tehnologija:
 - Express
 - TypeScript
+- JWT
+
+**Podatkovni sloj**
+
+Odgovoren za:
+- trajno shranjevanje podatkov,
+- relacije med uporabniki,
+- rezultate iger,
+- statistike.
+
+Predlagana tehnologija:
 - MongoDB
 
-### Ostalo
+---
 
-- JWT avtentikacija za zaščito uporabniških zahtevkov
-- bcrypt za varno hrambo gesel
-- Nodemailer za pošiljanje e-pošte ob obnovitvi gesla
+## 3. Podatkovni model
+
+### 3.1 Entiteta users
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Unique user identifier (primary key) |
+| username | String | Yes | Display name |
+| email | String | Yes | Email address |
+| password_hash | String | Yes | Password hash |
+| avatar_url | String | No | URL to profile avatar image |
+| avatar_file_id | String | No | File ID for uploaded avatar |
+| current_streak | Number | Yes | Current daily play streak |
+| longest_streak | Number | Yes | All-time longest streak |
+| games_played | Number | Yes | Total games played count |
+| num_achievements | Number | Yes | Total achievements unlocked |
+| global_rank | Number | Yes | Global leaderboard rank |
+| created_at | Date | Yes | Account creation timestamp |
+| updated_at | Date | Yes | Last profile update timestamp |
+| resetPasswordToken | String | No | Token for password reset flow |
+| resetPasswordExpires | Date | No | Expiry for the reset token |
+
+### 3.2 Entiteta users.achievements
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| title | String | Yes | Achievement title |
+| description | String | No | What the achievement is for |
+| unlockedAt | Date | No | When it was unlocked |
+
+### 3.3 Entiteta users.friends
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | User ID of the friend |
+
+### 3.4 Entiteta users.games
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Primary key |
+| title | String | Yes | Game name/type |
+| attempts | Number | Yes | Number of attempts used |
+| timeTaken | Number | Yes | Time taken in seconds |
+| completed | Boolean | Yes | Whether the game was completed |
+| datePlayed | Date | Yes | Date the game was played |
+
+### 3.5 Entiteta Game
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| game_id | Number | Yes | Primary key |
+| name | String | Yes | Game name — one of: wordle, flagle, worldle, moreless, songless, mathsprint |
+| description | String | No | Human-readable description |
+| max_attempts | Number | No | Max allowed attempts (null = unlimited) |
+| time_limit_seconds | Number | No | Time limit in seconds (null = untimed) |
+| is_active | Boolean | Yes | Whether the game is currently enabled |
+
+### 3.6 Entiteta DailyChallenge
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| gameType | String | No | Type of challenge |
+| date | String | No | Date string for this challenge (YYYY-MM-DD) |
+| challengeData | Mixed | No | Flexible payload — structure varies by game type |
+
+### 3.7 Entiteta GameResult
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | ObjectId | Yes | Primary key |
+| user_id | Number | Yes | References users._id |
+| gameType | String | Yes | Name of the game played |
+| challenge_id | String | Yes | ID of the challenge played (links to games.challenges) |
+| difficulty | String | No | Difficulty level — one of: easy, medium, hard |
+| completed | Boolean | Yes | Whether the user finished the challenge (default: false) |
+| attempts_used | Number | No | How many attempts were made |
+| correct_answers | Number | No | Number of correct answers (where applicable) |
+| time_seconds | Number | No | Time taken to complete in seconds |
+| score | Number | Yes | Final score (default: 0) |
+| played_at | Date | Yes | Timestamp of play (default: now) |
+
+### 3.8 Entiteta Notification
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| _id | Number | Yes | Primary key |
+| user_id | Number | Yes | References users._id — recipient of the notification |
+| type | String | Yes | Notification type — one of: friend_request, game_played, new_record |
+| message | String | Yes | Notification message text |
+| actor | String | No | Username who triggered the notification |
+| action_url | String | No | Optional deep-link URL for the notification |
+| read | Boolean | Yes | Whether the user has read it (default: false) |
+| created_at | Date | Yes | When the notification was created |
 
 ---
 
-## Arhitektura
+## 4. API dokumentacija
 
-Aplikacija je zgrajena po ločeni arhitekturi:
+### 4.1 Countries API
 
-- `frontend/` je klientska aplikacija, ki teče v brskalniku
-- `backend/` je REST API strežnik, ki obdeluje podatke in upravlja s podatkovno bazo
-- Backend uporablja MongoDB kot primarno shrambo za uporabnike, igre, rezultate in prijatelje
+```
+GET /api/countries
+```
 
-Komunikacija med frontendom in backendom poteka preko HTTP zahtevkov, kjer so nekateri endpointi zaščiteni z JWT žetonom.
+### 4.2 User API
 
----
+```
+GET    /api/user/data                  # Profil uporabnika
+PUT    /api/user/data/edit             # Posodobitev profila
+GET    /api/user/data/today            # Igre odigrane danes
+POST   /api/user/data/game             # Shrani odigrano igro
+GET    /api/user/data/statistics       # Podrobna statistika uporabnika
+GET    /api/user/leaderboard           # Globalni leaderboard
+POST   /api/user/avatar/upload         # Upload avatarja
+GET    /api/user/avatar                # Avatar trenutnega uporabnika
+GET    /api/user/avatar/:fileId        # Javni dostop do avatarja
+```
 
-## Struktura projekta
+### 4.3 Friends API
 
-### Vrhnje mape
+```
+GET    /api/friends/search/users               # Iskanje uporabnikov
+POST   /api/friends/request                    # Pošiljanje prošnje
+POST   /api/friends/:friendshipId/status       # Sprejem/zavrnitev prošnje
+GET    /api/friends/1                          # Seznam prijateljev
+GET    /api/friends1/requests                  # Seznam prejetih prošenj
+GET    /api/friends/1/requests/sent            # Seznam poslanih prošenj
+DELETE /api/friends/{id}/request               # Zavrni prošnjo
+DELETE /api/friends/{id}                       # Odstrani prijatelja
+```
 
-- `frontend/` - React aplikacija
-- `backend/` - Express API strežnik
+### 4.4 Games API
 
-### Frontend
+```
+GET    /api/games/active       # Seznam vseh iger / seznam vseh aktivnih iger
+GET    /api/games/:id          # Vrne podatke o posamezni igri
+```
 
-- `frontend/src/` - izvorna koda aplikacije
-- `frontend/src/components/` - komponente UI-ja
-- `frontend/src/pages/` - strani aplikacije
-- `frontend/src/context/` - podatkovni konteksti
-- `frontend/src/hooks/` - prilagojeni React hooki
-- `frontend/public/` - statične datoteke in ikone
+### 4.5 Leaderboard API
 
-### Backend
+```
+GET    /api/leaderboard/daily      # Dnevna lestvica
+GET    /api/leaderboard/weekly     # Tedenska lestvica
+GET    /api/leaderboard/monthly    # Mesečna lestvica
+```
 
-- `backend/src/index.ts` - glavni vstopni strežnik
-- `backend/src/routes/` - definicije API poti
-- `backend/src/controllers/` - logika za obdelavo zahtevkov
-- `backend/src/models/` - podatkovni modeli
-- `backend/src/middleware/` - preverjanje avtentikacije
-- `backend/src/utils/` - pomočne funkcije (avtentikacija, pošiljanje e-pošte, validacija)
-- `backend/src/data/` - igre in podatkovne datoteke za nekatere izzive
+### 4.7 Daily Challenge API
 
----
+```
+GET    /api/game/:gameType/today               # Pridobitev današnjega izziva
+GET    /api/game/:gameType/date/:date          # Pridobitev izziva za določen datum
+GET    /api/game/:gameType/played-today        # Preveri ali je uporabnik danes že igral
+POST   /api/game/:gameType/result              # Shrani rezultat igre
+```
 
-## Implementirane funkcionalnosti
+### 4.8 Statistics API
 
-- uporabniška registracija in prijava
-- avtentikacija z JWT žetonom
-- pozabljeno geslo in reset gesla preko e-pošte
-- pošiljanje rezultata igre na strežnik
-- preverjanje, ali je uporabnik igro že igral danes
-- upravljanje prijateljev (pošiljanje zahtevkov, sprejem, brisanje)
-- prikaz aktivnih in vseh iger iz baze
+```
+GET    /api/stats/me             # Vrne statistiko prijavljenega uporabnika
+GET    /api/stats/Leaderboard    # Vrne globalni leaderboard
+```
 
----
+### 4.9 Authentication API
 
-## API endpointi
+```
+POST   /api/user/register
+POST   /api/user/login
+POST   /api/user/logout
+POST   /api/user/forgot-password
+POST   /api/user/reset-password
+```
 
-### Avtorizacija in uporabnik
+**Protected endpointi**
 
-- `POST /api/user/register` - registracija novega uporabnika
-- `POST /api/user/login` - prijava in pridobitev JWT žetona
-- `GET /api/user/data?id=<userId>` - pridobi podatke uporabnika (zahteva žeton)
-- `POST /api/user/forgot-password` - zahteva resetiranje gesla po e-pošti
-- `POST /api/user/reset-password` - nastavi novo geslo z žetonom
+```
+GET    /api/game/:gameType/played-today
+POST   /api/game/:gametype/result
+GET    /api/stats/me
+```
 
-### Igre
-
-- `GET /api/games/active` - seznam aktivnih iger
-- `GET /api/games/all` - seznam vseh iger
-- `GET /api/games/:id` - podrobnosti o določeni igri
-- `GET /api/games/:gameType/today` - pridobi današnji izziv za izbrano igro
-- `GET /api/games/:gameType/played-today` - preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/:gameType/result` - pošlje rezultat igre
-
-### Statistika
-
-- `GET /api/stats/me` - statistika prijavljenega uporabnika prek JWT (streaki, povprečja, zgodovina iger)
-- `GET /api/stats/me?period=day|week|month|all&gameType=<ime_igre>` - filtrirana statistika za grafične prikaze
-- `GET /api/stats/leaderboard` - lestvica vseh uporabnikov za frontend sortiranje
-
-#### Minimalni response format
-
-- `GET /api/stats/me`
-  - `user`: osnovni podatki prijavljenega uporabnika
-  - `filters`: aktivni filtri (`period`, `gameType`)
-  - `stats`: `currentStreak`, `longestStreak`, `gamesPlayed`, `completedGames`, `completionRate`, `averageAttempts`, `averageTime`, `perGame`
-  - `history`: seznam odigranih iger za grafe in best results
-- `GET /api/stats/leaderboard`
-  - `leaderboard`: sortirani uporabniki z `rank`, `username`, `current_streak`, `longest_streak`, `games_played`
-
-### Prijatelji
-
-- `POST /api/friends/request` - pošlji prošnjo za prijateljstvo
-- `PATCH /api/friends/:friendshipId/status` - sprejmi ali zavrni prošnjo
-- `GET /api/friends/:userId` - pridobi seznam prijateljev uporabnika
-- `GET /api/friends/:userId/requests` - pridobi čakajoče prošnje za prijateljstvo
-- `DELETE /api/friends/:friendshipId` - odstrani sprejeto prijateljstvo
+Header:
+```
+Authorization: Bearer <jwt_token>
+```
 
 ---
 
-## Kratek način zagona
+## 5. Navodila za namestitev
 
-1. Namesti odvisnosti v obeh mapah:
-   - `cd frontend && npm install`
-   - `cd backend && npm install`
-2. Zaženi backend:
-   - `cd backend && npm run dev`
-3. Zaženi frontend:
-   - `cd frontend && npm run dev`
+Aplikacija je dostopna na strežniku brez dodatnih namestitev:
+https://frontend-4ckggfmn5-workspace5.vercel.app/
 
----
+### 5.1 Predpogoji
 
-## Sprint 2
+Za delovanje sistema so potrebni:
 
-### Nove funkcionalnosti
+- Node.js 18+
+- Npm 9+
 
-#### Igre
+### 5.3 Namestitev zalednega dela
 
-- **Wordle** – implementacija igre ugibanja besed (mreža 5 × 6); animacija razkrivanja rezultatov, zaslon za konec igre, sistem obvestil za neveljavne vnose; backend generira datoteko veljavnih besed in dnevno besedo
-- **Flagle** – implementacija igre ugibanja zastave; možnost igranja iger iz preteklih 3 dni
-- **Math Sprint** – deterministični generator 5 nalog na dan; lestvica težavnosti: easy | medium | hard; točkovanje: 100× pravilne + do 50 bonus točk
+V paketu namestite potrebne odvisnosti:
 
-#### Testiranje
+```bash
+cd backend && npm install
+```
 
-- Nastavitev testnega okolja
-- Osnovni testi: registracija, prijava, profil
-- Testiranje API endpointov
-- Testiranje UI komponent z `useEffect` in Hooks
-- Pomoč pri odkrivanju bugov
+Zagon backenda (port 3000):
 
----
+```bash
+cd backend
+npm run dev
+```
 
-### Posodobljeni API endpointi
+Backend dev server: http://localhost:3000
 
-#### Wordle
+### 5.4 Namestitev uporabniškega vmesnika
 
-- `GET /api/games/wordle/today` – pridobi današnjo besedo
-- `GET /api/games/wordle/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/wordle/result` – pošlje rezultat (število poskusov)
+V paketu namestite potrebne odvisnosti:
 
-#### Flagle
+```bash
+cd frontend && npm install
+```
 
-- `GET /api/games/flagle/today` – pridobi današnjo zastavo
-- `GET /api/games/flagle/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/flagle/result` – pošlje rezultat
-- `GET /api/games/flagle/history` – pridobi igre iz preteklih 3 dni
+Zagon frontenda (port 5173):
 
-#### Math Sprint
+```bash
+cd frontend
+npm run dev
+```
 
-- `GET /api/games/mathsprint/today` – pridobi današnjih 5 nalog
-- `GET /api/games/mathsprint/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/mathsprint/result` – pošlje rezultat (točke, čas, težavnost)
+Frontend dev server: http://localhost:5173
 
 ---
 
-### Posodobljena struktura projekta
+## 6. Navodila za uporabo
 
-#### Backend (dopolnitev)
+### 6.1 Registracija
 
-- `backend/src/data/words.json` – seznam veljavnih besed za Wordle
-- `backend/src/data/flags/` – podatki o zastavah za Flagle
-- `backend/scripts/` – pomožni skripti (npr. generiranje besed)
+1. Uporabnik odpre registracijsko stran.
+2. Vnese uporabniško ime in geslo.
+3. Sistem preveri unikatnost uporabniškega imena.
+4. Ustvari se uporabniški račun.
 
-#### Frontend (dopolnitev)
+### 6.2 Prijava
 
-- `frontend/src/pages/WordlePage.tsx` – stran igre Wordle
-- `frontend/src/pages/FlaglePage.tsx` – stran igre Flagle
-- `frontend/src/pages/MathSprintPage.tsx` – stran igre Math Sprint
-- `frontend/src/components/` – komponente posameznih iger (mreža, tipkovnica, zasloni za konec igre)
+1. Uporabnik vnese uporabniško ime in geslo.
+2. Sistem preveri podatke.
+3. Uporabnik prejme JWT žeton.
+4. Odpre se začetna stran.
 
----
+### 6.3 Igranje dnevnih iger
 
-### Zagotavljanje kakovosti (QA)
+1. Uporabnik izbere želeno igro.
+2. Naloži se dnevni izziv.
+3. Uporabnik rešuje nalogo.
+4. Rezultat se shrani v sistem.
+5. Rezultat se prikaže na lestvicah.
 
-V 2. sprintu je bila vzpostavljena osnovna infrastruktura za testiranje:
+### 6.4 Dodajanje prijateljev
 
-- Testno okolje konfigurirano ločeno od produkcijskega
-- Pokritost testov: registracija in prijava, API endpointi, UI komponente z `useEffect` v Hooks
+1. Uporabnik poišče drugega uporabnika.
+2. Pošlje prošnjo za prijateljstvo.
+3. Prejemnik prošnjo potrdi.
+4. Ustvari se povezava med uporabnikoma.
 
----
+### 6.5 Spremljanje statistik
 
-### Stanje ob koncu sprinta
+Uporabnik lahko:
 
-| Funkcionalnost              | Status    | Opomba                             |
-| --------------------------- | --------- | ---------------------------------- |
-| Wordle (frontend + backend) | Končano   |                                    |
-| Flagle (frontend + backend) | Končano   |                                    |
-| Math Sprint frontend        | Končano   | Urejena navigacija, 3 znane težave |
-| Math Sprint backend         | Končano   | Generator in točkovanje delujeta   |
-| Registracija in prijava     | V razvoju | Fix bugov v teku                   |
-| Uporabniški profil 2        | V razvoju | Avatarji, statistike, zavihki      |
-| Pisanje avtomatskih testov  | Končano   |                                    |
-| Dokumentacija               | V razvoju |                                    |
+- spremlja svojo zgodovino rezultatov,
+- pregleduje streake,
+- spremlja dosežke,
+- primerja rezultate s prijatelji,
+- spremlja globalne lestvice.
 
----
+### 6.6 Obvestila
 
-## Sprint 3
+Sistem uporabnika samodejno obvešča o:
 
-### Nove funkcionalnosti
-
-#### Igre
-- **Worldle** – implementacija igre ugibanja držav; logika za preverjanje vnešenih držav, filtriranje in validacija podatkovnih struktur; pravilno pretvarjanje GeoJSON podatkov v SVG prikaz siluet; podpora za različne velikostne razreze
-- **Songless** – implementacija igre ugibanja pesmi; JSON baza s seznamom pesmi in funkcija za pridobitev dnevne pesmi; popravljen indeks datuma (zero-based value)
-- **More/Less** – implementacija igre in logike za shranjevanje napredka ter dnevne igre
-
-#### Uporabniški profil (3. del)
-- **Frontend** – sistem dosežkov in medalj, streak-i, implementacija skupin in skupnih dosežkov; JWT token za posodabljanje slike profila; stran za globalno statistiko
-- **Backend** – posodabljanje avatarjev, sprejem JWT tokena, endpoint za shranjevanje odigranih iger, leaderboard podatki za vse igre na dnevni ravni
-
-#### Statistika
-- **Frontend** – stran s podrobno statistiko: graf rezultatov skozi čas (po igri), win streak, najboljši rezultati, primerjava s povprečjem vseh uporabnikov; filtriranje po igri in časovnem obdobju
-- **Backend** – endpointi za statistike, izračun streakov in povprečij; popravljeni backend za Math Sprint (Score, Time, Število vprašanj)
-
-#### Obvestila
-- **Frontend** – sistem obvestil v aplikaciji: dropdown z zadnjimi obvestili (nova prošnja prijatelja, prijatelj odigral igro, nov rekord); NotificationProvider za delovanje gumbov v dropdownu
-- **Backend** – tabela `notifications` v bazi; logika za ustvarjanje obvestil ob relevantnih dogodkih; endpointi za pridobitev in dodajanje obvestil; povezava frontend–backend za obvestila
+- novih dnevnih izzivih,
+- novih prijateljih,
+- pridobljenih medaljah,
+- doseženih streakih,
+- spremembah na lestvicah.
 
 ---
 
-### Posodobljeni API endpointi
+## 7. Zaključek
 
-#### Worldle
-- `GET /api/games/worldle/today` – pridobi današnjo državo
-- `GET /api/games/worldle/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/worldle/result` – pošlje rezultat
-
-#### Songless
-- `GET /api/games/songless/today` – pridobi današnjo pesem
-- `GET /api/games/songless/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/songless/result` – pošlje rezultat
-
-#### More/Less
-- `GET /api/games/moreless/today` – pridobi današnji izziv
-- `GET /api/games/moreless/played-today` – preveri, ali je uporabnik igro danes že igral
-- `POST /api/games/moreless/result` – pošlje rezultat
-
-#### Statistika
-- `GET /api/stats/:userId` – pridobi statistiko uporabnika
-- `GET /api/stats/:userId/:gameType` – pridobi statistiko za določeno igro
-- `GET /api/stats/leaderboard` – pridobi lestvico vseh uporabnikov
-
-#### Obvestila
-- `GET /api/notifications/:userId` – pridobi obvestila uporabnika
-- `POST /api/notifications` – ustvari novo obvestilo
-- `PATCH /api/notifications/:notificationId` – označi obvestilo kot prebrano
-
-#### Dosežki in skupine
-- `GET /api/achievements/:userId` – pridobi dosežke in medalje uporabnika
-- `GET /api/groups/:userId` – pridobi skupine uporabnika
-- `POST /api/groups` – ustvari novo skupino
-- `GET /api/groups/:groupId/achievements` – pridobi skupne dosežke skupine
-
----
-
-### Posodobljena struktura projekta
-
-#### Backend (dopolnitev)
-- `backend/src/data/countries.geojson` – GeoJSON podatki za Worldle
-- `backend/src/data/songs.json` – seznam pesmi za Songless
-- `backend/src/models/Notification.ts` – model obvestil
-- `backend/src/models/Achievement.ts` – model dosežkov
-- `backend/src/models/Group.ts` – model skupin
-- `backend/src/routes/stats.ts` – poti za statistike
-- `backend/src/routes/notifications.ts` – poti za obvestila
-- `backend/src/routes/achievements.ts` – poti za dosežke
-
-#### Frontend (dopolnitev)
-- `frontend/src/pages/WorldlePage.tsx` – stran igre Worldle
-- `frontend/src/pages/SonglessPage.tsx` – stran igre Songless
-- `frontend/src/pages/MoreLessPage.tsx` – stran igre More/Less
-- `frontend/src/pages/StatsPage.tsx` – stran s statistikami
-- `frontend/src/context/NotificationProvider.tsx` – kontekst za obvestila
-- `frontend/src/components/NotificationDropdown.tsx` – dropdown za obvestila
-
----
-
-### Stanje ob koncu sprinta
-
-| Funkcionalnost | Status | Opomba |
-|---|---|---|
-| Worldle (frontend + backend) | Končano | |
-| Songless (frontend + backend) | Končano | Popravljen indeks datuma |
-| More/Less (frontend + backend) | Končano | |
-| Uporabniški profil 3 | Končano | Dosežki, streak-i, skupine |
-| Statistika (frontend + backend) | Končano | |
-| Obvestila (frontend + backend) | Končano | |
+Daily Games Hub predstavlja sodobno spletno platformo za igranje dnevnih iger z močnim poudarkom na socialnih funkcionalnostih, statistični analizi in tekmovalnosti. Sistem je zasnovan modularno, kar omogoča enostavno dodajanje novih iger, funkcionalnosti in integracij z zunanjimi podatkovnimi viri. Arhitektura zagotavlja visoko razširljivost, varnost in vzdrževanje sistema tudi ob večjem številu uporabnikov.

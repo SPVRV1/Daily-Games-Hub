@@ -72,6 +72,7 @@ const GamePage = ({
   };
 
   if (state.status === "loading") return <div>Loading...</div>;
+  if (state.status === "error") return <div>{state.error ?? "Could not load game."}</div>;
 
   // Full-page end screens — game is not rendered, preventing replays
   if (state.status === "already_played") {
