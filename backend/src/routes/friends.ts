@@ -3,10 +3,11 @@ import { Router } from "express";
 import type { Collection, Db } from "mongodb";
 import type { User } from "../models/user.js";
 import { sendNewFriendEmail } from "../utils/mailer.js";
+import { sendNotification } from "../utils/notification.js";
 
 type FriendshipStatus = "pending" | "accepted" | "rejected";
 
-type Friendship = {
+export type Friendship = {
   _id?: ObjectId;
   requester_id: number;
   receiver_id: number;
@@ -163,7 +164,17 @@ export default function friendsRoutes(db: Db) {
                 updated_at: new Date(),
               },
             },
-          );
+            );
+            console.log(receiver_id +"  " + requester.username);
+            sendNotification({
+                userId: receiver_id,
+                type: "friend_request",
+                message: `${requester.username} sent you a friend request`,
+                actor: requester.username,
+                actionUrl: "/friends",
+            }).catch((err) =>
+                console.error("friend_request notification failed:", err),
+            );
 
           return res.status(200).json({
             ok: true,
@@ -275,6 +286,15 @@ export default function friendsRoutes(db: Db) {
               requester.username,
             ),
           ]);
+            sendNotification({
+                userId: existing.requester_id,
+                type: "friend_request",
+                message: `${receiver.username} accepted your friend request`,
+                actor: receiver.username,
+                actionUrl: "/friends",
+            }).catch((err) =>
+                console.error("friend_request accepted notification failed:", err),
+            );
         }
       }
 
