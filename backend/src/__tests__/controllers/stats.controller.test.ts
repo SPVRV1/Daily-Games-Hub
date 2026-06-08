@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { getLeaderboard, getMyStats } from '../../controllers/stats.controller.js';
+import type { AuthRequest } from '../../middleware/auth.js';
 
 vi.mock('../../db.js', () => ({
     getUsersCollection: vi.fn(),
@@ -9,7 +10,7 @@ vi.mock('../../db.js', () => ({
 import { getUsersCollection } from '../../db.js';
 
 describe('stats controller', () => {
-    let mockReq: Partial<Request>;
+    let mockReq: Partial<AuthRequest>;
     let mockRes: Partial<Response>;
 
     const dayMs = 24 * 60 * 60 * 1000;
@@ -53,7 +54,7 @@ describe('stats controller', () => {
 
         (getUsersCollection as any).mockResolvedValue(collection);
 
-        await getMyStats(mockReq as Request, mockRes as Response);
+        await getMyStats(mockReq as AuthRequest, mockRes as Response);
 
         expect(collection.findOne).toHaveBeenCalledWith({ _id: 123 }, expect.any(Object));
         expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
@@ -83,7 +84,7 @@ describe('stats controller', () => {
 
         (getUsersCollection as any).mockResolvedValue(collection);
 
-        await getLeaderboard(mockReq as Request, mockRes as Response);
+        await getLeaderboard(mockReq as AuthRequest, mockRes as Response);
 
         expect(mockRes.json).toHaveBeenCalledWith(expect.objectContaining({
             ok: true,

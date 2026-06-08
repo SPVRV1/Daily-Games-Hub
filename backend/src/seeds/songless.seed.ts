@@ -3,6 +3,7 @@ dotenv.config();
 
 import mongoose from "mongoose";
 import { GameModel } from "../models/game.js";
+import { type IGameChallange } from "../types/game.types.js";
 
 // Songs that have actual audio files in src/data/music/
 const SONGS = [
@@ -81,7 +82,7 @@ async function seed() {
     console.log("Connected to MongoDB");
 
     // Generate challenges: 7 days back + today + 60 days ahead
-    const challenges = [];
+    const challenges: IGameChallange[] = [];
     for (let offset = -7; offset <= 60; offset++) {
         const d = new Date();
         d.setUTCDate(d.getUTCDate() + offset);

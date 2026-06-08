@@ -4,6 +4,7 @@ dotenv.config();
 import fs from "fs";
 import mongoose from "mongoose";
 import { GameModel } from "../models/game.js";
+import { type IGameChallange } from "../types/game.types.js";
 import { getTodayDate } from "../utils/gameHelpers.js";
 
 async function seed() {
@@ -28,7 +29,7 @@ async function seed() {
 
     const today = getTodayDate();
 
-    const challenges = [
+    const challenges: IGameChallange[] = [
         {
             gameType: "wordle",
             date: today,

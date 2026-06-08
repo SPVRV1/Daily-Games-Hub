@@ -45,7 +45,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
 ];
 
-const API_BASE = 'http://localhost:3000/api'; // change port
+const API_BASE = `${import.meta.env.VITE_API_URL ?? 'http://localhost:3000'}/api`;
 
 function getToken(): string | null {
     return localStorage.getItem('token'); // adjust if you store it differently
