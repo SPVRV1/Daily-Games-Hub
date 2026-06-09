@@ -335,8 +335,8 @@ Authorization: Bearer <jwt_token>
 
 ## 5. Navodila za namestitev
 
-Aplikacija je dostopna na strežniku brez dodatnih namestitev:
-https://frontend-4ckggfmn5-workspace5.vercel.app/
+Aplikacija je dostopna tudi na strežniku brez dodatnih namestitev:
+https://frontend-workspace5.vercel.app/
 
 ### 5.1 Predpogoji
 
